@@ -1,0 +1,33 @@
+{%- assign current_variant = product.selected_or_first_available_variant -%}
+<section class="dw-section" id="dw-product">
+  <div class="dw-container">
+    <div class="dw-product">
+      <div class="dw-product-image">
+        {%- if product.featured_image -%}
+          <img src="{{ product.featured_image | image_url: width: 1200 }}" alt="{{ product.title | escape }}" width="1200" height="1200" loading="lazy" />
+        {%- elsif data.imageUrl != blank -%}
+          <img src="{{ data.imageUrl }}" alt="{{ product.title | escape }}" width="1024" height="1024" loading="lazy" />
+        {%- endif -%}
+      </div>
+      <div>
+        <h2 class="dw-product-title">{{ product.title }}</h2>
+        <div class="dw-product-price">{{ current_variant.price | money }}</div>
+        {%- if product.description != blank -%}
+          <div style="margin-top:20px;font-size:15px;line-height:1.6;opacity:0.8;">
+            {{ product.description }}
+          </div>
+        {%- endif -%}
+        <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" class="dw-product-form">
+          <input type="hidden" name="id" value="{{ current_variant.id }}" />
+          <button type="submit" class="dw-btn-primary" style="width:100%;justify-content:center;padding:16px;font-size:15px;">
+            {%- if current_variant.available -%}
+              Add to cart — {{ current_variant.price | money }}
+            {%- else -%}
+              Sold out
+            {%- endif -%}
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>

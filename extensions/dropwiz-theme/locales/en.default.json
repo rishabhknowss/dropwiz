@@ -1,0 +1,13 @@
+{
+  "blocks": {
+    "dropwiz_product_page": {
+      "name": "Dropwiz product page",
+      "settings": {
+        "fallback_message": {
+          "label": "Fallback message",
+          "info": "Shown when no Dropwiz design has been published for this product."
+        }
+      }
+    }
+  }
+}

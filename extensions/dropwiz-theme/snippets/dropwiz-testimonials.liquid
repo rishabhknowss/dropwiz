@@ -1,0 +1,30 @@
+{%- if data.testimonials.size > 0 -%}
+  <section class="dw-section">
+    <div class="dw-container">
+      <h2 class="dw-section-title">{{ data.title | default: 'What customers say' }}</h2>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">
+        {%- for t in data.testimonials -%}
+          <div style="border:1px solid rgba(10,10,10,0.1);border-radius:var(--store-radius);padding:24px;">
+            {%- if t.rating > 0 -%}
+              <div style="color:#facc15;font-size:14px;margin-bottom:12px;">
+                {%- for i in (1..t.rating) -%}★{%- endfor -%}
+              </div>
+            {%- endif -%}
+            <p style="margin:0 0 16px;font-size:15px;line-height:1.55;">"{{ t.quote }}"</p>
+            <div style="display:flex;align-items:center;gap:12px;">
+              {%- if t.avatarUrl != blank -%}
+                <img src="{{ t.avatarUrl }}" alt="" width="36" height="36" style="width:36px;height:36px;border-radius:999px;object-fit:cover;" loading="lazy" />
+              {%- endif -%}
+              <div>
+                <div style="font-size:13px;font-weight:600;">{{ t.name }}</div>
+                {%- if t.role != blank -%}
+                  <div style="font-size:12px;opacity:0.6;">{{ t.role }}</div>
+                {%- endif -%}
+              </div>
+            </div>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+{%- endif -%}

@@ -1,0 +1,11 @@
+node_modules
+.next
+.turbo
+.vercel
+out
+build
+coverage
+drizzle
+pnpm-lock.yaml
+public
+*.log

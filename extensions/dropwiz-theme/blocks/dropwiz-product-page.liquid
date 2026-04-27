@@ -1,0 +1,80 @@
+{% comment %}
+  Dropwiz product page — single block that renders the full Dropwiz-designed product page
+  by reading section data from product metafields written at publish time.
+{% endcomment %}
+
+{{ 'dropwiz.css' | asset_url | stylesheet_tag }}
+
+{%- liquid
+  assign tokens = product.metafields.dropwiz.theme_tokens.value
+  assign layout = product.metafields.dropwiz.layout.value
+  assign has_design = false
+  if layout != blank
+    assign has_design = true
+  endif
+-%}
+
+{%- if has_design -%}
+  <div
+    class="dw-store"
+    style="
+      --store-bg: {{ tokens.bg | default: '#ffffff' }};
+      --store-text: {{ tokens.text | default: '#0a0a0a' }};
+      --store-primary: {{ tokens.primary | default: '#0a0a0a' }};
+      --store-accent: {{ tokens.accent | default: '#fef08a' }};
+      --store-radius: {{ tokens.radius | default: '12px' }};
+      --store-font-display: {{ tokens.font_display | default: 'inherit' }};
+    "
+  >
+    {%- for section_type in layout -%}
+      {%- case section_type -%}
+        {%- when 'hero' -%}
+          {% render 'dropwiz-hero', data: product.metafields.dropwiz.hero.value %}
+        {%- when 'product' -%}
+          {% render 'dropwiz-product', product: product, data: product.metafields.dropwiz.product.value %}
+        {%- when 'bundles' -%}
+          {% render 'dropwiz-bundles', data: product.metafields.dropwiz.bundles.value %}
+        {%- when 'trust' -%}
+          {% render 'dropwiz-trust', data: product.metafields.dropwiz.trust.value %}
+        {%- when 'faq' -%}
+          {% render 'dropwiz-faq', data: product.metafields.dropwiz.faq.value %}
+        {%- when 'lifestyle' -%}
+          {% render 'dropwiz-lifestyle', data: product.metafields.dropwiz.lifestyle.value %}
+        {%- when 'gallery' -%}
+          {% render 'dropwiz-gallery', data: product.metafields.dropwiz.gallery.value %}
+        {%- when 'testimonials' -%}
+          {% render 'dropwiz-testimonials', data: product.metafields.dropwiz.testimonials.value %}
+        {%- when 'valueProps' -%}
+          {% render 'dropwiz-value-props', data: product.metafields.dropwiz.value_props.value %}
+        {%- when 'footer' -%}
+          {% render 'dropwiz-footer', data: product.metafields.dropwiz.footer.value %}
+      {%- endcase -%}
+    {%- endfor -%}
+  </div>
+{%- else -%}
+  <div class="dw-store-placeholder">
+    <p>{{ block.settings.fallback_message }}</p>
+  </div>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Dropwiz product page",
+  "target": "section",
+  "enabled_on": {
+    "templates": ["product"]
+  },
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Renders the full Dropwiz-designed product page. Publish a product from the Dropwiz app to populate the design."
+    },
+    {
+      "type": "text",
+      "id": "fallback_message",
+      "label": "Fallback message",
+      "default": "This product hasn't been designed in Dropwiz yet."
+    }
+  ]
+}
+{% endschema %}

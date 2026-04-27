@@ -1,0 +1,31 @@
+{%- if data.headline != blank -%}
+  {%- assign image_position = data.imagePosition | default: 'right' -%}
+  <section class="dw-section">
+    <div class="dw-container">
+      <div class="dw-hero-split">
+        {%- if image_position == 'left' -%}
+          <div class="dw-hero-image">
+            {%- if data.imageUrl != blank -%}
+              <img src="{{ data.imageUrl }}" alt="" width="1200" height="1200" loading="lazy" />
+            {%- else -%}
+              <div class="dw-hero-image-fallback"></div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+        <div>
+          <h2 class="dw-hero-headline" style="font-size:32px;">{{ data.headline }}</h2>
+          <p class="dw-hero-sub">{{ data.body }}</p>
+        </div>
+        {%- if image_position != 'left' -%}
+          <div class="dw-hero-image">
+            {%- if data.imageUrl != blank -%}
+              <img src="{{ data.imageUrl }}" alt="" width="1200" height="1200" loading="lazy" />
+            {%- else -%}
+              <div class="dw-hero-image-fallback"></div>
+            {%- endif -%}
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+  </section>
+{%- endif -%}

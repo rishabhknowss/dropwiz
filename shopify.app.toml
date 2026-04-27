@@ -1,0 +1,40 @@
+name = "Dropwiz"
+client_id = "ec4c4bca166ac22f887353350d3d8755"
+application_url = "https://www.dropwiz.ai"
+embedded = false
+
+[access_scopes]
+scopes = "read_products,write_products,read_publications,write_publications"
+
+[auth]
+redirect_urls = [
+  "https://www.dropwiz.ai/api/shopify/callback",
+  "https://dropwiz.ai/api/shopify/callback",
+  "https://armani-histologic-sheilah.ngrok-free.dev/api/shopify/callback",
+  "http://localhost:3000/api/shopify/callback",
+]
+
+[webhooks]
+api_version = "2024-10"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/api/shopify/webhooks/app-uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = ["app_subscriptions/update"]
+  uri = "/api/shopify/webhooks/subscriptions-update"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [
+    "customers/data_request",
+    "customers/redact",
+    "shop/redact",
+  ]
+  uri = "/api/shopify/webhooks/gdpr/dispatch"
+
+[pos]
+embedded = false
+
+[build]
+dev_store_url = ""

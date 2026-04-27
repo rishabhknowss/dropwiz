@@ -1,0 +1,9 @@
+{%- if data.storeName != blank -%}
+  <section class="dw-section">
+    <div class="dw-container">
+      <div class="dw-footer">
+        © {{ 'now' | date: '%Y' }} {{ data.storeName }}. All rights reserved.
+      </div>
+    </div>
+  </section>
+{%- endif -%}

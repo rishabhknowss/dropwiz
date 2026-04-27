@@ -1,0 +1,7 @@
+api_version = "2024-10"
+uid = "c21437e3-621b-99b3-1787-18cc306cc443be4f87ea"
+
+[[extensions]]
+type = "theme"
+name = "Dropwiz Theme Extension"
+handle = "dropwiz-theme"

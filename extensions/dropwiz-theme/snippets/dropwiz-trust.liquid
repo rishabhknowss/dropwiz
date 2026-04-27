@@ -1,0 +1,11 @@
+{%- if data.badges.size > 0 -%}
+  <section class="dw-section">
+    <div class="dw-container">
+      <div class="dw-trust">
+        {%- for badge in data.badges -%}
+          <div class="dw-trust-badge">{{ badge }}</div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+{%- endif -%}

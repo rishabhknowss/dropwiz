@@ -1,0 +1,20 @@
+{%- if data.props.size > 0 -%}
+  <section class="dw-section">
+    <div class="dw-container">
+      {%- if data.title != blank -%}
+        <h2 class="dw-section-title">{{ data.title }}</h2>
+      {%- endif -%}
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;">
+        {%- for p in data.props -%}
+          <div>
+            {%- if p.icon != blank -%}
+              <div style="font-size:24px;margin-bottom:12px;">{{ p.icon }}</div>
+            {%- endif -%}
+            <h3 style="font-size:16px;font-weight:600;margin:0 0 8px;">{{ p.title }}</h3>
+            <p style="font-size:14px;line-height:1.55;opacity:0.7;margin:0;">{{ p.description }}</p>
+          </div>
+        {%- endfor -%}
+      </div>
+    </div>
+  </section>
+{%- endif -%}
