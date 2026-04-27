@@ -185,7 +185,7 @@ const PLANS = [
 
 const Home = () => {
   return (
-    <div className="min-h-screen bg-[color:var(--dw-bg)] text-[color:var(--dw-text)]">
+    <div className="min-h-screen overflow-x-hidden bg-[color:var(--dw-bg)] text-[color:var(--dw-text)]">
       <DWTopNav active="Product" />
 
       {/* HERO */}
@@ -194,17 +194,20 @@ const Home = () => {
         <div className="dw-grid-bg absolute inset-0 opacity-40" />
 
         <div className="relative mx-auto flex max-w-[1200px] flex-col items-center text-center">
-          <div className="dw-reveal mb-8 inline-flex items-center gap-2.5 rounded-full border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] py-1.5 pl-1.5 pr-3">
-            <span className="rounded-full bg-[color:var(--dw-accent)] px-2 py-0.5 text-[11px] font-semibold tracking-[0.02em] text-[color:var(--dw-accent-ink)]">
+          <div className="dw-reveal mb-6 inline-flex max-w-full items-center gap-2 rounded-full border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] py-1.5 pl-1.5 pr-2.5 md:mb-8 md:gap-2.5 md:pr-3">
+            <span className="shrink-0 rounded-full bg-[color:var(--dw-accent)] px-2 py-0.5 text-[10px] font-semibold tracking-[0.02em] text-[color:var(--dw-accent-ink)] md:text-[11px]">
               NEW
             </span>
-            <span className="text-[13px] text-[color:var(--dw-text-dim)]">
-              Pixel-perfect Shopify publish via Theme App Extension
+            <span className="truncate text-[11.5px] text-[color:var(--dw-text-dim)] md:text-[13px]">
+              <span className="md:hidden">Shopify publish via TAE</span>
+              <span className="hidden md:inline">
+                Pixel-perfect Shopify publish via Theme App Extension
+              </span>
             </span>
             <HugeiconsIcon
               icon={ArrowRight01Icon}
-              size={13}
-              className="text-[color:var(--dw-text-muted)]"
+              size={12}
+              className="shrink-0 text-[color:var(--dw-text-muted)] md:size-[13px]"
             />
           </div>
 
@@ -230,7 +233,7 @@ const Home = () => {
           </p>
 
           <div
-            className="dw-reveal mt-10 flex flex-wrap items-center justify-center gap-3"
+            className="dw-reveal mt-8 flex w-full flex-col items-stretch justify-center gap-2.5 sm:flex-row sm:items-center sm:gap-3 md:mt-10"
             style={{ animationDelay: "120ms" }}
           >
             <Button asChild size="lg" className="h-11 px-5 text-[14px] font-medium">
@@ -247,19 +250,19 @@ const Home = () => {
               <HugeiconsIcon icon={PlayIcon} size={12} />
               Watch 90-sec demo
             </Button>
-            <span className="dw-mono ml-2 text-xs text-[color:var(--dw-text-muted)]">
+            <span className="dw-mono mt-1 text-center text-xs text-[color:var(--dw-text-muted)] sm:ml-2 sm:mt-0">
               No card · 60s build
             </span>
           </div>
 
           {/* hero video w/ backlight */}
           <div
-            className="dw-reveal relative mt-12 w-full md:mt-20"
+            className="dw-reveal relative mt-12 w-full overflow-hidden md:mt-20"
             style={{ animationDelay: "200ms" }}
           >
-            <Backlight blur={50} className="w-full">
+            <Backlight blur={30} className="w-full">
               <iframe
-                className="mx-auto aspect-video w-full max-w-[960px] rounded-[20px] border border-[color:var(--dw-border)]"
+                className="mx-auto aspect-video w-full max-w-[960px] rounded-[14px] border border-[color:var(--dw-border)] md:rounded-[20px]"
                 src="https://www.youtube.com/embed/9CJLtzzUphU?autoplay=1&mute=1&loop=1&playlist=9CJLtzzUphU&controls=0&showinfo=0&rel=0&modestbranding=1"
                 title="Dropwiz product demo"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -521,8 +524,8 @@ const FeatureCard = ({ feature }: { feature: Feature }) => {
   return (
     <div
       className={cn(
-        "relative flex min-h-[380px] flex-col overflow-hidden rounded-[20px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-7",
-        feature.span === 2 ? "col-span-2" : "col-span-1",
+        "relative flex min-h-[320px] flex-col overflow-hidden rounded-[20px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-5 md:min-h-[380px] md:p-7",
+        feature.span === 2 ? "md:col-span-2" : "md:col-span-1",
       )}
     >
       <div className="mb-auto flex size-9 items-center justify-center rounded-[10px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface2)] text-[color:var(--dw-accent)]">
@@ -549,7 +552,7 @@ const PricingCard = ({ plan }: { plan: Plan }) => {
   return (
     <div
       className={cn(
-        "relative rounded-[20px] border p-8",
+        "relative rounded-[20px] border p-6 md:p-8",
         plan.highlight
           ? "border-[color:var(--dw-accent)] bg-[#0A0A0A] text-[#FAFAF7]"
           : "border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] text-[color:var(--dw-text)]",
