@@ -72,14 +72,14 @@ const ShopifyManage = () => {
           { label: "Shopify", href: "/app/shopify" },
         ]}
       />
-      <main className="mx-auto max-w-[960px] px-6 py-14">
-        <div className="flex items-end justify-between gap-4">
+      <main className="mx-auto max-w-[960px] px-5 py-10 md:px-6 md:py-14">
+        <div className="flex flex-col items-start gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="dw-mono mb-2 inline-flex items-center gap-2 text-[10px] tracking-[0.16em] uppercase text-[color:var(--dw-text-muted)]">
               <HugeiconsIcon icon={ShoppingBag03Icon} size={11} />
               Shopify integration
             </div>
-            <h1 className="dw-display-sm text-[36px] leading-[1.05] tracking-[-0.02em]">
+            <h1 className="dw-display-sm text-[28px] leading-[1.05] tracking-[-0.02em] md:text-[32px] lg:text-[36px]">
               Connected shops
               <span className="text-[color:var(--dw-accent)]">.</span>
             </h1>

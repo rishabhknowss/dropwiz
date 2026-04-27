@@ -1,6 +1,12 @@
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Moon02Icon, Sun03Icon } from "@hugeicons/core-free-icons";
+import {
+  Moon02Icon,
+  Sun03Icon,
+  Menu01Icon,
+  Cancel01Icon,
+} from "@hugeicons/core-free-icons";
 import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/button";
 import { DWLogo } from "./Logo";
@@ -39,10 +45,21 @@ export const DWTopNav = ({
   secondaryDisabled,
 }: TopNavProps) => {
   const { theme, toggle } = useTheme();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    if (mobileOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [mobileOpen]);
 
   return (
     <header className="sticky top-0 z-40 border-b border-[color:var(--dw-border)] bg-[color:var(--dw-bg)]/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-8 px-10">
+      <div className="mx-auto flex h-14 max-w-[1200px] items-center gap-3 px-4 md:gap-8 md:px-8 lg:px-10">
         <Link href="/" className="flex items-center">
           <DWLogo size={18} />
         </Link>
@@ -61,7 +78,7 @@ export const DWTopNav = ({
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-1.5 md:gap-2">
           <button
             type="button"
             onClick={toggle}
@@ -73,36 +90,117 @@ export const DWTopNav = ({
               size={15}
             />
           </button>
-          {secondaryOnClick ? (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 text-[13px]"
-              onClick={secondaryOnClick}
-              disabled={secondaryDisabled}
-            >
-              {secondaryLabel}
-            </Button>
-          ) : (
-            <Button asChild variant="ghost" size="sm" className="h-8 px-3 text-[13px]">
-              <Link href={secondaryHref}>{secondaryLabel}</Link>
-            </Button>
-          )}
+
+          <div className="hidden items-center gap-2 md:flex">
+            {secondaryOnClick ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 text-[13px]"
+                onClick={secondaryOnClick}
+                disabled={secondaryDisabled}
+              >
+                {secondaryLabel}
+              </Button>
+            ) : (
+              <Button asChild variant="ghost" size="sm" className="h-8 px-3 text-[13px]">
+                <Link href={secondaryHref}>{secondaryLabel}</Link>
+              </Button>
+            )}
+            {ctaOnClick ? (
+              <Button
+                size="sm"
+                className="h-8 px-3 text-[13px] font-medium"
+                onClick={ctaOnClick}
+              >
+                {ctaLabel}
+              </Button>
+            ) : (
+              <Button asChild size="sm" className="h-8 px-3 text-[13px] font-medium">
+                <Link href={ctaHref}>{ctaLabel}</Link>
+              </Button>
+            )}
+          </div>
+
           {ctaOnClick ? (
             <Button
               size="sm"
-              className="h-8 px-3 text-[13px] font-medium"
+              className="h-8 px-3 text-[12px] font-medium md:hidden"
               onClick={ctaOnClick}
             >
               {ctaLabel}
             </Button>
           ) : (
-            <Button asChild size="sm" className="h-8 px-3 text-[13px] font-medium">
+            <Button asChild size="sm" className="h-8 px-3 text-[12px] font-medium md:hidden">
               <Link href={ctaHref}>{ctaLabel}</Link>
             </Button>
           )}
+
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Open menu"
+            className="flex size-8 items-center justify-center rounded-md text-[color:var(--dw-text-dim)] transition hover:bg-[color:var(--dw-surface2)] hover:text-[color:var(--dw-text)] md:hidden"
+          >
+            <HugeiconsIcon icon={Menu01Icon} size={16} />
+          </button>
         </div>
       </div>
+
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-[color:var(--dw-bg)] md:hidden">
+          <div className="flex h-14 items-center justify-between border-b border-[color:var(--dw-border)] px-4">
+            <Link href="/" className="flex items-center" onClick={() => setMobileOpen(false)}>
+              <DWLogo size={18} />
+            </Link>
+            <button
+              type="button"
+              onClick={() => setMobileOpen(false)}
+              aria-label="Close menu"
+              className="flex size-8 items-center justify-center rounded-md text-[color:var(--dw-text-dim)] transition hover:bg-[color:var(--dw-surface2)] hover:text-[color:var(--dw-text)]"
+            >
+              <HugeiconsIcon icon={Cancel01Icon} size={16} />
+            </button>
+          </div>
+          <nav className="flex flex-col gap-1 px-4 py-6">
+            {items.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                onClick={() => setMobileOpen(false)}
+                className={cn(
+                  "rounded-md px-3 py-3 text-[15px] font-medium text-[color:var(--dw-text-dim)] transition hover:bg-[color:var(--dw-surface2)] hover:text-[color:var(--dw-text)]",
+                  active === item.label &&
+                    "bg-[color:var(--dw-surface2)] text-[color:var(--dw-text)]",
+                )}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+          <div className="mt-auto border-t border-[color:var(--dw-border)] p-4">
+            {secondaryOnClick ? (
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  secondaryOnClick();
+                  setMobileOpen(false);
+                }}
+                disabled={secondaryDisabled}
+              >
+                {secondaryLabel}
+              </Button>
+            ) : (
+              <Button asChild variant="outline" className="w-full">
+                <Link href={secondaryHref} onClick={() => setMobileOpen(false)}>
+                  {secondaryLabel}
+                </Link>
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 };

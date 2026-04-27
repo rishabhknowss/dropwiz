@@ -5,6 +5,9 @@ import {
   ComputerIcon,
   Tablet01Icon,
   SmartPhone01Icon,
+  Menu01Icon,
+  Cancel01Icon,
+  Settings02Icon,
 } from "@hugeicons/core-free-icons";
 import { StoreRenderer } from "@/components/store/StoreRenderer";
 import { SectionInspector } from "@/components/editor/inspectors";
@@ -35,6 +38,8 @@ const EditStore = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("strategy");
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [viewport, setViewport] = useState<Viewport>("desktop");
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
 
   useEffect(() => {
     if (!me.isLoading && !me.data) router.replace("/auth/signin");
@@ -42,11 +47,19 @@ const EditStore = () => {
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setActiveSectionId(null);
+      if (e.key === "Escape") {
+        setActiveSectionId(null);
+        setMobileSidebarOpen(false);
+        setMobileInspectorOpen(false);
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
+
+  useEffect(() => {
+    if (activeSectionId) setMobileInspectorOpen(true);
+  }, [activeSectionId]);
 
   if (!me.data || !store.data) {
     return (
@@ -65,20 +78,46 @@ const EditStore = () => {
   const selectTab = (tab: TabKey) => {
     setActiveTab(tab);
     setActiveSectionId(null);
+    setMobileSidebarOpen(false);
+    setMobileInspectorOpen(true);
   };
 
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-[color:var(--dw-bg)] text-[color:var(--dw-text)]">
       <EditorHeader store={store.data} />
+
+      <MobileEditorBar
+        onOpenSidebar={() => setMobileSidebarOpen(true)}
+        onOpenInspector={() => setMobileInspectorOpen(true)}
+        viewport={viewport}
+        onChangeViewport={setViewport}
+      />
+
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <EditorSidebar
-          activeTab={activeTab}
-          hasActiveSection={!!activeSection}
-          onSelectTab={selectTab}
-        />
+        <div
+          className={`fixed inset-y-0 left-0 z-30 transition-transform duration-300 md:static md:translate-x-0 ${
+            mobileSidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          }`}
+        >
+          <EditorSidebar
+            activeTab={activeTab}
+            hasActiveSection={!!activeSection}
+            onSelectTab={selectTab}
+          />
+        </div>
+        {mobileSidebarOpen && (
+          <button
+            aria-label="Close sidebar"
+            onClick={() => setMobileSidebarOpen(false)}
+            className="fixed inset-0 z-20 bg-black/40 backdrop-blur-sm md:hidden"
+          />
+        )}
+
         <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[color:var(--dw-surface2)]/30">
-          <ViewportToolbar value={viewport} onChange={setViewport} />
-          <div className="flex-1 overflow-y-auto px-6 pb-10">
+          <div className="hidden md:block">
+            <ViewportToolbar value={viewport} onChange={setViewport} />
+          </div>
+          <div className="flex-1 overflow-y-auto px-3 pb-10 md:px-6">
             <div
               onClick={() => setActiveSectionId(null)}
               className="mx-auto overflow-hidden rounded-[14px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] shadow-lg transition-[max-width] duration-300"
@@ -93,22 +132,95 @@ const EditStore = () => {
             </div>
           </div>
         </main>
-        <aside className="w-[360px] shrink-0 overflow-y-auto border-l border-[color:var(--dw-border)] p-5">
+
+        <aside
+          className={`fixed inset-x-0 bottom-0 z-30 max-h-[80vh] overflow-y-auto rounded-t-[20px] border-t border-[color:var(--dw-border)] bg-[color:var(--dw-bg)] p-5 transition-transform duration-300 md:static md:max-h-none md:w-[360px] md:shrink-0 md:translate-y-0 md:rounded-none md:border-l md:border-t-0 ${
+            mobileInspectorOpen ? "translate-y-0" : "translate-y-full md:translate-y-0"
+          }`}
+        >
+          <button
+            aria-label="Close inspector"
+            onClick={() => setMobileInspectorOpen(false)}
+            className="absolute right-3 top-3 flex size-7 items-center justify-center rounded-md text-[color:var(--dw-text-muted)] transition hover:bg-[color:var(--dw-surface)] hover:text-[color:var(--dw-text)] md:hidden"
+          >
+            <HugeiconsIcon icon={Cancel01Icon} size={14} />
+          </button>
+          <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[color:var(--dw-border-strong)] md:hidden" />
           {activeSection ? (
             <SectionInspector
               section={activeSection}
               store={store.data}
-              onClose={() => setActiveSectionId(null)}
+              onClose={() => {
+                setActiveSectionId(null);
+                setMobileInspectorOpen(false);
+              }}
             />
           ) : (
             <InspectorByTab tab={activeTab} storeId={store.data.id} />
           )}
         </aside>
+        {mobileInspectorOpen && (
+          <button
+            aria-label="Close inspector"
+            onClick={() => setMobileInspectorOpen(false)}
+            className="fixed inset-0 z-20 bg-black/40 backdrop-blur-sm md:hidden"
+          />
+        )}
       </div>
       <OnboardingTour onNavigate={(t) => setActiveTab(t)} />
     </div>
   );
 };
+
+const MobileEditorBar = ({
+  onOpenSidebar,
+  onOpenInspector,
+  viewport,
+  onChangeViewport,
+}: {
+  onOpenSidebar: () => void;
+  onOpenInspector: () => void;
+  viewport: Viewport;
+  onChangeViewport: (v: Viewport) => void;
+}) => (
+  <div className="flex h-11 shrink-0 items-center justify-between border-b border-[color:var(--dw-border)] bg-[color:var(--dw-bg)]/80 px-3 backdrop-blur md:hidden">
+    <button
+      onClick={onOpenSidebar}
+      aria-label="Open sidebar"
+      className="flex size-8 items-center justify-center rounded-md text-[color:var(--dw-text-muted)] transition hover:bg-[color:var(--dw-surface)] hover:text-[color:var(--dw-text)]"
+    >
+      <HugeiconsIcon icon={Menu01Icon} size={16} />
+    </button>
+    <div className="inline-flex items-center gap-0.5 rounded-[8px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-0.5">
+      {VIEWPORT_OPTIONS.map((opt) => {
+        const active = viewport === opt.id;
+        return (
+          <button
+            key={opt.id}
+            type="button"
+            onClick={() => onChangeViewport(opt.id)}
+            aria-label={opt.label}
+            title={opt.label}
+            className={`flex size-7 items-center justify-center rounded-[6px] transition ${
+              active
+                ? "bg-[color:var(--dw-surface2)] text-[color:var(--dw-text)]"
+                : "text-[color:var(--dw-text-muted)] hover:text-[color:var(--dw-text)]"
+            }`}
+          >
+            <HugeiconsIcon icon={opt.icon} size={13} />
+          </button>
+        );
+      })}
+    </div>
+    <button
+      onClick={onOpenInspector}
+      aria-label="Open inspector"
+      className="flex size-8 items-center justify-center rounded-md text-[color:var(--dw-text-muted)] transition hover:bg-[color:var(--dw-surface)] hover:text-[color:var(--dw-text)]"
+    >
+      <HugeiconsIcon icon={Settings02Icon} size={16} />
+    </button>
+  </div>
+);
 
 const InspectorByTab = ({
   tab,

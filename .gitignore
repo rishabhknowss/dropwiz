@@ -16,13 +16,13 @@ node_modules/
 .npm/
 .pnpm-store/
 
-# ─── Build output ─────────────────────────────────────────────
-.next/
-out/
-build/
-dist/
-.turbo/
-.swc/
+# ─── Build output (anchored to repo root so we don't shadow real dirs) ──
+/.next/
+/out/
+/build/
+/dist/
+/.turbo/
+/.swc/
 *.tsbuildinfo
 next-env.d.ts
 
@@ -77,8 +77,8 @@ lerna-debug.log*
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # ─── Testing / coverage ───────────────────────────────────────
-coverage/
-.nyc_output/
+/coverage/
+/.nyc_output/
 *.lcov
 
 # ─── IDE / editor ─────────────────────────────────────────────
@@ -123,9 +123,9 @@ public/uploads/
 public/tmp/
 
 # ─── Misc ─────────────────────────────────────────────────────
-.cache/
-.tmp/
-tmp/
+/.cache/
+/.tmp/
+/tmp/
 *.bak
 *.orig
 *.rej

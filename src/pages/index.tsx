@@ -189,7 +189,7 @@ const Home = () => {
       <DWTopNav active="Product" />
 
       {/* HERO */}
-      <section className="relative overflow-hidden px-10 pb-[120px] pt-[96px]">
+      <section className="relative overflow-hidden px-5 pb-16 pt-14 md:px-8 md:pb-24 md:pt-20 lg:px-10 lg:pb-[120px] lg:pt-[96px]">
         <div className="dw-bloom -right-[200px] -top-[200px]" />
         <div className="dw-grid-bg absolute inset-0 opacity-40" />
 
@@ -209,7 +209,7 @@ const Home = () => {
           </div>
 
           <h1
-            className="dw-reveal dw-display max-w-[1000px] text-[84px]"
+            className="dw-reveal dw-display max-w-[1000px] text-[44px] sm:text-[56px] md:text-[68px] lg:text-[84px]"
             style={{ animationDelay: "40ms" }}
           >
             Ship a store.
@@ -221,7 +221,7 @@ const Home = () => {
           </h1>
 
           <p
-            className="dw-reveal mt-8 max-w-[640px] text-[19px] leading-[1.45] tracking-[-0.015em] text-[color:var(--dw-text-dim)]"
+            className="dw-reveal mt-6 max-w-[640px] text-[15px] leading-[1.5] tracking-[-0.01em] text-[color:var(--dw-text-dim)] md:mt-8 md:text-[17px] md:leading-[1.45] md:tracking-[-0.015em] lg:text-[19px]"
             style={{ animationDelay: "80ms" }}
           >
             Paste a product URL. Get a Shopify-native storefront in 60 seconds —
@@ -254,7 +254,7 @@ const Home = () => {
 
           {/* hero video w/ backlight */}
           <div
-            className="dw-reveal relative mt-20 w-full"
+            className="dw-reveal relative mt-12 w-full md:mt-20"
             style={{ animationDelay: "200ms" }}
           >
             <Backlight blur={50} className="w-full">
@@ -270,7 +270,7 @@ const Home = () => {
           </div>
 
           {/* stats bar */}
-          <div className="mt-16 grid w-full grid-cols-4 border-y border-[color:var(--dw-border)] py-7 text-left">
+          <div className="mt-12 grid w-full grid-cols-2 gap-y-6 border-y border-[color:var(--dw-border)] py-6 text-left md:mt-16 md:grid-cols-4 md:gap-y-0 md:py-7">
             {[
               ["60s", "median build time"],
               ["17+", "section variants"],
@@ -279,10 +279,14 @@ const Home = () => {
             ].map(([n, l], i) => (
               <div
                 key={i}
-                className={cn("px-8", i && "border-l border-[color:var(--dw-border)]")}
+                className={cn(
+                  "px-4 md:px-8",
+                  i % 2 === 1 && "border-l border-[color:var(--dw-border)]",
+                  "md:[&:not(:first-child)]:border-l md:border-[color:var(--dw-border)]",
+                )}
               >
-                <div className="dw-display-sm text-[32px]">{n}</div>
-                <div className="mt-1 text-[13px] text-[color:var(--dw-text-muted)]">
+                <div className="dw-display-sm text-[24px] md:text-[32px]">{n}</div>
+                <div className="mt-1 text-[12px] text-[color:var(--dw-text-muted)] md:text-[13px]">
                   {l}
                 </div>
               </div>
@@ -292,12 +296,12 @@ const Home = () => {
       </section>
 
       {/* TECH STRIP */}
-      <section className="border-t border-[color:var(--dw-border)] px-10 py-20">
+      <section className="border-t border-[color:var(--dw-border)] px-5 py-12 md:px-8 md:py-16 lg:px-10 lg:py-20">
         <div className="mx-auto max-w-[1200px]">
-          <div className="dw-mono mb-7 text-center text-[11px] uppercase tracking-[0.18em] text-[color:var(--dw-text-muted)]">
+          <div className="dw-mono mb-6 text-center text-[10px] uppercase tracking-[0.18em] text-[color:var(--dw-text-muted)] md:mb-7 md:text-[11px]">
             Built on the best models. Ships to Shopify today.
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-10 opacity-70">
+          <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 opacity-70 md:justify-between md:gap-10">
             {[
               "Shopify",
               "Anthropic Claude",
@@ -308,7 +312,7 @@ const Home = () => {
             ].map((b) => (
               <div
                 key={b}
-                className="text-[20px] font-medium tracking-[-0.02em] text-[color:var(--dw-text-dim)]"
+                className="text-[14px] font-medium tracking-[-0.02em] text-[color:var(--dw-text-dim)] md:text-[16px] lg:text-[20px]"
               >
                 {b}
               </div>
@@ -320,15 +324,15 @@ const Home = () => {
       {/* FEATURES */}
       <section
         id="product"
-        className="border-t border-[color:var(--dw-border)] px-10 py-[120px]"
+        className="border-t border-[color:var(--dw-border)] px-5 py-16 md:px-8 md:py-24 lg:px-10 lg:py-[120px]"
       >
         <div className="mx-auto max-w-[1200px]">
-          <h2 className="dw-display-sm max-w-[800px] text-[56px]">
+          <h2 className="dw-display-sm max-w-[800px] text-[32px] md:text-[44px] lg:text-[56px]">
             Everything needed to test, launch & scale
             <span className="text-[color:var(--dw-accent)]">.</span>
           </h2>
 
-          <div className="mt-14 grid grid-cols-3 gap-4">
+          <div className="mt-10 grid grid-cols-1 gap-4 md:mt-14 md:grid-cols-3">
             {FEATURES.map((f, i) => (
               <FeatureCard key={i} feature={f} />
             ))}
@@ -337,21 +341,21 @@ const Home = () => {
       </section>
 
       {/* FLOW */}
-      <section className="border-t border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] px-10 py-[120px]">
+      <section className="border-t border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] px-5 py-16 md:px-8 md:py-24 lg:px-10 lg:py-[120px]">
         <div className="mx-auto max-w-[1200px]">
-          <h2 className="dw-display-sm max-w-[800px] text-[56px]">
+          <h2 className="dw-display-sm max-w-[800px] text-[32px] md:text-[44px] lg:text-[56px]">
             URL to paying customer in one afternoon.
           </h2>
-          <div className="mt-14 grid grid-cols-4 gap-6">
+          <div className="mt-10 grid grid-cols-1 gap-6 md:mt-14 md:grid-cols-2 lg:grid-cols-4">
             {FLOW_STEPS.map((step) => (
               <div key={step.num} className="relative">
                 <div className="mb-5">
                   <FlowStepViz kind={step.viz} />
                 </div>
-                <div className="dw-mono mb-4 text-[11px] tracking-[0.14em] text-[color:var(--dw-accent)]">
+                <div className="dw-mono mb-3 text-[11px] tracking-[0.14em] text-[color:var(--dw-accent)] md:mb-4">
                   {step.num}
                 </div>
-                <div className="mb-2 text-[20px] font-medium tracking-[-0.015em]">
+                <div className="mb-2 text-[18px] font-medium tracking-[-0.015em] md:text-[20px]">
                   {step.title}
                 </div>
                 <div className="text-[14px] leading-[1.55] text-[color:var(--dw-text-dim)]">
@@ -364,18 +368,18 @@ const Home = () => {
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="border-t border-[color:var(--dw-border)] px-10 py-[120px]">
+      <section className="border-t border-[color:var(--dw-border)] px-5 py-16 md:px-8 md:py-24 lg:px-10 lg:py-[120px]">
         <div className="mx-auto max-w-[1200px]">
-          <h2 className="dw-display-sm max-w-[800px] text-[56px]">
+          <h2 className="dw-display-sm max-w-[800px] text-[32px] md:text-[44px] lg:text-[56px]">
             Used by the people actually shipping.
           </h2>
-          <div className="mt-14 grid grid-cols-3 gap-4">
+          <div className="mt-10 grid grid-cols-1 gap-4 md:mt-14 md:grid-cols-3">
             {TESTIMONIALS.map((t, i) => (
               <div
                 key={i}
-                className="rounded-[20px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-7"
+                className="rounded-[20px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-5 md:p-7"
               >
-                <div className="mb-7 text-[16px] leading-[1.55] tracking-[-0.005em]">
+                <div className="mb-6 text-[15px] leading-[1.55] tracking-[-0.005em] md:mb-7 md:text-[16px]">
                   &ldquo;{t.quote}&rdquo;
                 </div>
                 <div className="flex items-center gap-3 border-t border-[color:var(--dw-border)] pt-4">
@@ -405,13 +409,13 @@ const Home = () => {
       {/* PRICING */}
       <section
         id="pricing"
-        className="border-t border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] px-10 py-[120px]"
+        className="border-t border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] px-5 py-16 md:px-8 md:py-24 lg:px-10 lg:py-[120px]"
       >
         <div className="mx-auto max-w-[1100px]">
-          <h2 className="dw-display-sm max-w-[800px] text-[56px]">
+          <h2 className="dw-display-sm max-w-[800px] text-[32px] md:text-[44px] lg:text-[56px]">
             Start free. Pay when it prints.
           </h2>
-          <div className="mt-14 grid grid-cols-3 gap-4">
+          <div className="mt-10 grid grid-cols-1 gap-4 md:mt-14 md:grid-cols-3">
             {PLANS.map((p, i) => (
               <PricingCard key={i} plan={p} />
             ))}
@@ -420,16 +424,16 @@ const Home = () => {
       </section>
 
       {/* FINAL CTA */}
-      <section className="relative overflow-hidden border-t border-[color:var(--dw-border)] px-10 py-[140px]">
+      <section className="relative overflow-hidden border-t border-[color:var(--dw-border)] px-5 py-20 md:px-8 md:py-28 lg:px-10 lg:py-[140px]">
         <CtaAtmosphere />
         <div className="relative z-10 mx-auto max-w-[900px] text-center">
-          <h2 className="dw-display text-[88px]">
+          <h2 className="dw-display text-[44px] sm:text-[56px] md:text-[72px] lg:text-[88px]">
             Stop theming.
             <br />
             Start shipping
             <span className="text-[color:var(--dw-accent)]">.</span>
           </h2>
-          <div className="mt-10 flex justify-center">
+          <div className="mt-8 flex justify-center md:mt-10">
             <Button asChild size="lg" className="h-12 px-6 text-[14px] font-medium">
               <Link href="/auth/signup">
                 Build a store free
@@ -441,8 +445,8 @@ const Home = () => {
       </section>
 
       {/* FOOTER */}
-      <footer className="border-t border-[color:var(--dw-border)] px-10 pb-9 pt-12">
-        <div className="mx-auto flex max-w-[1200px] flex-wrap items-start justify-between gap-10">
+      <footer className="border-t border-[color:var(--dw-border)] px-5 pb-9 pt-12 md:px-8 lg:px-10">
+        <div className="mx-auto grid max-w-[1200px] grid-cols-2 gap-x-6 gap-y-10 md:flex md:flex-wrap md:items-start md:justify-between md:gap-10">
           <div className="max-w-[300px]">
             <DWLogo size={18} />
             <div className="mt-3.5 text-[13px] leading-[1.5] text-[color:var(--dw-text-muted)]">

@@ -79,16 +79,16 @@ const StoresIndex = () => {
         secondaryDisabled={signOut.isPending}
       />
 
-      <main className="mx-auto max-w-[1200px] px-10 py-16">
-        <div className="flex items-end justify-between">
+      <main className="mx-auto max-w-[1200px] px-5 py-10 md:px-8 md:py-14 lg:px-10 lg:py-16">
+        <div className="flex flex-col items-start gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="dw-display-sm text-[44px]">
+            <h1 className="dw-display-sm text-[32px] md:text-[40px] lg:text-[44px]">
               Welcome back
               <span className="text-[color:var(--dw-accent)]">.</span>
             </h1>
-            <p className="mt-2 text-[15px] text-[color:var(--dw-text-dim)]">
+            <p className="mt-2 text-[14px] text-[color:var(--dw-text-dim)] md:text-[15px]">
               {me.data.name ?? me.data.email.split("@")[0]} ·{" "}
-              <span className="dw-mono text-[12px] tracking-[0.08em] uppercase">
+              <span className="dw-mono text-[11px] tracking-[0.08em] uppercase md:text-[12px]">
                 {me.data.emailVerified ? "Verified" : "Pending"}
               </span>
             </p>
@@ -102,7 +102,7 @@ const StoresIndex = () => {
         </div>
 
         {hasStores && (
-          <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-4">
+          <div className="mt-8 grid grid-cols-2 gap-3 md:mt-10 md:grid-cols-4 md:gap-4">
             <StatCard
               label="Live"
               value={String(published.length)}
