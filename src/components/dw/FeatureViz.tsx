@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { DottedMap } from "@/components/ui/dotted-map";
 import { HexagonPattern } from "@/components/ui/hexagon-pattern";
 import { Marquee } from "@/components/ui/marquee";
@@ -61,11 +62,14 @@ const ProductRipple = () => (
       numCircles={6}
       className="text-[color:var(--dw-accent)]"
     />
-    <div className="relative z-10 flex size-20 items-center justify-center rounded-2xl bg-gradient-to-br from-[#fef9c3] via-[#c7ff3d] to-[#84cc16] shadow-[0_20px_40px_-15px_rgba(199,255,61,0.5)]">
-      <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
-        <rect x="6" y="3" width="12" height="18" rx="2" stroke="#0a0a0a" strokeWidth="1.4" />
-        <path d="M9 7h6M9 11h6M9 15h4" stroke="#0a0a0a" strokeWidth="1.2" strokeLinecap="round" />
-      </svg>
+    <div className="relative z-10 flex size-20 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#fef9c3] via-[#c7ff3d] to-[#84cc16] p-3 shadow-[0_20px_40px_-15px_rgba(199,255,61,0.5)]">
+      <Image
+        src="/logo.png"
+        alt="Dropwiz"
+        width={56}
+        height={56}
+        className="object-contain"
+      />
     </div>
   </div>
 );
@@ -86,34 +90,44 @@ type AdCreative = {
 
 const AD_CREATIVES: AdCreative[] = [
   {
-    id: "skin",
-    headline: "Glow up, daily.",
-    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&q=80&auto=format&fit=crop",
-  },
-  {
-    id: "fragrance",
-    headline: "Bottle the moment.",
-    image: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80&auto=format&fit=crop",
-  },
-  {
-    id: "fitness",
+    id: "sneaker",
     headline: "Built for runners.",
     image: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80&auto=format&fit=crop",
   },
   {
-    id: "supplement",
-    headline: "Strength, simplified.",
-    image: "https://images.unsplash.com/photo-1579722821273-0f6c1b5d0bda?w=400&q=80&auto=format&fit=crop",
+    id: "skincare",
+    headline: "Glow up, daily.",
+    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=400&q=80&auto=format&fit=crop",
   },
   {
-    id: "skincare2",
-    headline: "Clean. Quietly.",
-    image: "https://images.unsplash.com/photo-1571781926291-c477ebfd024b?w=400&q=80&auto=format&fit=crop",
+    id: "perfume",
+    headline: "Bottle the moment.",
+    image: "https://images.unsplash.com/photo-1523293182086-7651a899d37f?w=400&q=80&auto=format&fit=crop",
   },
   {
-    id: "drink",
-    headline: "Hydrate without the sugar.",
-    image: "https://images.unsplash.com/photo-1622543925917-763c34d1a86e?w=400&q=80&auto=format&fit=crop",
+    id: "watch",
+    headline: "Time, perfected.",
+    image: "https://images.unsplash.com/photo-1524805444758-089113d48a6d?w=400&q=80&auto=format&fit=crop",
+  },
+  {
+    id: "headphones",
+    headline: "Hear the difference.",
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80&auto=format&fit=crop",
+  },
+  {
+    id: "coffee",
+    headline: "Morning ritual.",
+    image: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=400&q=80&auto=format&fit=crop",
+  },
+  {
+    id: "sunglasses",
+    headline: "Shade, elevated.",
+    image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=400&q=80&auto=format&fit=crop",
+  },
+  {
+    id: "bag",
+    headline: "Carry your world.",
+    image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&q=80&auto=format&fit=crop",
   },
 ];
 

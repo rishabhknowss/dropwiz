@@ -6,19 +6,21 @@ import {
   Sun03Icon,
   Menu01Icon,
   Cancel01Icon,
+  SparklesIcon,
 } from "@hugeicons/core-free-icons";
 import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/button";
 import { DWLogo } from "./Logo";
 import { cn } from "@/lib/utils";
+import { api } from "@/utils/api";
 
 type NavItem = { label: string; href: string };
 
 const DEFAULT_NAV: NavItem[] = [
   { label: "Product", href: "/#product" },
   { label: "Pricing", href: "/#pricing" },
-  { label: "Academy", href: "/academy" },
-  { label: "Changelog", href: "/changelog" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
 ];
 
 type TopNavProps = {
@@ -31,6 +33,7 @@ type TopNavProps = {
   secondaryHref?: string;
   secondaryOnClick?: () => void;
   secondaryDisabled?: boolean;
+  showCredits?: boolean;
 };
 
 export const DWTopNav = ({
@@ -43,9 +46,11 @@ export const DWTopNav = ({
   secondaryHref = "/auth/signin",
   secondaryOnClick,
   secondaryDisabled,
+  showCredits = false,
 }: TopNavProps) => {
   const { theme, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const me = api.auth.me.useQuery(undefined, { enabled: showCredits });
 
   useEffect(() => {
     if (mobileOpen) {
@@ -80,6 +85,22 @@ export const DWTopNav = ({
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-1.5 md:gap-2">
+            {showCredits && me.data && (
+              <Link
+                href="/app/settings"
+                className="flex items-center gap-1.5 rounded-full border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] px-2.5 py-1 transition hover:border-[color:var(--dw-accent)]/40"
+                title={`${me.data.imageCredits} image credits remaining`}
+              >
+                <HugeiconsIcon
+                  icon={SparklesIcon}
+                  size={12}
+                  className="text-[color:var(--dw-accent)]"
+                />
+                <span className="text-[12px] font-semibold text-[color:var(--dw-text)]">
+                  {me.data.imageCredits}
+                </span>
+              </Link>
+            )}
             <button
               type="button"
               onClick={toggle}
@@ -93,7 +114,7 @@ export const DWTopNav = ({
             </button>
 
             <div className="hidden items-center gap-2 md:flex">
-              {secondaryOnClick ? (
+              {secondaryLabel && (secondaryOnClick ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -105,9 +126,9 @@ export const DWTopNav = ({
                 </Button>
               ) : (
                 <Button asChild variant="ghost" size="sm" className="h-8 px-3 text-[13px]">
-                  <Link href={secondaryHref}>{secondaryLabel}</Link>
+                  <Link href={secondaryHref!}>{secondaryLabel}</Link>
                 </Button>
-              )}
+              ))}
               {ctaOnClick ? (
                 <Button
                   size="sm"
@@ -189,30 +210,32 @@ export const DWTopNav = ({
               </Link>
             ))}
           </nav>
-          <div
-            className="shrink-0 border-t border-[color:var(--dw-border)] p-4"
-            style={{ background: "var(--dw-bg)" }}
-          >
-            {secondaryOnClick ? (
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  secondaryOnClick();
-                  setMobileOpen(false);
-                }}
-                disabled={secondaryDisabled}
-              >
-                {secondaryLabel}
-              </Button>
-            ) : (
-              <Button asChild variant="outline" className="w-full">
-                <Link href={secondaryHref} onClick={() => setMobileOpen(false)}>
+          {secondaryLabel && (
+            <div
+              className="shrink-0 border-t border-[color:var(--dw-border)] p-4"
+              style={{ background: "var(--dw-bg)" }}
+            >
+              {secondaryOnClick ? (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => {
+                    secondaryOnClick();
+                    setMobileOpen(false);
+                  }}
+                  disabled={secondaryDisabled}
+                >
                   {secondaryLabel}
-                </Link>
-              </Button>
-            )}
-          </div>
+                </Button>
+              ) : (
+                <Button asChild variant="outline" className="w-full">
+                  <Link href={secondaryHref!} onClick={() => setMobileOpen(false)}>
+                    {secondaryLabel}
+                  </Link>
+                </Button>
+              )}
+            </div>
+          )}
         </div>
       )}
     </>

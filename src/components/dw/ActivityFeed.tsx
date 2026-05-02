@@ -8,7 +8,7 @@ export type ActivityEvent = {
   icon: string;
   label: string;
   sub: string;
-  tone?: "default" | "live" | "ai" | "ship";
+  tone?: "default" | "live" | "ai" | "ship" | "stripe";
 };
 
 const TONE_STYLES: Record<NonNullable<ActivityEvent["tone"]>, string> = {
@@ -16,6 +16,7 @@ const TONE_STYLES: Record<NonNullable<ActivityEvent["tone"]>, string> = {
   ai: "bg-[color:var(--dw-accent)]/10 text-[color:var(--dw-accent)]",
   live: "bg-[color:var(--dw-jade)]/15 text-[color:var(--dw-jade)]",
   ship: "bg-[color:var(--dw-citrus)]/14 text-[color:var(--dw-citrus)]",
+  stripe: "bg-[#635BFF]/15 text-[#635BFF]",
 };
 
 export const ActivityFeed = ({
@@ -88,14 +89,20 @@ export const DROPWIZ_ACTIVITY: ActivityEvent[] = [
   { id: "persona", icon: "🧠", label: "Persona generated", sub: "Fitness enthusiast, 25–35", tone: "ai" },
   { id: "copy", icon: "✨", label: "Hero copy written", sub: "3 variants · Claude Sonnet", tone: "ai" },
   { id: "hero-img", icon: "🎨", label: "Hero image rendered", sub: "47s · Seedream v4.5", tone: "ai" },
+  { id: "stripe1", icon: "💰", label: "Sarah earned $2,847", sub: "Stripe · just now", tone: "stripe" },
   { id: "bundle", icon: "🧱", label: "Bundles section added", sub: "Showcase layout · 3 tiers", tone: "default" },
   { id: "faq", icon: "💬", label: "FAQ generated", sub: "8 questions · Cards layout", tone: "default" },
+  { id: "stripe2", icon: "💰", label: "James earned $1,249", sub: "Stripe · 2m ago", tone: "stripe" },
   { id: "lifestyle", icon: "📸", label: "Lifestyle image", sub: "62s · img2img preserved product", tone: "ai" },
   { id: "ad", icon: "🎯", label: "Static ad created", sub: "Story 9:16 · Premium · $0.04", tone: "ai" },
+  { id: "stripe3", icon: "💰", label: "Emma earned $4,392", sub: "Stripe · 5m ago", tone: "stripe" },
   { id: "ad2", icon: "🟩", label: "Static ad created", sub: "Feed 4:5 · Standard · $0.04", tone: "ai" },
   { id: "tier", icon: "🛍️", label: "Pricing tier set", sub: "Pro $49 · bundle save 30%", tone: "default" },
+  { id: "stripe4", icon: "💰", label: "Marcus earned $892", sub: "Stripe · 8m ago", tone: "stripe" },
   { id: "palette", icon: "⚡", label: "Theme palette tuned", sub: "Lime + cream · WCAG AA", tone: "default" },
   { id: "publish", icon: "🚀", label: "Published to Shopify", sub: "Online Store · channel active", tone: "ship" },
+  { id: "stripe5", icon: "💰", label: "Aisha earned $3,156", sub: "Stripe · 12m ago", tone: "stripe" },
   { id: "block", icon: "🧩", label: "Theme block placed", sub: "Default product template", tone: "ship" },
   { id: "live", icon: "✅", label: "Store active", sub: "dropwiz-test.myshopify.com", tone: "live" },
+  { id: "stripe6", icon: "💰", label: "Chris earned $5,234", sub: "Stripe · 15m ago", tone: "stripe" },
 ];

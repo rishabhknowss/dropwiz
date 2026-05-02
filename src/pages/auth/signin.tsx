@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -16,12 +16,27 @@ import { AuthShell } from "@/components/dw/AuthShell";
 import { api } from "@/utils/api";
 import { getErrorMessage } from "@/lib/trpc-errors";
 import { signInSchema } from "@/lib/auth/schemas";
+import { getPendingBuild, PENDING_BUILD_KEY } from "@/components/dw/FakeBuildModal";
 
 const SignIn = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const signIn = api.auth.signIn.useMutation();
+
+  const getRedirectUrl = () => {
+    const pending = getPendingBuild();
+    if (router.query.redirect === "build" && pending) {
+      return `/build/new?pending=true`;
+    }
+    if (router.query.redirect === "connect-shopify") {
+      return `/app/stores?action=connect-shopify`;
+    }
+    if (router.query.redirect === "ai-build") {
+      return `/build/new?mode=ai`;
+    }
+    return "/app";
+  };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -36,11 +51,23 @@ const SignIn = () => {
       {
         onSuccess: () => {
           toast.success("Welcome back", { id });
-          router.push("/app");
+          router.push(getRedirectUrl());
         },
         onError: (err) => toast.error(getErrorMessage(err), { id }),
       },
     );
+  };
+
+  const handleGoogleAuth = () => {
+    const pending = getPendingBuild();
+    if (pending) {
+      document.cookie = "dropwiz_google_redirect=build; path=/; max-age=600; SameSite=Lax";
+    } else if (router.query.redirect === "connect-shopify") {
+      document.cookie = "dropwiz_google_redirect=connect-shopify; path=/; max-age=600; SameSite=Lax";
+    } else if (router.query.redirect === "ai-build") {
+      document.cookie = "dropwiz_google_redirect=ai-build; path=/; max-age=600; SameSite=Lax";
+    }
+    window.location.href = "/api/auth/signin/google";
   };
 
   return (
@@ -67,9 +94,7 @@ const SignIn = () => {
       <Button
         variant="outline"
         className="h-11 w-full justify-center gap-2 text-[14px]"
-        onClick={() => {
-          window.location.href = "/api/auth/signin/google";
-        }}
+        onClick={handleGoogleAuth}
       >
         <HugeiconsIcon icon={GoogleIcon} size={15} />
         Continue with Google

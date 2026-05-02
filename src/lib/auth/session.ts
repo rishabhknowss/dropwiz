@@ -7,7 +7,7 @@ const REFRESH_GRACE_MS = 30_000;
 
 export type SessionUser = Pick<
   User,
-  "id" | "email" | "name" | "image" | "locale" | "emailVerified" | "refreshTokenVersion"
+  "id" | "email" | "name" | "image" | "locale" | "emailVerified" | "refreshTokenVersion" | "tier" | "imageCredits"
 >;
 
 export type SessionResult =
@@ -91,6 +91,8 @@ export async function resolveSession(
       locale: updated.locale,
       emailVerified: updated.emailVerified,
       refreshTokenVersion: updated.refreshTokenVersion,
+      tier: updated.tier,
+      imageCredits: updated.imageCredits,
     },
     rotated: true,
   };
@@ -106,6 +108,8 @@ async function getSessionUser(userId: string): Promise<SessionUser | null> {
       locale: users.locale,
       emailVerified: users.emailVerified,
       refreshTokenVersion: users.refreshTokenVersion,
+      tier: users.tier,
+      imageCredits: users.imageCredits,
     })
     .from(users)
     .where(eq(users.id, userId))

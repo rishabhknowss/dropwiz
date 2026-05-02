@@ -67,18 +67,20 @@ export const StoreRenderer = ({
   return (
     <div
       style={style}
-      className="@container/store min-h-screen"
+      className="store-renderer @container/store min-h-screen"
       data-store-id={store.id}
     >
       <style jsx>{`
-        div[data-store-id] {
+        .store-renderer {
           background: var(--store-bg);
           color: var(--store-text);
           font-family: var(--store-font-sans);
         }
-        div[data-store-id] :global(h1),
-        div[data-store-id] :global(h2),
-        div[data-store-id] :global(h3) {
+      `}</style>
+      <style>{`
+        .store-renderer h1,
+        .store-renderer h2,
+        .store-renderer h3 {
           font-family: var(--store-font-display);
         }
       `}</style>

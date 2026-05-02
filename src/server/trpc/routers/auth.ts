@@ -60,6 +60,8 @@ export const authRouter = router({
       image: u.image,
       locale: u.locale,
       emailVerified: !!u.emailVerified,
+      tier: u.tier,
+      imageCredits: u.imageCredits,
     };
   }),
 

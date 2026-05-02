@@ -1,0 +1,1 @@
+ALTER TABLE "users" ADD COLUMN "image_credits" integer DEFAULT 5 NOT NULL;

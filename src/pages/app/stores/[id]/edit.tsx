@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -30,16 +30,38 @@ import { api } from "@/utils/api";
 const EditStore = () => {
   const router = useRouter();
   const storeId = typeof router.query.id === "string" ? router.query.id : null;
+  const pageIdFromUrl =
+    typeof router.query.page === "string" ? router.query.page : null;
+
   const me = api.auth.me.useQuery();
   const store = api.stores.getMine.useQuery(
     { storeId: storeId ?? "" },
     { enabled: !!storeId && !!me.data, refetchOnWindowFocus: false },
   );
+  const pagesQuery = api.stores.getPages.useQuery(
+    { storeId: storeId ?? "" },
+    { enabled: !!storeId && !!me.data, refetchOnWindowFocus: false },
+  );
+
   const [activeTab, setActiveTab] = useState<TabKey>("strategy");
   const [activeSectionId, setActiveSectionId] = useState<string | null>(null);
   const [viewport, setViewport] = useState<Viewport>("desktop");
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
+
+  const pages = pagesQuery.data ?? [];
+  const activePageId = pageIdFromUrl ?? pages[0]?.id ?? null;
+  const activePage = pages.find((p) => p.id === activePageId) ?? pages[0];
+  const activeSections = activePage?.sections ?? store.data?.sections ?? [];
+
+  const handleSelectPage = (pageId: string) => {
+    router.push(
+      { pathname: router.pathname, query: { ...router.query, page: pageId } },
+      undefined,
+      { shallow: true },
+    );
+    setActiveSectionId(null);
+  };
 
   useEffect(() => {
     if (!me.isLoading && !me.data) router.replace("/auth/signin");
@@ -72,7 +94,7 @@ const EditStore = () => {
   }
 
   const activeSection = activeSectionId
-    ? (store.data.sections.find((s) => s.id === activeSectionId) ?? null)
+    ? (activeSections.find((s) => s.id === activeSectionId) ?? null)
     : null;
 
   const selectTab = (tab: TabKey) => {
@@ -82,9 +104,19 @@ const EditStore = () => {
     setMobileInspectorOpen(true);
   };
 
+  const storeWithActiveSections = {
+    ...store.data,
+    sections: activeSections,
+  };
+
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-[color:var(--dw-bg)] text-[color:var(--dw-text)]">
-      <EditorHeader store={store.data} />
+      <EditorHeader
+        store={store.data}
+        pages={pages}
+        activePageId={activePageId}
+        onSelectPage={handleSelectPage}
+      />
 
       <MobileEditorBar
         onOpenSidebar={() => setMobileSidebarOpen(true)}
@@ -113,30 +145,32 @@ const EditStore = () => {
           />
         )}
 
-        <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[color:var(--dw-surface2)]/30">
-          <div className="hidden md:block">
-            <ViewportToolbar value={viewport} onChange={setViewport} />
-          </div>
-          <div className="flex-1 overflow-y-auto px-3 pb-10 md:px-6">
-            <div
-              onClick={() => setActiveSectionId(null)}
-              className="mx-auto overflow-hidden rounded-[14px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] shadow-lg transition-[max-width] duration-300"
-              style={{ maxWidth: VIEWPORT_WIDTHS[viewport] }}
-            >
-              <StoreRenderer
-                store={store.data}
-                selectable
-                activeSectionId={activeSectionId}
-                onSelectSection={(id) => setActiveSectionId(id)}
-              />
+        {activeTab !== "studio" && (
+          <main className="flex min-w-0 flex-1 flex-col overflow-hidden bg-[color:var(--dw-surface2)]/30">
+            <div className="hidden md:block">
+              <ViewportToolbar value={viewport} onChange={setViewport} />
             </div>
-          </div>
-        </main>
+            <div className="flex-1 overflow-y-auto px-3 pb-10 md:px-6">
+              <div
+                onClick={() => setActiveSectionId(null)}
+                className="mx-auto overflow-hidden rounded-[14px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] shadow-lg transition-[max-width] duration-300"
+                style={{ maxWidth: VIEWPORT_WIDTHS[viewport] }}
+              >
+                <StoreRenderer
+                  store={storeWithActiveSections}
+                  selectable
+                  activeSectionId={activeSectionId}
+                  onSelectSection={(id) => setActiveSectionId(id)}
+                />
+              </div>
+            </div>
+          </main>
+        )}
 
         <aside
-          className={`fixed inset-x-0 bottom-0 z-30 max-h-[80vh] overflow-y-auto rounded-t-[20px] border-t border-[color:var(--dw-border)] bg-[color:var(--dw-bg)] p-5 transition-transform duration-300 md:static md:max-h-none md:w-[360px] md:shrink-0 md:translate-y-0 md:rounded-none md:border-l md:border-t-0 ${
+          className={`fixed inset-x-0 bottom-0 z-30 max-h-[80vh] overflow-y-auto rounded-t-[20px] border-t border-[color:var(--dw-border)] bg-[color:var(--dw-bg)] p-5 transition-transform duration-300 md:static md:max-h-none md:shrink-0 md:translate-y-0 md:rounded-none md:border-l md:border-t-0 ${
             mobileInspectorOpen ? "translate-y-0" : "translate-y-full md:translate-y-0"
-          }`}
+          } ${activeTab === "studio" ? "md:flex-1" : "md:w-[360px]"}`}
         >
           <button
             aria-label="Close inspector"
@@ -149,14 +183,19 @@ const EditStore = () => {
           {activeSection ? (
             <SectionInspector
               section={activeSection}
-              store={store.data}
+              store={storeWithActiveSections}
+              pageId={activePageId}
               onClose={() => {
                 setActiveSectionId(null);
                 setMobileInspectorOpen(false);
               }}
             />
           ) : (
-            <InspectorByTab tab={activeTab} storeId={store.data.id} />
+            <InspectorByTab
+              tab={activeTab}
+              storeId={store.data.id}
+              pageId={activePageId}
+            />
           )}
         </aside>
         {mobileInspectorOpen && (
@@ -225,9 +264,11 @@ const MobileEditorBar = ({
 const InspectorByTab = ({
   tab,
   storeId,
+  pageId,
 }: {
   tab: TabKey;
   storeId: string;
+  pageId: string | null;
 }) => {
   switch (tab) {
     case "strategy":
@@ -237,7 +278,7 @@ const InspectorByTab = ({
     case "design":
       return <DesignPanel storeId={storeId} />;
     case "sections":
-      return <SectionsPanel storeId={storeId} />;
+      return <SectionsPanel storeId={storeId} pageId={pageId} />;
     case "studio":
       return <StudioPanel storeId={storeId} />;
     case "ads":

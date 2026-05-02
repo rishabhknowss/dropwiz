@@ -96,6 +96,7 @@ export const users = pgTable(
     lastRefreshAt: timestamp("last_refresh_at", { withTimezone: true }),
     tier: subscriptionTierEnum("tier").notNull().default("free"),
     billingSource: billingSourceEnum("billing_source"),
+    imageCredits: integer("image_credits").notNull().default(5),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),
@@ -212,6 +213,25 @@ export type StoreSection = {
   data: Record<string, unknown>;
 };
 
+export const pageTypeEnum = pgEnum("page_type", [
+  "product",
+  "landing",
+  "about",
+  "faq",
+  "gallery",
+  "blog",
+]);
+
+export type StorePage = {
+  id: string;
+  type: "product" | "landing" | "about" | "faq" | "gallery" | "blog";
+  name: string;
+  slug: string;
+  sections: StoreSection[];
+  order: number;
+  isDefault: boolean;
+};
+
 export const stores = pgTable(
   "stores",
   {
@@ -230,6 +250,7 @@ export const stores = pgTable(
     currency: varchar("currency", { length: 8 }).notNull().default("USD"),
     themeTokens: jsonb("theme_tokens").$type<ThemeTokens>().notNull().default({}),
     sections: jsonb("sections").$type<StoreSection[]>().notNull().default([]),
+    pages: jsonb("pages").$type<StorePage[]>().notNull().default([]),
     copy: jsonb("copy").$type<Record<string, unknown>>().notNull().default({}),
     score: integer("score"),
     status: storeStatusEnum("status").notNull().default("draft"),

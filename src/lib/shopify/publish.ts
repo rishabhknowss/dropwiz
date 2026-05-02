@@ -445,6 +445,7 @@ type MetafieldDefinitionCreateResponse = {
 const DROPWIZ_METAFIELD_KEYS: Array<{ key: string; name: string }> = [
   { key: "layout", name: "Dropwiz layout" },
   { key: "theme_tokens", name: "Dropwiz theme tokens" },
+  { key: "pages", name: "Dropwiz pages" },
   { key: "hero", name: "Dropwiz hero" },
   { key: "product", name: "Dropwiz product" },
   { key: "bundles", name: "Dropwiz bundles" },
@@ -613,14 +614,21 @@ async function writeDropwizMetafields(
   productGid: string,
   store: Store,
 ): Promise<void> {
+  const pages = store.pages ?? [];
+  const hasPages = pages.length > 0;
+
+  const sectionsToUse = hasPages
+    ? pages.find((p) => p.isDefault)?.sections ?? store.sections
+    : store.sections;
+
   const sectionsByType = new Map<string, unknown>();
-  for (const section of store.sections) {
+  for (const section of sectionsToUse) {
     if (!sectionsByType.has(section.type)) {
       sectionsByType.set(section.type, section.data);
     }
   }
 
-  const layout = store.sections
+  const layout = sectionsToUse
     .slice()
     .sort((a, b) => a.order - b.order)
     .map((s) => s.type);
@@ -644,6 +652,21 @@ async function writeDropwizMetafields(
     valueProps: "value_props",
   };
 
+  const pagesData = pages.map((page) => ({
+    id: page.id,
+    type: page.type,
+    name: page.name,
+    slug: page.slug,
+    isDefault: page.isDefault,
+    order: page.order,
+    sections: page.sections.map((s) => ({
+      id: s.id,
+      type: s.type,
+      order: s.order,
+      data: s.data,
+    })),
+  }));
+
   const metafields = [
     {
       ownerId: productGid,
@@ -659,6 +682,17 @@ async function writeDropwizMetafields(
       type: "json",
       value: JSON.stringify(themeTokensFlat),
     },
+    ...(hasPages
+      ? [
+          {
+            ownerId: productGid,
+            namespace: "dropwiz",
+            key: "pages",
+            type: "json",
+            value: JSON.stringify(pagesData),
+          },
+        ]
+      : []),
     ...Array.from(sectionsByType.entries()).map(([type, data]) => ({
       ownerId: productGid,
       namespace: "dropwiz",

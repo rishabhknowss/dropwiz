@@ -31,6 +31,14 @@ import {
   hookSchema,
   type HookOutput,
 } from "./hook-v1";
+import {
+  PRODUCT_SYSTEM,
+  PRODUCT_VERSION,
+  buildProductUser,
+  productJsonSchema,
+  productSchema,
+  type ProductOutput,
+} from "./product-v1";
 import type { ProductContext, TargetingContext } from "./types";
 
 export type GenerateContext = {
@@ -123,5 +131,32 @@ export async function generateHooks(ctx: GenerateContext): Promise<HookOutput> {
   return result.output;
 }
 
-export type { HeroOutput, BundleOutput, FaqOutput, HookOutput };
+export type AIProductContext = {
+  aiPrompt: string;
+  targeting: TargetingContext;
+  storeId?: string | null;
+  userId?: string | null;
+};
+
+export async function generateProductFromAI(ctx: AIProductContext): Promise<ProductOutput> {
+  const result = await runTemplate({
+    kind: "copy",
+    promptVersion: PRODUCT_VERSION,
+    system: PRODUCT_SYSTEM,
+    user: buildProductUser(ctx.aiPrompt, ctx.targeting),
+    schema: productSchema,
+    jsonSchema: productJsonSchema as unknown as Record<string, unknown>,
+    logInput: {
+      aiPrompt: ctx.aiPrompt,
+      persona: ctx.targeting.persona,
+      angle: ctx.targeting.angle,
+      targetLanguage: ctx.targeting.targetLanguage,
+    },
+    storeId: ctx.storeId,
+    userId: ctx.userId,
+  });
+  return result.output;
+}
+
+export type { HeroOutput, BundleOutput, FaqOutput, HookOutput, ProductOutput };
 export type { ProductContext, TargetingContext };

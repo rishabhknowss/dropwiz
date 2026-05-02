@@ -15,10 +15,16 @@ export async function createContext({ req, res }: CreateNextContextOptions): Pro
   const accessToken = req.cookies[ACCESS_COOKIE];
   const refreshToken = req.cookies[REFRESH_COOKIE];
 
-  const session = await resolveSession(accessToken, refreshToken);
+  let session: Awaited<ReturnType<typeof resolveSession>> = null;
+  try {
+    session = await resolveSession(accessToken, refreshToken);
 
-  if (session?.rotated) {
-    await sendAuthCookies(res, session.user.id, session.user.refreshTokenVersion);
+    if (session?.rotated) {
+      await sendAuthCookies(res, session.user.id, session.user.refreshTokenVersion);
+    }
+  } catch (err) {
+    console.error("[context] session resolution failed:", err);
+    session = null;
   }
 
   return {

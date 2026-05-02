@@ -70,7 +70,9 @@ const ShopifyManage = () => {
         items={[
           { label: "Stores", href: "/app/stores" },
           { label: "Shopify", href: "/app/shopify" },
+          { label: "Settings", href: "/app/settings" },
         ]}
+        showCredits
       />
       <main className="mx-auto max-w-[960px] px-5 py-10 md:px-6 md:py-14">
         <div className="flex flex-col items-start gap-4 md:flex-row md:items-end md:justify-between">

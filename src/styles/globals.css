@@ -12,10 +12,10 @@
   --dw-text: #0a0a0a;
   --dw-text-dim: rgba(10, 10, 10, 0.68);
   --dw-text-muted: rgba(10, 10, 10, 0.46);
-  --dw-accent: #0a0a0a;
-  --dw-accent-ink: #fafaf7;
-  --dw-chip-bg: #c7ff3d;
-  --dw-chip-text: #0a0a0a;
+  --dw-accent: #6eb520;
+  --dw-accent-ink: #ffffff;
+  --dw-chip-bg: #6eb520;
+  --dw-chip-text: #ffffff;
   --dw-chip-border: transparent;
   --dw-jade: #1f5a2e;
   --dw-citrus: #ff7a1f;
@@ -81,6 +81,13 @@
   --border: var(--dw-border);
   --input: var(--dw-border);
   --ring: var(--dw-accent);
+}
+
+[data-radix-popper-content-wrapper],
+[data-radix-portal],
+[data-slot="dialog-content"],
+[data-slot="dropdown-menu-content"] {
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {

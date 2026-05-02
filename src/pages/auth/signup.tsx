@@ -1,4 +1,5 @@
 import { useState, useMemo, type FormEvent } from "react";
+import { useRouter } from "next/router";
 import Link from "next/link";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -20,6 +21,7 @@ import { api } from "@/utils/api";
 import { signUpSchema, passwordChecks } from "@/lib/auth/schemas";
 import { getErrorMessage } from "@/lib/trpc-errors";
 import { cn } from "@/lib/utils";
+import { getPendingBuild } from "@/components/dw/FakeBuildModal";
 
 const PERKS = [
   "Unlimited draft stores on free tier",
@@ -30,6 +32,7 @@ const PERKS = [
 type Errors = Partial<Record<"name" | "email" | "password", string>>;
 
 const SignUp = () => {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -39,6 +42,14 @@ const SignUp = () => {
   const [submitted, setSubmitted] = useState(false);
 
   const signUp = api.auth.signUp.useMutation();
+
+  const handleGoogleAuth = () => {
+    const pending = getPendingBuild();
+    if (pending) {
+      document.cookie = "dropwiz_google_redirect=build; path=/; max-age=600; SameSite=Lax";
+    }
+    window.location.href = "/api/auth/signin/google";
+  };
 
   const passwordStatus = useMemo(
     () => passwordChecks.map((c) => ({ ...c, passed: c.test(password) })),
@@ -197,9 +208,7 @@ const SignUp = () => {
       <Button
         variant="outline"
         className="h-11 w-full justify-center gap-2 text-[14px]"
-        onClick={() => {
-          window.location.href = "/api/auth/signin/google";
-        }}
+        onClick={handleGoogleAuth}
       >
         <HugeiconsIcon icon={GoogleIcon} size={15} />
         Continue with Google

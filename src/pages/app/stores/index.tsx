@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -12,10 +12,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { DWTopNav } from "@/components/dw/TopNav";
 import { DWChip } from "@/components/dw/Chip";
+import { OnboardingModal } from "@/components/dw/OnboardingModal";
+import { ShopifyConnectModal } from "@/components/shopify/ShopifyConnectModal";
 import { api } from "@/utils/api";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/trpc-errors";
 import type { RouterOutputs } from "@/utils/api";
+
+const ONBOARDING_KEY = "dropwiz_onboarding_complete";
 
 type StoreCardData = RouterOutputs["stores"]["listMine"][number];
 
@@ -28,10 +32,33 @@ const StoresIndex = () => {
   });
   const utils = api.useUtils();
   const signOut = api.auth.signOut.useMutation();
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showShopifyConnect, setShowShopifyConnect] = useState(false);
 
   useEffect(() => {
     if (!me.isLoading && !me.data) router.replace("/auth/signin");
   }, [me.isLoading, me.data, router]);
+
+  useEffect(() => {
+    if (router.query.action === "connect-shopify") {
+      setShowShopifyConnect(true);
+      router.replace("/app/stores", undefined, { shallow: true });
+    }
+  }, [router.query.action, router]);
+
+  useEffect(() => {
+    if (me.data && stores.data !== undefined) {
+      const hasCompleted = localStorage.getItem(ONBOARDING_KEY) === "true";
+      if (!hasCompleted && stores.data.length === 0) {
+        setShowOnboarding(true);
+      }
+    }
+  }, [me.data, stores.data]);
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem(ONBOARDING_KEY, "true");
+    setShowOnboarding(false);
+  };
 
   const handleSignOut = () => {
     const id = toast.loading("Signing out...");
@@ -65,18 +92,28 @@ const StoresIndex = () => {
 
   return (
     <div className="min-h-screen bg-[color:var(--dw-bg)] text-[color:var(--dw-text)]">
+      {showOnboarding && (
+        <OnboardingModal
+          userName={me.data?.name ?? undefined}
+          onComplete={handleOnboardingComplete}
+        />
+      )}
+      {showShopifyConnect && (
+        <ShopifyConnectModal onClose={() => setShowShopifyConnect(false)} />
+      )}
       <DWTopNav
         active="Stores"
         items={[
           { label: "Stores", href: "/app/stores" },
           { label: "Shopify", href: "/app/shopify" },
-          { label: "Find", href: "/app/find" },
+          { label: "Settings", href: "/app/settings" },
         ]}
         ctaLabel="New store"
         ctaHref="/build/new"
         secondaryLabel={signOut.isPending ? "Signing out..." : "Sign out"}
         secondaryOnClick={handleSignOut}
         secondaryDisabled={signOut.isPending}
+        showCredits
       />
 
       <main className="mx-auto max-w-[1200px] px-5 py-10 md:px-8 md:py-14 lg:px-10 lg:py-16">

@@ -22,6 +22,7 @@ import {
   generateBundles,
   generateFaq,
   generateHooks,
+  generateProductFromAI,
 } from "@/lib/ai/prompts";
 import { generateImage } from "@/lib/ai/wavespeed";
 import type { HeroOutput, BundleOutput, FaqOutput } from "@/lib/ai/prompts";
@@ -54,6 +55,7 @@ function defaultTheme(): ThemeTokens {
 
 export type CreateStoreInput = {
   url: string;
+  aiPrompt?: string;
   persona: string;
   angle: string;
   targetLanguage: string;
@@ -91,6 +93,7 @@ export async function createPendingStore(
 
 export type RunStoreGenerationOptions = {
   shopifySource?: { shopDomain: string; productId: string } | null;
+  aiPrompt?: string;
 };
 
 export async function runStoreGeneration(
@@ -99,7 +102,11 @@ export async function runStoreGeneration(
   options: RunStoreGenerationOptions = {},
 ): Promise<void> {
   try {
-    const scraped = options.shopifySource
+    const isAIMode = !!options.aiPrompt;
+
+    const scraped = isAIMode
+      ? await generateProductFromPrompt(storeId, options.aiPrompt!, sourceUrl)
+      : options.shopifySource
       ? await loadFromShopify(options.shopifySource, sourceUrl)
       : await scrapeProduct(sourceUrl);
 
@@ -322,6 +329,59 @@ async function loadFromShopify(
       productType: product.productType,
       tags: product.tags,
       status: product.status,
+    },
+    scrapedAt: new Date(),
+  };
+}
+
+async function generateProductFromPrompt(
+  storeId: string,
+  aiPrompt: string,
+  sourceUrl: string,
+): Promise<ScrapedProduct> {
+  const [storeRow] = await db
+    .select({
+      persona: stores.persona,
+      angle: stores.angle,
+      targetLanguage: stores.targetLanguage,
+      currency: stores.currency,
+    })
+    .from(stores)
+    .where(eq(stores.id, storeId))
+    .limit(1);
+
+  const targeting = {
+    persona: storeRow?.persona ?? "General consumer",
+    angle: storeRow?.angle ?? "Problem-solution",
+    targetLanguage: storeRow?.targetLanguage ?? "en",
+  };
+
+  const generated = await generateProductFromAI({
+    aiPrompt,
+    targeting,
+    storeId,
+    userId: null,
+  });
+
+  const sourceUrlHash = createHash("sha256").update(sourceUrl).digest("hex");
+
+  return {
+    sourceUrl,
+    sourceUrlHash,
+    sourcePlatform: "other",
+    title: generated.title,
+    description: generated.description,
+    priceCents: generated.priceCents,
+    estCostCents: Math.round(generated.priceCents * 0.3),
+    currency: generated.currency,
+    originalImages: [],
+    variants: [],
+    rawPayload: {
+      provider: "ai",
+      aiPrompt,
+      features: generated.features,
+      category: generated.category,
+      imagePrompt: generated.imagePrompt,
     },
     scrapedAt: new Date(),
   };

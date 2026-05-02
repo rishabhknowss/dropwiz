@@ -165,7 +165,28 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: true,
     });
 
-    return res.redirect(302, "/app");
+    const pendingRedirect = req.cookies["dropwiz_google_redirect"];
+    const existingCookies = res.getHeader("Set-Cookie");
+    const clearCookie = "dropwiz_google_redirect=; Path=/; Max-Age=0";
+    if (Array.isArray(existingCookies)) {
+      res.setHeader("Set-Cookie", [...existingCookies, clearCookie]);
+    } else if (typeof existingCookies === "string") {
+      res.setHeader("Set-Cookie", [existingCookies, clearCookie]);
+    } else {
+      res.setHeader("Set-Cookie", clearCookie);
+    }
+
+    if (pendingRedirect === "build") {
+      return res.redirect(302, "/build/new?pending=true");
+    }
+    if (pendingRedirect === "connect-shopify") {
+      return res.redirect(302, "/app/stores?action=connect-shopify");
+    }
+    if (pendingRedirect === "ai-build") {
+      return res.redirect(302, "/build/new?mode=ai");
+    }
+
+    return res.redirect(302, "/app/stores");
   } catch (err) {
     console.error("[oauth-callback] exchange failed:", err);
     await logAuthEvent({

@@ -1,33 +1,333 @@
 {%- assign current_variant = product.selected_or_first_available_variant -%}
+{%- assign compare_price = current_variant.compare_at_price -%}
+{%- assign has_discount = compare_price > current_variant.price -%}
+{%- assign discount_percent = 0 -%}
+{%- if has_discount -%}
+  {%- assign discount_percent = compare_price | minus: current_variant.price | times: 100 | divided_by: compare_price -%}
+{%- endif -%}
+
 <section class="dw-section" id="dw-product">
   <div class="dw-container">
     <div class="dw-product">
-      <div class="dw-product-image">
-        {%- if product.featured_image -%}
-          <img src="{{ product.featured_image | image_url: width: 1200 }}" alt="{{ product.title | escape }}" width="1200" height="1200" loading="lazy" />
-        {%- elsif data.imageUrl != blank -%}
-          <img src="{{ data.imageUrl }}" alt="{{ product.title | escape }}" width="1024" height="1024" loading="lazy" />
-        {%- endif -%}
-      </div>
-      <div>
-        <h2 class="dw-product-title">{{ product.title }}</h2>
-        <div class="dw-product-price">{{ current_variant.price | money }}</div>
-        {%- if product.description != blank -%}
-          <div style="margin-top:20px;font-size:15px;line-height:1.6;opacity:0.8;">
-            {{ product.description }}
+      <div class="dw-product-gallery">
+        <div class="dw-product-image-main">
+          {%- if product.featured_image -%}
+            <img src="{{ product.featured_image | image_url: width: 1200 }}" alt="{{ product.title | escape }}" width="1200" height="1200" loading="lazy" id="dw-main-image" />
+          {%- elsif data.imageUrl != blank -%}
+            <img src="{{ data.imageUrl }}" alt="{{ product.title | escape }}" width="1024" height="1024" loading="lazy" id="dw-main-image" />
+          {%- endif -%}
+        </div>
+        {%- if product.images.size > 1 -%}
+          <div class="dw-product-thumbs">
+            {%- for image in product.images limit: 6 -%}
+              <button type="button" class="dw-thumb{% if forloop.first %} dw-thumb--active{% endif %}" data-image="{{ image | image_url: width: 1200 }}">
+                <img src="{{ image | image_url: width: 200 }}" alt="{{ image.alt | default: product.title | escape }}" loading="lazy" />
+              </button>
+            {%- endfor -%}
           </div>
         {%- endif -%}
+      </div>
+
+      <div class="dw-product-info">
+        <div class="dw-product-rating">
+          <div class="dw-stars">
+            {%- for i in (1..5) -%}
+              <svg class="dw-star dw-star--filled" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+              </svg>
+            {%- endfor -%}
+          </div>
+          <span class="dw-rating-text">4.9/5 from 1,200+ happy customers</span>
+        </div>
+
+        <h1 class="dw-product-title">{{ product.title }}</h1>
+
+        <div class="dw-product-price-row">
+          <span class="dw-product-price">{{ current_variant.price | money }}</span>
+          {%- if has_discount -%}
+            <span class="dw-product-compare">{{ compare_price | money }}</span>
+            <span class="dw-product-badge">Save {{ discount_percent }}%</span>
+          {%- endif -%}
+        </div>
+
+        {%- if product.description != blank -%}
+          <div class="dw-product-desc">{{ product.description }}</div>
+        {%- endif -%}
+
+        {%- if product.variants.size > 1 or product.options.size > 0 -%}
+          <div class="dw-product-options">
+            {%- for option in product.options_with_values -%}
+              <div class="dw-option-group">
+                <label class="dw-option-label">{{ option.name }}</label>
+                <div class="dw-option-values">
+                  {%- for value in option.values -%}
+                    <button type="button" class="dw-option-btn{% if forloop.first %} dw-option-btn--active{% endif %}" data-option="{{ option.name }}" data-value="{{ value }}">
+                      {{ value }}
+                    </button>
+                  {%- endfor -%}
+                </div>
+              </div>
+            {%- endfor -%}
+          </div>
+        {%- endif -%}
+
         <form action="{{ routes.cart_add_url }}" method="post" enctype="multipart/form-data" class="dw-product-form">
-          <input type="hidden" name="id" value="{{ current_variant.id }}" />
-          <button type="submit" class="dw-btn-primary" style="width:100%;justify-content:center;padding:16px;font-size:15px;">
+          <input type="hidden" name="id" value="{{ current_variant.id }}" id="dw-variant-id" />
+          <input type="hidden" name="quantity" value="1" />
+
+          <div class="dw-quantity-row">
+            <div class="dw-quantity">
+              <button type="button" class="dw-qty-btn" data-action="decrease">−</button>
+              <input type="number" name="quantity" value="1" min="1" max="99" class="dw-qty-input" id="dw-quantity" />
+              <button type="button" class="dw-qty-btn" data-action="increase">+</button>
+            </div>
+          </div>
+
+          <button type="submit" class="dw-btn-primary dw-add-to-cart" {% unless current_variant.available %}disabled{% endunless %}>
             {%- if current_variant.available -%}
-              Add to cart — {{ current_variant.price | money }}
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+                <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/>
+              </svg>
+              Add to Cart — {{ current_variant.price | money }}
             {%- else -%}
-              Sold out
+              Sold Out
             {%- endif -%}
           </button>
         </form>
+
+        <div class="dw-trust-signals">
+          <div class="dw-trust-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            <span>Free shipping over $50</span>
+          </div>
+          <div class="dw-trust-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <span>Secure checkout</span>
+          </div>
+          <div class="dw-trust-item">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 18 0 9 9 0 1 0-18 0"/><path d="m9 12 2 2 4-4"/></svg>
+            <span>30-day money back</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </section>
+
+<style>
+  .dw-product {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+  }
+  @media (max-width: 768px) {
+    .dw-product { grid-template-columns: 1fr; gap: 32px; }
+  }
+  .dw-product-gallery { position: sticky; top: 100px; }
+  .dw-product-image-main {
+    aspect-ratio: 1;
+    border-radius: 16px;
+    overflow: hidden;
+    background: var(--dw-surface2, #f5f5f5);
+  }
+  .dw-product-image-main img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .dw-product-thumbs {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+  }
+  .dw-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid transparent;
+    padding: 0;
+    background: var(--dw-surface2, #f5f5f5);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .dw-thumb--active, .dw-thumb:hover {
+    border-color: var(--dw-accent, #000);
+  }
+  .dw-thumb img { width: 100%; height: 100%; object-fit: cover; }
+
+  .dw-product-rating {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .dw-stars { display: flex; gap: 2px; }
+  .dw-star { width: 18px; height: 18px; color: #FBBF24; }
+  .dw-rating-text { font-size: 13px; opacity: 0.7; }
+
+  .dw-product-title {
+    font-size: 28px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin: 0 0 16px;
+  }
+
+  .dw-product-price-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .dw-product-price {
+    font-size: 24px;
+    font-weight: 600;
+  }
+  .dw-product-compare {
+    font-size: 18px;
+    text-decoration: line-through;
+    opacity: 0.5;
+  }
+  .dw-product-badge {
+    background: #22c55e;
+    color: white;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .dw-product-desc {
+    font-size: 15px;
+    line-height: 1.6;
+    opacity: 0.8;
+    margin-bottom: 24px;
+  }
+
+  .dw-product-options { margin-bottom: 24px; }
+  .dw-option-group { margin-bottom: 16px; }
+  .dw-option-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 8px;
+  }
+  .dw-option-values { display: flex; flex-wrap: wrap; gap: 8px; }
+  .dw-option-btn {
+    padding: 10px 20px;
+    border: 1px solid var(--dw-border, rgba(0,0,0,0.1));
+    border-radius: 8px;
+    background: transparent;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dw-option-btn:hover { border-color: var(--dw-text, #000); }
+  .dw-option-btn--active {
+    background: var(--dw-text, #000);
+    color: var(--dw-bg, #fff);
+    border-color: var(--dw-text, #000);
+  }
+
+  .dw-quantity-row { margin-bottom: 16px; }
+  .dw-quantity {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid var(--dw-border, rgba(0,0,0,0.1));
+    border-radius: 8px;
+  }
+  .dw-qty-btn {
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: none;
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dw-qty-btn:hover { background: var(--dw-surface2, #f5f5f5); }
+  .dw-qty-input {
+    width: 50px;
+    height: 44px;
+    text-align: center;
+    border: none;
+    font-size: 15px;
+    background: transparent;
+    -moz-appearance: textfield;
+  }
+  .dw-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  .dw-add-to-cart {
+    width: 100%;
+    padding: 18px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    border-radius: 12px;
+  }
+  .dw-add-to-cart:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .dw-trust-signals {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--dw-border, rgba(0,0,0,0.08));
+  }
+  .dw-trust-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    opacity: 0.7;
+  }
+  .dw-trust-item svg { opacity: 0.6; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const thumbs = document.querySelectorAll('.dw-thumb');
+  const mainImg = document.getElementById('dw-main-image');
+
+  thumbs.forEach(thumb => {
+    thumb.addEventListener('click', function() {
+      thumbs.forEach(t => t.classList.remove('dw-thumb--active'));
+      this.classList.add('dw-thumb--active');
+      if (mainImg) mainImg.src = this.dataset.image;
+    });
+  });
+
+  const qtyInput = document.getElementById('dw-quantity');
+  const qtyBtns = document.querySelectorAll('.dw-qty-btn');
+
+  qtyBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      let val = parseInt(qtyInput.value) || 1;
+      if (this.dataset.action === 'increase') val++;
+      else if (this.dataset.action === 'decrease' && val > 1) val--;
+      qtyInput.value = val;
+    });
+  });
+
+  const optionBtns = document.querySelectorAll('.dw-option-btn');
+  optionBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const group = this.closest('.dw-option-group');
+      group.querySelectorAll('.dw-option-btn').forEach(b => b.classList.remove('dw-option-btn--active'));
+      this.classList.add('dw-option-btn--active');
+    });
+  });
+});
+</script>

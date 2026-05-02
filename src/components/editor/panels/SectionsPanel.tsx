@@ -3,12 +3,28 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PlusSignIcon,
   Delete01Icon,
-  ArrowUp01Icon,
-  ArrowDown01Icon,
   ArrowLeft01Icon,
   ArrowRight01Icon,
   Tick02Icon,
+  DragDropVerticalIcon,
 } from "@hugeicons/core-free-icons";
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { Button } from "@/components/ui/button";
 import { api } from "@/utils/api";
 import { runSilent, runWithToast } from "@/hooks/useToastMutation";
@@ -27,62 +43,131 @@ type View =
   | { kind: "library" }
   | { kind: "variants"; category: SectionType };
 
-export const SectionsPanel = ({ storeId }: { storeId: string }) => {
+type SectionsPanelProps = {
+  storeId: string;
+  pageId: string | null;
+};
+
+export const SectionsPanel = ({ storeId, pageId }: SectionsPanelProps) => {
   const store = api.stores.getMine.useQuery({ storeId });
+  const pagesQuery = api.stores.getPages.useQuery({ storeId });
   const utils = api.useUtils();
-  const add = api.stores.addSection.useMutation();
-  const remove = api.stores.removeSection.useMutation();
-  const reorder = api.stores.reorderSections.useMutation();
+  const addLegacy = api.stores.addSection.useMutation();
+  const addPage = api.stores.addPageSection.useMutation();
+  const removeLegacy = api.stores.removeSection.useMutation();
+  const removePage = api.stores.removePageSection.useMutation();
+  const reorderLegacy = api.stores.reorderSections.useMutation();
+  const reorderPage = api.stores.reorderPageSections.useMutation();
   const [view, setView] = useState<View>({ kind: "list" });
   const [pendingVariant, setPendingVariant] = useState<string | null>(null);
 
   if (!store.data) return null;
-  const sections = [...store.data.sections].sort((a, b) => a.order - b.order);
-  const invalidate = () => utils.stores.getMine.invalidate({ storeId });
+
+  const pages = pagesQuery.data ?? [];
+  const activePage = pageId ? pages.find((p) => p.id === pageId) : pages[0];
+  const sections = activePage
+    ? [...activePage.sections].sort((a, b) => a.order - b.order)
+    : [...store.data.sections].sort((a, b) => a.order - b.order);
+
+  const invalidate = () => {
+    utils.stores.getMine.invalidate({ storeId });
+    utils.stores.getPages.invalidate({ storeId });
+  };
 
   const handleAddVariant = (type: SectionType, variantId: string) => {
     setPendingVariant(`${type}:${variantId}`);
-    runWithToast(
-      add,
-      { storeId, type, variant: variantId },
-      {
-        loading: "Adding section...",
-        success: "Section added",
-        toastId: "section-add",
-        onSuccess: () => {
-          invalidate();
-          setPendingVariant(null);
-          setView({ kind: "list" });
+    const effectivePageId = pageId ?? activePage?.id;
+    if (effectivePageId) {
+      runWithToast(
+        addPage,
+        { storeId, pageId: effectivePageId, type, variant: variantId },
+        {
+          loading: "Adding section...",
+          success: "Section added",
+          toastId: "section-add",
+          onSuccess: () => {
+            invalidate();
+            setPendingVariant(null);
+            setView({ kind: "list" });
+          },
+          onError: () => setPendingVariant(null),
         },
-        onError: () => setPendingVariant(null),
-      },
-    );
+      );
+    } else {
+      runWithToast(
+        addLegacy,
+        { storeId, type, variant: variantId },
+        {
+          loading: "Adding section...",
+          success: "Section added",
+          toastId: "section-add",
+          onSuccess: () => {
+            invalidate();
+            setPendingVariant(null);
+            setView({ kind: "list" });
+          },
+          onError: () => setPendingVariant(null),
+        },
+      );
+    }
   };
 
   const handleRemove = (sectionId: string) => {
     if (!confirm("Delete this section?")) return;
-    runWithToast(
-      remove,
-      { storeId, sectionId },
-      {
-        loading: "Deleting...",
-        success: "Deleted",
-        toastId: "section-delete",
-        onSuccess: invalidate,
-      },
-    );
+    const effectivePageId = pageId ?? activePage?.id;
+    if (effectivePageId) {
+      runWithToast(
+        removePage,
+        { storeId, pageId: effectivePageId, sectionId },
+        {
+          loading: "Deleting...",
+          success: "Deleted",
+          toastId: "section-delete",
+          onSuccess: invalidate,
+        },
+      );
+    } else {
+      runWithToast(
+        removeLegacy,
+        { storeId, sectionId },
+        {
+          loading: "Deleting...",
+          success: "Deleted",
+          toastId: "section-delete",
+          onSuccess: invalidate,
+        },
+      );
+    }
   };
 
-  const move = (idx: number, dir: -1 | 1) => {
-    const next = [...sections];
-    const target = idx + dir;
-    if (target < 0 || target >= next.length) return;
-    [next[idx], next[target]] = [next[target], next[idx]];
-    runSilent(
-      reorder,
-      { storeId, sectionIds: next.map((s) => s.id) },
-      { onSuccess: invalidate },
-    );
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = sections.findIndex((s) => s.id === active.id);
+    const newIndex = sections.findIndex((s) => s.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(sections, oldIndex, newIndex);
+    const effectivePageId = pageId ?? activePage?.id;
+    if (effectivePageId) {
+      runSilent(
+        reorderPage,
+        { storeId, pageId: effectivePageId, sectionIds: reordered.map((s) => s.id) },
+        { onSuccess: invalidate },
+      );
+    } else {
+      runSilent(
+        reorderLegacy,
+        { storeId, sectionIds: reordered.map((s) => s.id) },
+        { onSuccess: invalidate },
+      );
+    }
   };
 
   if (view.kind === "library") {
@@ -137,18 +222,26 @@ export const SectionsPanel = ({ storeId }: { storeId: string }) => {
       </Button>
 
       <div className="mt-4 space-y-1.5">
-        {sections.map((s, i) => (
-          <SectionRow
-            key={s.id}
-            index={i}
-            section={s}
-            total={sections.length}
-            loading={reorder.isPending}
-            onMoveUp={() => move(i, -1)}
-            onMoveDown={() => move(i, 1)}
-            onRemove={() => handleRemove(s.id)}
-          />
-        ))}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={sections.map((s) => s.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            {sections.map((s, i) => (
+              <SortableSectionRow
+                key={s.id}
+                id={s.id}
+                index={i}
+                section={s}
+                onRemove={() => handleRemove(s.id)}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
         {sections.length === 0 && (
           <div className="rounded-[10px] border border-dashed border-[color:var(--dw-border)] p-5 text-center text-[12px] text-[color:var(--dw-text-muted)]">
             No sections yet. Browse the library to add one.
@@ -244,31 +337,53 @@ const VariantCard = ({
   </div>
 );
 
-const SectionRow = ({
+const SortableSectionRow = ({
+  id,
   index,
   section,
-  total,
-  loading,
-  onMoveUp,
-  onMoveDown,
   onRemove,
 }: {
+  id: string;
   index: number;
   section: { type: string; data: Record<string, unknown> };
-  total: number;
-  loading: boolean;
-  onMoveUp: () => void;
-  onMoveDown: () => void;
   onRemove: () => void;
 }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   const cat = SECTION_CATALOG.find((c) => c.type === section.type);
   const variantId =
     typeof section.data?.variant === "string" ? section.data.variant : null;
   const variant = variantId
     ? cat?.variants.find((v) => v.id === variantId)
     : cat?.variants[0];
+
   return (
-    <div className="flex items-center gap-1 rounded-[10px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-2 text-[13px]">
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-1 rounded-[10px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-2 text-[13px]"
+    >
+      <button
+        {...attributes}
+        {...listeners}
+        className="flex size-7 cursor-grab items-center justify-center rounded-md text-[color:var(--dw-text-muted)] hover:bg-[color:var(--dw-surface2)] active:cursor-grabbing"
+        aria-label="Drag to reorder"
+      >
+        <HugeiconsIcon icon={DragDropVerticalIcon} size={14} />
+      </button>
       <span className="dw-mono w-6 text-[10.5px] text-[color:var(--dw-text-muted)]">
         {String(index + 1).padStart(2, "0")}
       </span>
@@ -282,53 +397,15 @@ const SectionRow = ({
           </div>
         )}
       </div>
-      <IconButton
-        label="Move up"
-        icon={ArrowUp01Icon}
-        onClick={onMoveUp}
-        disabled={index === 0 || loading}
-      />
-      <IconButton
-        label="Move down"
-        icon={ArrowDown01Icon}
-        onClick={onMoveDown}
-        disabled={index === total - 1 || loading}
-      />
-      <IconButton
-        label="Remove"
-        icon={Delete01Icon}
+      <button
         onClick={onRemove}
-        tone="destructive"
-      />
+        aria-label="Remove"
+        className="flex size-7 items-center justify-center rounded-md text-[color:var(--dw-text-muted)] hover:bg-[color:var(--dw-signal)]/10 hover:text-[color:var(--dw-signal)]"
+      >
+        <HugeiconsIcon icon={Delete01Icon} size={12} />
+      </button>
     </div>
   );
 };
-
-const IconButton = ({
-  label,
-  icon,
-  onClick,
-  disabled,
-  tone,
-}: {
-  label: string;
-  icon: typeof ArrowUp01Icon;
-  onClick: () => void;
-  disabled?: boolean;
-  tone?: "destructive";
-}) => (
-  <button
-    onClick={onClick}
-    disabled={disabled}
-    aria-label={label}
-    className={
-      tone === "destructive"
-        ? "flex size-7 items-center justify-center rounded-md text-[color:var(--dw-text-muted)] hover:bg-[color:var(--dw-signal)]/10 hover:text-[color:var(--dw-signal)]"
-        : "flex size-7 items-center justify-center rounded-md text-[color:var(--dw-text-muted)] hover:bg-[color:var(--dw-surface2)] disabled:opacity-30"
-    }
-  >
-    <HugeiconsIcon icon={icon} size={12} />
-  </button>
-);
 
 void Tick02Icon;

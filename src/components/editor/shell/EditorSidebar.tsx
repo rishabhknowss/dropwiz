@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   PaintBrush02Icon,
@@ -6,8 +7,11 @@ import {
   DashboardSquare01Icon,
   PlayIcon,
   Layers01Icon,
+  Settings02Icon,
+  SparklesIcon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
+import { api } from "@/utils/api";
 
 export type TabKey =
   | "design"
@@ -61,6 +65,14 @@ export const TABS: Array<{
   },
 ];
 
+const TIER_COLORS: Record<string, string> = {
+  free: "var(--dw-text-muted)",
+  starter: "var(--dw-accent)",
+  pro: "#a78bfa",
+  agency: "#f59e0b",
+  enterprise: "#ef4444",
+};
+
 export const EditorSidebar = ({
   activeTab,
   hasActiveSection,
@@ -69,27 +81,61 @@ export const EditorSidebar = ({
   activeTab: TabKey;
   hasActiveSection: boolean;
   onSelectTab: (tab: TabKey) => void;
-}) => (
-  <aside className="flex w-[72px] flex-col items-stretch justify-center border-r border-[color:var(--dw-border)] py-3">
-    {TABS.map((tab) => {
-      const active = activeTab === tab.key && !hasActiveSection;
-      return (
-        <button
-          key={tab.key}
-          onClick={() => onSelectTab(tab.key)}
-          aria-label={tab.label}
-          title={tab.desc}
-          className={cn(
-            "mx-2 mb-1 flex cursor-pointer flex-col items-center gap-1 rounded-lg px-1 py-2 transition",
-            active
-              ? "bg-[color:var(--dw-surface2)] text-[color:var(--dw-accent)]"
-              : "text-[color:var(--dw-text-muted)] hover:bg-[color:var(--dw-surface2)] hover:text-[color:var(--dw-text)]",
-          )}
-        >
-          <HugeiconsIcon icon={tab.icon} size={17} />
-          <span className="text-[10px] font-medium leading-none">{tab.label}</span>
-        </button>
-      );
-    })}
-  </aside>
-);
+}) => {
+  const me = api.auth.me.useQuery();
+  const tierColor = TIER_COLORS[me.data?.tier ?? "free"] ?? TIER_COLORS.free;
+
+  return (
+    <aside className="flex h-full w-[72px] flex-col items-stretch border-r border-[color:var(--dw-border)] bg-[color:var(--dw-bg)] py-3">
+      <div className="flex flex-1 flex-col items-stretch justify-center">
+        {TABS.map((tab) => {
+          const active = activeTab === tab.key && !hasActiveSection;
+          return (
+            <button
+              key={tab.key}
+              onClick={() => onSelectTab(tab.key)}
+              aria-label={tab.label}
+              title={tab.desc}
+              className={cn(
+                "mx-2 mb-1 flex cursor-pointer flex-col items-center gap-1 rounded-lg px-1 py-2 transition",
+                active
+                  ? "bg-[color:var(--dw-surface2)] text-[color:var(--dw-accent)]"
+                  : "text-[color:var(--dw-text-muted)] hover:bg-[color:var(--dw-surface2)] hover:text-[color:var(--dw-text)]",
+              )}
+            >
+              <HugeiconsIcon icon={tab.icon} size={17} />
+              <span className="text-[10px] font-medium leading-none">{tab.label}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {me.data && (
+        <div className="mx-2 mt-auto border-t border-[color:var(--dw-border)] pt-3">
+          <Link
+            href="/app/settings"
+            className="group flex flex-col items-center gap-2 rounded-lg p-2 transition hover:bg-[color:var(--dw-surface2)]"
+            title={`${me.data.email}\n${me.data.imageCredits} credits · ${me.data.tier}`}
+          >
+            <div
+              className="flex size-8 items-center justify-center rounded-full border-2 text-[11px] font-bold uppercase transition group-hover:scale-105"
+              style={{
+                borderColor: tierColor,
+                backgroundColor: `${tierColor}15`,
+                color: tierColor,
+              }}
+            >
+              {me.data.email.charAt(0)}
+            </div>
+            <div className="flex items-center gap-1 rounded-full bg-[color:var(--dw-surface2)] px-2 py-0.5">
+              <HugeiconsIcon icon={SparklesIcon} size={9} className="text-[color:var(--dw-accent)]" />
+              <span className="text-[9px] font-semibold text-[color:var(--dw-text)]">
+                {me.data.imageCredits}
+              </span>
+            </div>
+          </Link>
+        </div>
+      )}
+    </aside>
+  );
+};

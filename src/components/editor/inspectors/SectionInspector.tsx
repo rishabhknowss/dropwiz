@@ -17,30 +17,57 @@ import { ValuePropsInspector } from "./ValuePropsInspector";
 type Props = {
   section: StoreSection;
   store: Store;
+  pageId: string | null;
   onClose: () => void;
 };
 
 const REGENERATABLE: Array<StoreSection["type"]> = ["hero", "bundles", "faq"];
 
-export const SectionInspector = ({ section, store, onClose }: Props) => {
+export const SectionInspector = ({ section, store, pageId, onClose }: Props) => {
   const key = `${store.id}-${section.id}-${store.updatedAt.toISOString()}`;
-  return <SectionForm key={key} section={section} store={store} onClose={onClose} />;
+  return (
+    <SectionForm
+      key={key}
+      section={section}
+      store={store}
+      pageId={pageId}
+      onClose={onClose}
+    />
+  );
 };
 
-const SectionForm = ({ section, store, onClose }: Props) => {
+const SectionForm = ({ section, store, pageId, onClose }: Props) => {
   const utils = api.useUtils();
-  const update = api.stores.updateSection.useMutation();
+  const pagesQuery = api.stores.getPages.useQuery({ storeId: store.id });
+  const updateLegacy = api.stores.updateSection.useMutation();
+  const updatePage = api.stores.updatePageSection.useMutation();
   const regen = api.stores.regenerateSection.useMutation();
-  const remove = api.stores.removeSection.useMutation();
+  const removeLegacy = api.stores.removeSection.useMutation();
+  const removePage = api.stores.removePageSection.useMutation();
 
-  const invalidate = () => utils.stores.getMine.invalidate({ storeId: store.id });
+  const pages = pagesQuery.data ?? [];
+  const effectivePageId = pageId ?? pages[0]?.id ?? null;
 
-  const commit = (data: Record<string, unknown>) =>
-    runSilent(
-      update,
-      { storeId: store.id, sectionId: section.id, data },
-      { onSuccess: invalidate },
-    );
+  const invalidate = () => {
+    utils.stores.getMine.invalidate({ storeId: store.id });
+    utils.stores.getPages.invalidate({ storeId: store.id });
+  };
+
+  const commit = (data: Record<string, unknown>) => {
+    if (effectivePageId) {
+      runSilent(
+        updatePage,
+        { storeId: store.id, pageId: effectivePageId, sectionId: section.id, data },
+        { onSuccess: invalidate },
+      );
+    } else {
+      runSilent(
+        updateLegacy,
+        { storeId: store.id, sectionId: section.id, data },
+        { onSuccess: invalidate },
+      );
+    }
+  };
 
   const handleRegenerate = () =>
     runWithToast(
@@ -55,18 +82,33 @@ const SectionForm = ({ section, store, onClose }: Props) => {
 
   const handleDelete = () => {
     if (!confirm("Delete this section? This can't be undone.")) return;
-    runWithToast(
-      remove,
-      { storeId: store.id, sectionId: section.id },
-      {
-        loading: "Deleting...",
-        success: "Deleted",
-        onSuccess: () => {
-          invalidate();
-          onClose();
+    if (effectivePageId) {
+      runWithToast(
+        removePage,
+        { storeId: store.id, pageId: effectivePageId, sectionId: section.id },
+        {
+          loading: "Deleting...",
+          success: "Deleted",
+          onSuccess: () => {
+            invalidate();
+            onClose();
+          },
         },
-      },
-    );
+      );
+    } else {
+      runWithToast(
+        removeLegacy,
+        { storeId: store.id, sectionId: section.id },
+        {
+          loading: "Deleting...",
+          success: "Deleted",
+          onSuccess: () => {
+            invalidate();
+            onClose();
+          },
+        },
+      );
+    }
   };
 
   return (

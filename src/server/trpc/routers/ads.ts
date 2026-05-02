@@ -1,13 +1,16 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "@/db";
-import { generations, stores, assets, products } from "@/db/schema";
+import { generations, stores, assets, products, users } from "@/db/schema";
 import { generateHooks } from "@/lib/ai/prompts";
 import { generateAdImage } from "@/lib/ai/wavespeed";
 import { composeAdPrompt } from "@/lib/ai/ad-prompt";
 import { resolveProductImageUrl } from "@/lib/ai/product-image";
 import { protectedProcedure, router } from "../trpc";
+
+const FREE_TIERS = ["free", "starter"] as const;
+const CREDITS_PER_IMAGE = 1;
 
 export const adsRouter = router({
   generateHooks: protectedProcedure
@@ -89,6 +92,22 @@ export const adsRouter = router({
         .orderBy(desc(assets.createdAt));
     }),
 
+  getCredits: protectedProcedure.query(async ({ ctx }) => {
+    const userRows = await db
+      .select({ imageCredits: users.imageCredits, tier: users.tier })
+      .from(users)
+      .where(eq(users.id, ctx.user.id))
+      .limit(1);
+    const user = userRows[0];
+    if (!user) throw new TRPCError({ code: "NOT_FOUND" });
+    const isFreeTier = FREE_TIERS.includes(user.tier as (typeof FREE_TIERS)[number]);
+    return {
+      credits: user.imageCredits,
+      unlimited: !isFreeTier,
+      tier: user.tier,
+    };
+  }),
+
   generateStaticAd: protectedProcedure
     .input(
       z.object({
@@ -106,6 +125,22 @@ export const adsRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const userRows = await db
+        .select({ imageCredits: users.imageCredits, tier: users.tier })
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1);
+      const user = userRows[0];
+      if (!user) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const isFreeTier = FREE_TIERS.includes(user.tier as (typeof FREE_TIERS)[number]);
+      if (isFreeTier && user.imageCredits < CREDITS_PER_IMAGE) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: "Not enough image credits. Upgrade to Pro for unlimited generations.",
+        });
+      }
+
       const rows = await db
         .select()
         .from(stores)
@@ -152,12 +187,20 @@ export const adsRouter = router({
         userId: ctx.user.id,
       });
 
+      if (isFreeTier) {
+        await db
+          .update(users)
+          .set({ imageCredits: sql`${users.imageCredits} - ${CREDITS_PER_IMAGE}` })
+          .where(eq(users.id, ctx.user.id));
+      }
+
       return {
         assetId: result.assetId,
         imageUrl: result.imageUrl,
         prompt,
         aspectRatio,
         costUsd: result.costUsd,
+        creditsRemaining: isFreeTier ? user.imageCredits - CREDITS_PER_IMAGE : null,
       };
     }),
 

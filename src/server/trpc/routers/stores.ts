@@ -3,7 +3,10 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { db } from "@/db";
-import { stores, products, assets, type StoreSection } from "@/db/schema";
+import { stores, products, assets, users, type StoreSection, type StorePage } from "@/db/schema";
+
+const FREE_TIERS = ["free", "starter"] as const;
+import { createPageFromTemplate, PAGE_TEMPLATES } from "@/lib/page-templates";
 import {
   createPendingStore,
   runStoreGeneration,
@@ -26,6 +29,7 @@ import { checkLimits } from "../rate-limit";
 
 const createInputSchema = z.object({
   url: z.string().url().max(2048).optional(),
+  aiPrompt: z.string().min(10).max(1000).optional(),
   persona: z.string().max(160).optional(),
   angle: z.string().max(160).optional(),
   targetLanguage: z.string().min(2).max(10),
@@ -50,19 +54,24 @@ export const storesRouter = router({
 
       const usingShopify =
         !!input.shopifyShopDomain && !!input.shopifyProductId;
-      if (!usingShopify && !input.url) {
+      const usingAI = !!input.aiPrompt;
+
+      if (!usingShopify && !input.url && !usingAI) {
         throw new TRPCError({
           code: "BAD_REQUEST",
-          message: "Provide a product URL or a Shopify product",
+          message: "Provide a product URL, Shopify product, or AI description",
         });
       }
 
       const sourceUrl = usingShopify
         ? `https://${input.shopifyShopDomain}/products/${input.shopifyProductId}`
+        : usingAI
+        ? `ai://${Date.now()}`
         : input.url!;
 
       const pending = await createPendingStore({
         url: sourceUrl,
+        aiPrompt: usingAI ? input.aiPrompt : undefined,
         persona: input.persona?.trim() || "General buyer for this product",
         angle: input.angle?.trim() || "Problem-solution",
         targetLanguage: input.targetLanguage,
@@ -80,6 +89,7 @@ export const storesRouter = router({
 
       void runStoreGeneration(pending.storeId, sourceUrl, {
         shopifySource,
+        aiPrompt: usingAI ? input.aiPrompt : undefined,
       }).catch((err) => {
         console.error("[store-gen] unhandled:", err);
       });
@@ -210,6 +220,7 @@ export const storesRouter = router({
         persona: z.string().min(2).max(80).optional(),
         angle: z.string().min(2).max(80).optional(),
         targetLanguage: z.string().min(2).max(10).optional(),
+        currency: z.string().min(3).max(8).optional(),
         name: z.string().min(1).max(200).optional(),
       }),
     )
@@ -220,6 +231,7 @@ export const storesRouter = router({
           persona: input.persona,
           angle: input.angle,
           targetLanguage: input.targetLanguage,
+          currency: input.currency,
           name: input.name,
           updatedAt: new Date(),
         })
@@ -550,6 +562,23 @@ export const storesRouter = router({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const userRows = await db
+        .select({ imageCredits: users.imageCredits, tier: users.tier })
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1);
+      const user = userRows[0];
+      if (!user) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const count = input.count ?? 1;
+      const isFreeTier = FREE_TIERS.includes(user.tier as (typeof FREE_TIERS)[number]);
+      if (isFreeTier && user.imageCredits < count) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: `Not enough image credits. Need ${count}, have ${user.imageCredits}. Upgrade to Pro for unlimited.`,
+        });
+      }
+
       const rows = await db
         .select()
         .from(stores)
@@ -558,7 +587,6 @@ export const storesRouter = router({
       const store = rows[0];
       if (!store) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const count = input.count ?? 1;
       let referenceImageUrl: string | null = null;
       if (store.productId) {
         const productRows = await db
@@ -587,11 +615,20 @@ export const storesRouter = router({
         if (!first) {
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         }
+
+        if (isFreeTier) {
+          await db
+            .update(users)
+            .set({ imageCredits: sql`${users.imageCredits} - ${count}` })
+            .where(eq(users.id, ctx.user.id));
+        }
+
         return {
           assetId: first.assetId,
           imageUrl: first.imageUrl,
           r2Key: first.r2Key,
           variants: result.variants,
+          creditsRemaining: isFreeTier ? user.imageCredits - count : null,
         };
       }
 
@@ -610,6 +647,14 @@ export const storesRouter = router({
       if (!asset?.publicUrl) {
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
+
+      if (isFreeTier) {
+        await db
+          .update(users)
+          .set({ imageCredits: sql`${users.imageCredits} - ${count}` })
+          .where(eq(users.id, ctx.user.id));
+      }
+
       return {
         assetId: asset.id,
         imageUrl: asset.publicUrl,
@@ -621,6 +666,7 @@ export const storesRouter = router({
             imageUrl: a.publicUrl as string,
             r2Key: a.r2Key,
           })),
+        creditsRemaining: isFreeTier ? user.imageCredits - count : null,
       };
     }),
 
@@ -698,9 +744,28 @@ export const storesRouter = router({
       z.object({
         storeId: z.string().uuid(),
         prompt: z.string().max(500).optional(),
+        count: z.number().int().min(1).max(4).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      const count = input.count ?? 1;
+
+      const userRows = await db
+        .select({ imageCredits: users.imageCredits, tier: users.tier })
+        .from(users)
+        .where(eq(users.id, ctx.user.id))
+        .limit(1);
+      const user = userRows[0];
+      if (!user) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const isFreeTier = FREE_TIERS.includes(user.tier as (typeof FREE_TIERS)[number]);
+      if (isFreeTier && user.imageCredits < count) {
+        throw new TRPCError({
+          code: "PRECONDITION_FAILED",
+          message: `Not enough credits. Need ${count}, have ${user.imageCredits}.`,
+        });
+      }
+
       const rows = await db
         .select()
         .from(stores)
@@ -722,7 +787,7 @@ export const storesRouter = router({
         prompt,
         width: 1024,
         height: 1024,
-        numImages: 1,
+        numImages: count,
         storeId: store.id,
         userId: ctx.user.id,
         kind: "hero",
@@ -730,6 +795,13 @@ export const storesRouter = router({
 
       const newImageUrl = result.assets[0]?.publicUrl;
       if (!newImageUrl) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+
+      if (isFreeTier) {
+        await db
+          .update(users)
+          .set({ imageCredits: sql`${users.imageCredits} - ${count}` })
+          .where(eq(users.id, ctx.user.id));
+      }
 
       const next = [...store.sections];
       next[heroIdx] = {
@@ -741,7 +813,18 @@ export const storesRouter = router({
         .set({ sections: next, updatedAt: new Date() })
         .where(eq(stores.id, store.id));
 
-      return { imageUrl: newImageUrl, assetId: result.assets[0]?.id };
+      return {
+        imageUrl: newImageUrl,
+        assetId: result.assets[0]?.id,
+        variants: result.assets
+          .filter((a) => !!a.publicUrl)
+          .map((a) => ({
+            assetId: a.id,
+            imageUrl: a.publicUrl as string,
+            r2Key: a.r2Key,
+          })),
+        creditsRemaining: isFreeTier ? user.imageCredits - count : null,
+      };
     }),
 
   setHeroImage: protectedProcedure
@@ -802,7 +885,404 @@ export const storesRouter = router({
       }
       return claimed;
     }),
+
+  getPages: protectedProcedure
+    .input(z.object({ storeId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const rows = await db
+        .select({ pages: stores.pages, sections: stores.sections, name: stores.name })
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (store.pages.length > 0) {
+        return store.pages;
+      }
+
+      const defaultPage: StorePage = {
+        id: nanoid(10),
+        type: "product",
+        name: "Product Page",
+        slug: "",
+        sections: store.sections,
+        order: 0,
+        isDefault: true,
+      };
+      return [defaultPage];
+    }),
+
+  addPage: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        type: z.enum(["product", "landing", "about", "faq", "gallery", "blog"]),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      let pages = store.pages;
+      if (pages.length === 0 && store.sections.length > 0) {
+        const defaultPage: StorePage = {
+          id: nanoid(10),
+          type: "product",
+          name: "Product Page",
+          slug: "",
+          sections: store.sections,
+          order: 0,
+          isDefault: true,
+        };
+        pages = [defaultPage];
+      }
+
+      const productSection = store.sections.find((s) => s.type === "product");
+      const productData = (productSection?.data ?? {}) as { imageUrl?: string };
+      const newPage = createPageFromTemplate(
+        input.type,
+        store.name ?? "Store",
+        pages.length,
+        productData.imageUrl,
+      );
+
+      const updatedPages = [...pages, newPage];
+      await db
+        .update(stores)
+        .set({ pages: updatedPages, updatedAt: new Date() })
+        .where(eq(stores.id, input.storeId));
+
+      return { page: newPage };
+    }),
+
+  updatePage: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        pageId: z.string().min(1),
+        name: z.string().min(1).max(100).optional(),
+        slug: z.string().max(80).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const pages = ensurePages(store);
+      const pageIdx = pages.findIndex((p) => p.id === input.pageId);
+      if (pageIdx === -1) throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+
+      const updatedPages = [...pages];
+      updatedPages[pageIdx] = {
+        ...updatedPages[pageIdx],
+        ...(input.name !== undefined && { name: input.name }),
+        ...(input.slug !== undefined && { slug: input.slug }),
+      };
+
+      await db
+        .update(stores)
+        .set({ pages: updatedPages, updatedAt: new Date() })
+        .where(eq(stores.id, input.storeId));
+
+      return { success: true };
+    }),
+
+  deletePage: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        pageId: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const pages = ensurePages(store);
+      const page = pages.find((p) => p.id === input.pageId);
+      if (!page) throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+      if (page.isDefault) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "Cannot delete the default page" });
+      }
+
+      const updatedPages = pages
+        .filter((p) => p.id !== input.pageId)
+        .map((p, i) => ({ ...p, order: i }));
+
+      await db
+        .update(stores)
+        .set({ pages: updatedPages, updatedAt: new Date() })
+        .where(eq(stores.id, input.storeId));
+
+      return { success: true };
+    }),
+
+  reorderPages: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        pageIds: z.array(z.string()).min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const pages = ensurePages(store);
+      const byId = new Map(pages.map((p) => [p.id, p]));
+      const reordered = input.pageIds
+        .map((id) => byId.get(id))
+        .filter((p): p is StorePage => !!p)
+        .map((p, i) => ({ ...p, order: i }));
+
+      await db
+        .update(stores)
+        .set({ pages: reordered, updatedAt: new Date() })
+        .where(eq(stores.id, input.storeId));
+
+      return { success: true };
+    }),
+
+  updatePageSection: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        pageId: z.string().min(1),
+        sectionId: z.string().min(1),
+        data: z.record(z.string(), z.unknown()),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const pages = ensurePages(store);
+      const pageIdx = pages.findIndex((p) => p.id === input.pageId);
+      if (pageIdx === -1) throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+
+      const page = pages[pageIdx];
+      const sectionIdx = page.sections.findIndex((s) => s.id === input.sectionId);
+      if (sectionIdx === -1) throw new TRPCError({ code: "NOT_FOUND", message: "Section not found" });
+
+      const updatedSections = [...page.sections];
+      updatedSections[sectionIdx] = {
+        ...updatedSections[sectionIdx],
+        data: { ...updatedSections[sectionIdx].data, ...input.data },
+      };
+
+      const updatedPages = [...pages];
+      updatedPages[pageIdx] = { ...page, sections: updatedSections };
+
+      const sectionsUpdate = page.isDefault ? updatedSections : store.sections;
+
+      await db
+        .update(stores)
+        .set({ pages: updatedPages, sections: sectionsUpdate, updatedAt: new Date() })
+        .where(eq(stores.id, input.storeId));
+
+      return { success: true };
+    }),
+
+  addPageSection: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        pageId: z.string().min(1),
+        type: z.enum([
+          "hero",
+          "product",
+          "bundles",
+          "trust",
+          "faq",
+          "footer",
+          "video",
+          "countdown",
+          "comparison",
+          "lifestyle",
+          "gallery",
+          "testimonials",
+          "valueProps",
+        ]),
+        position: z.number().int().min(0).optional(),
+        variant: z.string().max(40).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const pages = ensurePages(store);
+      const pageIdx = pages.findIndex((p) => p.id === input.pageId);
+      if (pageIdx === -1) throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+
+      const page = pages[pageIdx];
+      const baseData = defaultSectionData(input.type, store) as Record<string, unknown>;
+      const data = input.variant ? { ...baseData, variant: input.variant } : baseData;
+      const newSection: StoreSection = {
+        id: nanoid(8),
+        type: input.type,
+        order: 0,
+        data,
+      };
+
+      const insertAt = input.position ?? page.sections.length;
+      const updatedSections = [...page.sections];
+      updatedSections.splice(insertAt, 0, newSection);
+      const orderedSections = updatedSections.map((s, i) => ({ ...s, order: i }));
+
+      const updatedPages = [...pages];
+      updatedPages[pageIdx] = { ...page, sections: orderedSections };
+
+      const sectionsUpdate = page.isDefault ? orderedSections : store.sections;
+
+      await db
+        .update(stores)
+        .set({ pages: updatedPages, sections: sectionsUpdate, updatedAt: new Date() })
+        .where(eq(stores.id, input.storeId));
+
+      return { section: newSection };
+    }),
+
+  removePageSection: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        pageId: z.string().min(1),
+        sectionId: z.string().min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const pages = ensurePages(store);
+      const pageIdx = pages.findIndex((p) => p.id === input.pageId);
+      if (pageIdx === -1) throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+
+      const page = pages[pageIdx];
+      const updatedSections = page.sections
+        .filter((s) => s.id !== input.sectionId)
+        .map((s, i) => ({ ...s, order: i }));
+
+      const updatedPages = [...pages];
+      updatedPages[pageIdx] = { ...page, sections: updatedSections };
+
+      const sectionsUpdate = page.isDefault ? updatedSections : store.sections;
+
+      await db
+        .update(stores)
+        .set({ pages: updatedPages, sections: sectionsUpdate, updatedAt: new Date() })
+        .where(eq(stores.id, input.storeId));
+
+      return { success: true };
+    }),
+
+  reorderPageSections: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        pageId: z.string().min(1),
+        sectionIds: z.array(z.string()).min(1),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const pages = ensurePages(store);
+      const pageIdx = pages.findIndex((p) => p.id === input.pageId);
+      if (pageIdx === -1) throw new TRPCError({ code: "NOT_FOUND", message: "Page not found" });
+
+      const page = pages[pageIdx];
+      const byId = new Map(page.sections.map((s) => [s.id, s]));
+      const reordered = input.sectionIds
+        .map((id) => byId.get(id))
+        .filter((s): s is StoreSection => !!s)
+        .map((s, i) => ({ ...s, order: i }));
+
+      const updatedPages = [...pages];
+      updatedPages[pageIdx] = { ...page, sections: reordered };
+
+      const sectionsUpdate = page.isDefault ? reordered : store.sections;
+
+      await db
+        .update(stores)
+        .set({ pages: updatedPages, sections: sectionsUpdate, updatedAt: new Date() })
+        .where(eq(stores.id, input.storeId));
+
+      return { success: true };
+    }),
+
+  listPageTemplates: publicProcedure.query(() => {
+    return PAGE_TEMPLATES.map((t) => ({
+      type: t.type,
+      name: t.name,
+      description: t.description,
+      icon: t.icon,
+    }));
+  }),
 });
+
+function ensurePages(store: typeof stores.$inferSelect): StorePage[] {
+  if (store.pages.length > 0) {
+    return store.pages;
+  }
+  if (store.sections.length === 0) {
+    return [];
+  }
+  return [
+    {
+      id: nanoid(10),
+      type: "product",
+      name: "Product Page",
+      slug: "",
+      sections: store.sections,
+      order: 0,
+      isDefault: true,
+    },
+  ];
+}
 
 function defaultSectionData(
   type: StoreSection["type"],

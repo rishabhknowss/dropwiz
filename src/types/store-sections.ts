@@ -70,7 +70,20 @@ export type TrustData = { badges: string[] };
 export type FaqItem = { question: string; answer: string };
 export type FaqData = { faqs: FaqItem[]; variant?: FaqVariant };
 
-export type FooterData = { storeName: string };
+export type PaymentMethod =
+  | "visa"
+  | "mastercard"
+  | "amex"
+  | "paypal"
+  | "applepay"
+  | "googlepay"
+  | "discover"
+  | "stripe";
+
+export type FooterData = {
+  storeName: string;
+  paymentMethods?: PaymentMethod[];
+};
 
 export type VideoData = { videoUrl: string; caption?: string };
 

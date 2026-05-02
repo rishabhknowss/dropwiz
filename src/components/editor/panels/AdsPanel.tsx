@@ -7,11 +7,14 @@ import {
   Copy01Icon,
   ArrowUp02Icon,
   Cancel01Icon,
+  SparklesIcon,
 } from "@hugeicons/core-free-icons";
 import { api } from "@/utils/api";
 import { r2PublicUrl } from "@/lib/r2-url";
 import { Panel } from "./shared/Panel";
 import { getErrorMessage } from "@/lib/trpc-errors";
+
+const FREE_TIERS = ["free", "starter"];
 
 type AdFormat = "square" | "feed" | "story" | "landscape" | "wide";
 
@@ -24,6 +27,8 @@ const FORMATS: Array<{ value: AdFormat; label: string; sub: string }> = [
 ];
 
 export const AdsPanel = ({ storeId }: { storeId: string }) => {
+  const me = api.auth.me.useQuery();
+  const isFreeTier = FREE_TIERS.includes(me.data?.tier ?? "free");
   const generateAd = api.ads.generateStaticAd.useMutation();
   const adAssets = api.ads.listAssets.useQuery(
     { storeId, kind: "ad" },
@@ -39,6 +44,10 @@ export const AdsPanel = ({ storeId }: { storeId: string }) => {
 
   const handleGenerate = () => {
     if (isGenerating) return;
+    if (isFreeTier && (me.data?.imageCredits ?? 0) < 1) {
+      toast.error("Not enough credits");
+      return;
+    }
     if (toastIdRef.current) toast.dismiss(toastIdRef.current);
     toastIdRef.current = toast.loading("Generating ad — ~30–60s…");
     setIsGenerating(true);
@@ -50,11 +59,13 @@ export const AdsPanel = ({ storeId }: { storeId: string }) => {
         hook: brief.trim() || undefined,
       },
       {
-        onSuccess: () => {
+        onSuccess: (data) => {
           if (toastIdRef.current) toast.dismiss(toastIdRef.current);
           toastIdRef.current = null;
-          toast.success("Ad ready");
+          const remaining = data.creditsRemaining;
+          toast.success(remaining !== null ? `Ad ready · ${remaining} credits left` : "Ad ready");
           utils.ads.listAssets.invalidate({ storeId });
+          utils.auth.me.invalidate();
           setIsGenerating(false);
         },
         onError: (err) => {
@@ -97,6 +108,8 @@ export const AdsPanel = ({ storeId }: { storeId: string }) => {
         setFormat={setFormat}
         onGenerate={handleGenerate}
         isGenerating={isGenerating}
+        credits={me.data?.imageCredits}
+        isFreeTier={isFreeTier}
       />
 
       {lightboxUrl && (
@@ -329,6 +342,8 @@ const ChatBox = ({
   setFormat,
   onGenerate,
   isGenerating,
+  credits,
+  isFreeTier,
 }: {
   brief: string;
   setBrief: (v: string) => void;
@@ -336,6 +351,8 @@ const ChatBox = ({
   setFormat: (v: AdFormat) => void;
   onGenerate: () => void;
   isGenerating: boolean;
+  credits?: number;
+  isFreeTier: boolean;
 }) => (
   <div className="rounded-[14px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-3 transition focus-within:border-[color:var(--dw-accent)]/60">
     <textarea
@@ -353,16 +370,22 @@ const ChatBox = ({
       className="w-full resize-none bg-transparent text-[13px] leading-[1.5] text-[color:var(--dw-text)] outline-none placeholder:text-[color:var(--dw-text-muted)]"
     />
     <div className="mt-2 flex items-center justify-between gap-2">
-      <div className="flex flex-wrap items-center gap-1">
+      <div className="flex flex-wrap items-center gap-1.5">
         <Pill
           options={FORMATS}
           value={format}
           onChange={(v) => setFormat(v as AdFormat)}
         />
+        {credits !== undefined && (
+          <span className="flex items-center gap-1 text-[10px] text-[color:var(--dw-text-muted)]">
+            <HugeiconsIcon icon={SparklesIcon} size={10} className="text-[color:var(--dw-accent)]" />
+            {isFreeTier ? `${credits} · -1` : "∞"}
+          </span>
+        )}
       </div>
       <button
         onClick={onGenerate}
-        disabled={isGenerating}
+        disabled={isGenerating || (isFreeTier && (credits ?? 0) < 1)}
         aria-label="Generate ad"
         className="flex size-9 items-center justify-center rounded-full bg-[color:var(--dw-accent)] text-[color:var(--dw-accent-ink)] transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
       >

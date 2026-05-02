@@ -7,21 +7,36 @@ import { Button } from "@/components/ui/button";
 import { DWLogo } from "@/components/dw/Logo";
 import { DWChip } from "@/components/dw/Chip";
 import { PublishButton } from "../publish/PublishButton";
-import type { Store } from "@/db/schema";
+import { PageSelector } from "../PageSelector";
+import type { Store, StorePage } from "@/db/schema";
 
-export const EditorHeader = ({ store }: { store: Store }) => (
-  <header className="flex h-14 items-center gap-4 border-b border-[color:var(--dw-border)] bg-[color:var(--dw-bg)]/80 px-5 backdrop-blur">
+type EditorHeaderProps = {
+  store: Store;
+  pages: StorePage[];
+  activePageId: string | null;
+  onSelectPage: (pageId: string) => void;
+};
+
+export const EditorHeader = ({
+  store,
+  pages,
+  activePageId,
+  onSelectPage,
+}: EditorHeaderProps) => (
+  <header className="flex h-12 items-center gap-2 border-b border-[color:var(--dw-border)] bg-[color:var(--dw-bg)]/80 px-3 backdrop-blur md:h-14 md:gap-4 md:px-5">
     <Link
       href="/app/stores"
-      className="flex size-8 items-center justify-center rounded-md text-[color:var(--dw-text-dim)] hover:bg-[color:var(--dw-surface2)]"
+      className="flex size-7 shrink-0 items-center justify-center rounded-md text-[color:var(--dw-text-dim)] hover:bg-[color:var(--dw-surface2)] md:size-8"
       aria-label="Back to stores"
     >
-      <HugeiconsIcon icon={ArrowLeft01Icon} size={15} />
+      <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
     </Link>
-    <DWLogo size={16} />
-    <div className="flex items-center gap-2 text-[13px] text-[color:var(--dw-text-dim)]">
-      <span className="opacity-50">/</span>
-      <span className="max-w-[280px] truncate text-[color:var(--dw-text)]">
+    <div className="hidden md:block">
+      <DWLogo size={16} />
+    </div>
+    <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[12px] text-[color:var(--dw-text-dim)] md:flex-none md:gap-2 md:text-[13px]">
+      <span className="hidden opacity-50 md:inline">/</span>
+      <span className="max-w-[100px] truncate text-[color:var(--dw-text)] md:max-w-[180px]">
         {store.name ?? "Untitled"}
       </span>
       {store.status === "published" ? (
@@ -30,9 +45,19 @@ export const EditorHeader = ({ store }: { store: Store }) => (
         <DWChip variant="accent">Draft</DWChip>
       )}
     </div>
-    <SaveIndicator />
-    <div className="ml-auto flex items-center gap-2">
-      <Button asChild variant="outline" size="sm" className="h-8">
+    {pages.length > 0 && (
+      <PageSelector
+        storeId={store.id}
+        pages={pages}
+        activePageId={activePageId}
+        onSelectPage={onSelectPage}
+      />
+    )}
+    <div className="hidden md:block">
+      <SaveIndicator />
+    </div>
+    <div className="ml-auto flex shrink-0 items-center gap-1.5 md:gap-2">
+      <Button asChild variant="outline" size="sm" className="hidden h-8 md:inline-flex">
         <Link href={`/p/${store.slug}`} target="_blank">
           Preview
         </Link>

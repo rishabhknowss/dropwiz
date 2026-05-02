@@ -63,6 +63,9 @@ function sanitizeJsonSchema(node: unknown): unknown {
       if (UNSUPPORTED_SCHEMA_KEYS.has(key)) continue;
       out[key] = sanitizeJsonSchema(value);
     }
+    if (out.type === "object" && out.additionalProperties === undefined) {
+      out.additionalProperties = false;
+    }
     return out;
   }
   return node;
