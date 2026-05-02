@@ -1,1 +1,1 @@
-ALTER TABLE "users" ADD COLUMN "image_credits" integer DEFAULT 5 NOT NULL;
+ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "image_credits" integer DEFAULT 5 NOT NULL;
