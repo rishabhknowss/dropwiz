@@ -5,13 +5,24 @@ type LogoProps = {
   size?: number;
   className?: string;
   showText?: boolean;
+  variant?: "default" | "light";
+  textClassName?: string;
 };
 
-export const DWLogo = ({ size = 20, className, showText = true }: LogoProps) => {
+export const DWLogo = ({
+  size = 28,
+  className,
+  showText = true,
+  variant = "default",
+  textClassName
+}: LogoProps) => {
+  const logoSrc = variant === "light" ? "/logowithbg.png" : "/logo.png";
+  const textColor = variant === "light" ? "text-white" : "text-[var(--dw-text)]";
+
   return (
-    <div className={cn("inline-flex items-center gap-2", className)}>
+    <div className={cn("inline-flex items-center gap-2.5", className)}>
       <Image
-        src="/logo.png"
+        src={logoSrc}
         alt="Dropwiz"
         width={size}
         height={size}
@@ -19,24 +30,57 @@ export const DWLogo = ({ size = 20, className, showText = true }: LogoProps) => 
       />
       {showText && (
         <span
-          className="dw-display-sm text-foreground"
-          style={{ fontSize: size * 0.85, letterSpacing: "-0.04em" }}
+          className={cn("font-bold", textColor, textClassName)}
+          style={{
+            fontSize: size * 0.75,
+            letterSpacing: "-0.02em",
+          }}
         >
-          dropwiz
+          Dropwiz
         </span>
       )}
     </div>
   );
 };
 
-export const DWLogoIcon = ({ size = 24, className }: Omit<LogoProps, "showText">) => {
+export const DWLogoIcon = ({
+  size = 32,
+  className,
+  variant = "default"
+}: Omit<LogoProps, "showText" | "textClassName">) => {
+  const logoSrc = variant === "light" ? "/logowithbg.png" : "/logo.png";
+
   return (
     <Image
-      src="/logo.png"
+      src={logoSrc}
       alt="Dropwiz"
       width={size}
       height={size}
       className={cn("object-contain", className)}
     />
+  );
+};
+
+export const DWLogoText = ({
+  size = 24,
+  className,
+  variant = "default"
+}: {
+  size?: number;
+  className?: string;
+  variant?: "default" | "light";
+}) => {
+  const textColor = variant === "light" ? "text-white" : "text-[var(--dw-text)]";
+
+  return (
+    <span
+      className={cn("font-bold", textColor, className)}
+      style={{
+        fontSize: size,
+        letterSpacing: "-0.02em",
+      }}
+    >
+      Dropwiz
+    </span>
   );
 };

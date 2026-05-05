@@ -157,6 +157,7 @@ export const authEvents = pgTable(
     index("auth_events_user_idx").on(t.userId),
     index("auth_events_kind_idx").on(t.kind),
     index("auth_events_created_idx").on(t.createdAt.desc()),
+    index("auth_events_user_kind_created_idx").on(t.userId, t.kind, t.createdAt.desc()),
   ],
 );
 
@@ -238,7 +239,7 @@ export const stores = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     userId: uuid("user_id").references(() => users.id, { onDelete: "cascade" }),
     productId: uuid("product_id").references(() => products.id, {
-      onDelete: "restrict",
+      onDelete: "set null",
     }),
     slug: varchar("slug", { length: 80 }).notNull(),
     name: varchar("name", { length: 200 }),
@@ -310,6 +311,7 @@ export const assets = pgTable(
     index("assets_store_idx").on(t.storeId),
     index("assets_kind_idx").on(t.kind),
     uniqueIndex("assets_r2_key_unique").on(t.r2Key),
+    index("assets_store_kind_idx").on(t.storeId, t.kind),
   ],
 );
 
@@ -346,6 +348,7 @@ export const generations = pgTable(
     index("generations_kind_idx").on(t.kind),
     index("generations_input_hash_idx").on(t.inputHash),
     index("generations_created_idx").on(t.createdAt.desc()),
+    index("generations_store_kind_created_idx").on(t.storeId, t.kind, t.createdAt.desc()),
   ],
 );
 

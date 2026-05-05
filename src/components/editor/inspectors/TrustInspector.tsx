@@ -1,8 +1,11 @@
 import type { StoreSection } from "@/db/schema";
-import type { TrustData } from "@/types/store-sections";
+import type { TrustData, TrustBadge } from "@/types/store-sections";
 import { TextField } from "./fields";
 
 type Commit = (data: Record<string, unknown>) => void;
+
+const getBadgeText = (badge: string | TrustBadge): string =>
+  typeof badge === "string" ? badge : badge.title;
 
 export const TrustInspector = ({
   section,
@@ -13,7 +16,11 @@ export const TrustInspector = ({
 }) => {
   const data = section.data as TrustData;
   const update = (idx: number, v: string) => {
-    const next = data.badges.map((b, i) => (i === idx ? v : b));
+    const next = data.badges.map((b, i) => {
+      if (i !== idx) return b;
+      if (typeof b === "string") return v;
+      return { ...b, title: v };
+    });
     onCommit({ badges: next });
   };
   return (
@@ -22,7 +29,7 @@ export const TrustInspector = ({
         <TextField
           key={i}
           label={`Badge ${i + 1}`}
-          defaultValue={b}
+          defaultValue={getBadgeText(b)}
           onCommit={(v) => update(i, v)}
         />
       ))}

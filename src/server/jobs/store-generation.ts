@@ -63,32 +63,54 @@ export type CreateStoreInput = {
   userId?: string | null;
 };
 
+const MAX_SLUG_RETRIES = 5;
+
+const isUniqueConstraintError = (error: unknown): boolean => {
+  if (error && typeof error === "object" && "code" in error) {
+    return (error as { code: string }).code === "23505";
+  }
+  return false;
+};
+
 export async function createPendingStore(
   input: CreateStoreInput,
 ): Promise<{ storeId: string; slug: string; claimToken: string | null }> {
-  const slug = slugifyTitle("new-store");
   const claimToken = input.userId ? null : generateSecureToken(24);
   const claimExpiry = claimToken ? new Date(Date.now() + 24 * 60 * 60 * 1000) : null;
 
-  const [store] = await db
-    .insert(stores)
-    .values({
-      userId: input.userId ?? null,
-      slug,
-      persona: input.persona,
-      angle: input.angle,
-      targetLanguage: input.targetLanguage,
-      currency: input.currency ?? "USD",
-      themeTokens: defaultTheme(),
-      sections: [],
-      copy: {},
-      status: "scraping",
-      claimToken,
-      claimTokenExpiresAt: claimExpiry,
-    })
-    .returning({ id: stores.id, slug: stores.slug });
+  let lastError: unknown;
+  for (let attempt = 0; attempt < MAX_SLUG_RETRIES; attempt++) {
+    const slug = slugifyTitle("new-store");
 
-  return { storeId: store.id, slug: store.slug, claimToken };
+    try {
+      const [store] = await db
+        .insert(stores)
+        .values({
+          userId: input.userId ?? null,
+          slug,
+          persona: input.persona,
+          angle: input.angle,
+          targetLanguage: input.targetLanguage,
+          currency: input.currency ?? "USD",
+          themeTokens: defaultTheme(),
+          sections: [],
+          copy: {},
+          status: "scraping",
+          claimToken,
+          claimTokenExpiresAt: claimExpiry,
+        })
+        .returning({ id: stores.id, slug: stores.slug });
+
+      return { storeId: store.id, slug: store.slug, claimToken };
+    } catch (error) {
+      lastError = error;
+      if (!isUniqueConstraintError(error)) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError;
 }
 
 export type RunStoreGenerationOptions = {
@@ -238,8 +260,13 @@ export async function runStoreGeneration(
       heroImageUrl,
       productImageUrl:
         (scraped.originalImages as string[])[0] ?? heroImageUrl ?? "",
+      productImages: scraped.originalImages as string[],
       productTitle: scraped.title ?? "Product",
+      productDescription: scraped.description ?? undefined,
       priceCents: scraped.priceCents ?? 4900,
+      originalPriceCents: scraped.estCostCents
+        ? Math.round((scraped.priceCents ?? 4900) * 1.4)
+        : undefined,
       currency: scraped.currency ?? "USD",
     });
 
@@ -432,15 +459,51 @@ function buildSections(input: {
   faq: FaqOutput;
   heroImageUrl?: string;
   productImageUrl: string;
+  productImages?: string[];
   productTitle: string;
+  productDescription?: string;
   priceCents: number;
+  originalPriceCents?: number;
   currency: string;
 }): StoreSection[] {
+  const originalPrice = input.originalPriceCents ?? Math.round(input.priceCents * 1.4);
+  const productImages = input.productImages?.length
+    ? input.productImages
+    : [input.productImageUrl];
+
+  const bundlesWithBogo = input.bundles.bundles.map((b, i) => ({
+    ...b,
+    freeQuantity: i === 0 ? 0 : b.quantity,
+  }));
+
   return [
     {
       id: nanoid(8),
-      type: "hero",
+      type: "announcement",
       order: 0,
+      data: {
+        badges: [
+          { icon: "🚚", text: "Free Shipping on all orders" },
+          { icon: "🔒", text: "Secure Checkout" },
+          { icon: "❤️", text: "30-Day Money Back Guarantee" },
+        ],
+        variant: "marquee",
+      },
+    },
+    {
+      id: nanoid(8),
+      type: "header",
+      order: 1,
+      data: {
+        logoUrl: "",
+        storeName: input.productTitle,
+        showCartIcon: true,
+      },
+    },
+    {
+      id: nanoid(8),
+      type: "hero",
+      order: 2,
       data: {
         headline: input.hero.headline,
         subheadline: input.hero.subheadline,
@@ -449,52 +512,260 @@ function buildSections(input: {
         urgencyBadge: input.hero.urgencyBadge,
         socialProof: input.hero.socialProof,
         imageUrl: input.heroImageUrl ?? input.productImageUrl,
+        rating: 4.8,
+        reviewCount: 2500,
+        currency: input.currency,
+        trustBadges: ["Free Shipping", "30-Day Guarantee", "Secure Checkout"],
+        featureBadges: [
+          { icon: "⚡", label: "Fast Results" },
+          { icon: "✓", label: "Premium Quality" },
+          { icon: "🛡", label: "Risk-Free" },
+        ],
+        bundles: bundlesWithBogo.map((b, idx) => {
+          const unitPrice = input.priceCents;
+          const totalUnits = b.quantity + (b.freeQuantity ?? 0);
+          const fullPrice = unitPrice * totalUnits;
+          const discountedPrice = Math.round(fullPrice * (1 - b.discountPercent / 100));
+          return {
+            name: b.name,
+            quantity: b.quantity,
+            freeQuantity: b.freeQuantity,
+            priceCents: discountedPrice,
+            originalPriceCents: fullPrice,
+            savings: b.savings,
+            badge: b.badge,
+          };
+        }),
       },
     },
     {
       id: nanoid(8),
       type: "product",
-      order: 1,
-      data: {
-        title: input.productTitle,
-        imageUrl: input.productImageUrl,
-        priceCents: input.priceCents,
-        currency: input.currency,
-      },
-    },
-    {
-      id: nanoid(8),
-      type: "bundles",
-      order: 2,
-      data: {
-        bundles: input.bundles.bundles,
-        basePriceCents: input.priceCents,
-        currency: input.currency,
-      },
-    },
-    {
-      id: nanoid(8),
-      type: "trust",
       order: 3,
       data: {
-        badges: [
-          "30-day money-back guarantee",
-          "Ships in 1-2 business days",
-          "Secure checkout",
+        title: input.productTitle,
+        subtitle: "The smart choice for modern living",
+        description: input.productDescription ?? `Experience the difference with ${input.productTitle}. Designed for those who demand the best, this premium product delivers exceptional results every time.`,
+        imageUrl: input.productImageUrl,
+        images: productImages,
+        priceCents: input.priceCents,
+        originalPriceCents: originalPrice,
+        currency: input.currency,
+        badge: "Best Seller",
+        rating: 4.8,
+        reviewCount: 2500,
+        features: [
+          { icon: "⚡", label: "Fast Acting" },
+          { icon: "🌿", label: "All Natural" },
+          { icon: "✓", label: "Clinically Tested" },
+          { icon: "🔒", label: "Secure Purchase" },
         ],
       },
     },
     {
       id: nanoid(8),
-      type: "faq",
+      type: "bundles",
       order: 4,
-      data: { faqs: input.faq.faqs },
+      data: {
+        bundles: bundlesWithBogo,
+        basePriceCents: input.priceCents,
+        originalPriceCents: originalPrice,
+        currency: input.currency,
+        productImage: input.productImageUrl,
+      },
+    },
+    {
+      id: nanoid(8),
+      type: "trust",
+      order: 5,
+      data: {
+        badges: [
+          {
+            icon: "❤️",
+            title: "Try it risk-free",
+            description: "Love it or your money back. No questions asked.",
+          },
+          {
+            icon: "🚛",
+            title: "Fast, free shipping",
+            description: "Get it delivered to your door in 3-5 business days.",
+          },
+          {
+            icon: "🔒",
+            title: "Secure checkout",
+            description: "Your payment information is always protected.",
+          },
+        ],
+        showPaymentBadges: true,
+        shippingTimeline: [
+          { icon: "✅", label: "Order Confirmed", date: "Today" },
+          { icon: "🚛", label: "On Its Way", date: "1-2 days" },
+          { icon: "⭐", label: "Delivered", date: "3-5 days" },
+        ],
+        variant: "detailed",
+      },
+    },
+    {
+      id: nanoid(8),
+      type: "testimonials",
+      order: 6,
+      data: {
+        title: "What customers are saying",
+        testimonials: [
+          {
+            quote: "This actually works. Two weeks in and I'm already seeing results.",
+            name: "Sarah K.",
+            role: "Verified Buyer",
+            rating: 5,
+          },
+          {
+            quote: "Exceeded my expectations. Already ordered two more for my family.",
+            name: "Marcus T.",
+            role: "Verified Buyer",
+            rating: 5,
+          },
+          {
+            quote: "Worth every penny. The quality is outstanding.",
+            name: "Priya S.",
+            role: "Verified Buyer",
+            rating: 5,
+          },
+        ],
+        variant: "grid",
+      },
+    },
+    {
+      id: nanoid(8),
+      type: "faq",
+      order: 7,
+      data: { faqs: input.faq.faqs, variant: "accordion" },
     },
     {
       id: nanoid(8),
       type: "footer",
-      order: 5,
+      order: 8,
       data: { storeName: input.productTitle },
     },
   ];
+}
+
+export type AddProductPageInput = {
+  storeId: string;
+  url?: string;
+  aiPrompt?: string;
+  shopifySource?: { shopDomain: string; productId: string } | null;
+  targetLanguage: string;
+  currency?: string;
+  userId: string;
+};
+
+export async function addProductPageToStore(
+  input: AddProductPageInput,
+): Promise<{ pageId: string; pageName: string }> {
+  const [storeRow] = await db
+    .select()
+    .from(stores)
+    .where(and(eq(stores.id, input.storeId), eq(stores.userId, input.userId)))
+    .limit(1);
+
+  if (!storeRow) {
+    throw new Error("Store not found");
+  }
+
+  const isAIMode = !!input.aiPrompt;
+  const sourceUrl = input.shopifySource
+    ? `https://${input.shopifySource.shopDomain}/products/${input.shopifySource.productId}`
+    : isAIMode
+    ? `ai://${Date.now()}`
+    : input.url!;
+
+  const scraped = isAIMode
+    ? await generateProductFromPrompt(input.storeId, input.aiPrompt!, sourceUrl)
+    : input.shopifySource
+    ? await loadFromShopify(input.shopifySource, sourceUrl)
+    : await scrapeProduct(sourceUrl);
+
+  const sourceImages = (scraped.originalImages as string[] | null) ?? [];
+  const rehostedImages = await rehostImages(sourceImages, input.storeId);
+  scraped.originalImages = rehostedImages;
+
+  const productContext = {
+    title: scraped.title ?? "Product",
+    description: scraped.description ?? "",
+    priceCents: scraped.priceCents ?? 4900,
+    currency: scraped.currency ?? input.currency ?? "USD",
+    originalImages: scraped.originalImages as string[],
+  };
+
+  const targeting = {
+    persona: storeRow.persona ?? "General consumer",
+    angle: storeRow.angle ?? "Problem-solution",
+    targetLanguage: input.targetLanguage,
+  };
+
+  const genCtx = {
+    product: productContext,
+    targeting,
+    storeId: input.storeId,
+    userId: input.userId,
+  };
+
+  const [hero, bundles, faq] = await Promise.all([
+    generateHero(genCtx),
+    generateBundles(genCtx),
+    generateFaq(genCtx),
+  ]);
+
+  const productImageUrl = (scraped.originalImages as string[])[0] ?? "";
+
+  const sections = buildSections({
+    hero,
+    bundles,
+    faq,
+    heroImageUrl: productImageUrl,
+    productImageUrl,
+    productImages: scraped.originalImages as string[],
+    productTitle: scraped.title ?? "Product",
+    productDescription: scraped.description ?? undefined,
+    priceCents: scraped.priceCents ?? 4900,
+    originalPriceCents: scraped.estCostCents
+      ? Math.round((scraped.priceCents ?? 4900) * 1.4)
+      : undefined,
+    currency: scraped.currency ?? input.currency ?? "USD",
+  });
+
+  const pageId = nanoid(10);
+  const pageName = scraped.title ?? "Product Page";
+  const existingPages = storeRow.pages.length > 0 ? storeRow.pages : [];
+
+  if (existingPages.length === 0 && storeRow.sections.length > 0) {
+    existingPages.push({
+      id: nanoid(10),
+      type: "product" as const,
+      name: "Product Page",
+      slug: "",
+      sections: storeRow.sections,
+      order: 0,
+      isDefault: true,
+    });
+  }
+
+  const newPage = {
+    id: pageId,
+    type: "product" as const,
+    name: pageName,
+    slug: pageName.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40),
+    sections,
+    order: existingPages.length,
+    isDefault: false,
+  };
+
+  const updatedPages = [...existingPages, newPage];
+
+  await db
+    .update(stores)
+    .set({ pages: updatedPages, updatedAt: new Date() })
+    .where(eq(stores.id, input.storeId));
+
+  return { pageId, pageName };
 }

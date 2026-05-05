@@ -2,6 +2,7 @@ import type { CSSProperties } from "react";
 import type { Store } from "@/db/schema";
 import { Section } from "./sections";
 import { SelectableWrap } from "./SelectableWrap";
+import { CartProvider, CartDrawer, StickyBuyBar } from "./cart";
 
 type ThemeColors = {
   primary?: string;
@@ -22,6 +23,9 @@ export type StoreRendererProps = {
   selectable?: boolean;
   activeSectionId?: string | null;
   onSelectSection?: (sectionId: string) => void;
+  enableCart?: boolean;
+  shopifyDomain?: string;
+  shopifyProductId?: string;
 };
 
 function fontStack(fam: string | undefined, fallback: string): string {
@@ -34,6 +38,9 @@ export const StoreRenderer = ({
   selectable,
   activeSectionId,
   onSelectSection,
+  enableCart = true,
+  shopifyDomain,
+  shopifyProductId,
 }: StoreRendererProps) => {
   const tokens = (store.themeTokens ?? {}) as {
     colors?: ThemeColors;
@@ -64,7 +71,7 @@ export const StoreRenderer = ({
 
   const sortedSections = [...store.sections].sort((a, b) => a.order - b.order);
 
-  return (
+  const content = (
     <div
       style={style}
       className="store-renderer @container/store min-h-screen"
@@ -92,9 +99,25 @@ export const StoreRenderer = ({
           active={activeSectionId === section.id}
           onSelect={onSelectSection}
         >
-          <Section section={section} store={store} />
+          <Section section={section} store={store} allSections={sortedSections} />
         </SelectableWrap>
       ))}
+      {enableCart && !selectable && (
+        <>
+          <CartDrawer />
+          <StickyBuyBar />
+        </>
+      )}
     </div>
   );
+
+  if (enableCart && !selectable) {
+    return (
+      <CartProvider shopifyDomain={shopifyDomain} shopifyProductId={shopifyProductId}>
+        {content}
+      </CartProvider>
+    );
+  }
+
+  return content;
 };

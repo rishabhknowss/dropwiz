@@ -97,9 +97,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         name: sub.name,
       }),
     });
+    return res.status(200).json({ ok: true });
   } catch (err) {
     console.error("[shopify-webhook subscriptions-update]", err);
+    return res.status(500).json({ error: "processing_failed" });
   }
-
-  return res.status(200).json({ ok: true });
 }

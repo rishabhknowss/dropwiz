@@ -2,6 +2,7 @@ import type { Store, StoreSection } from "@/db/schema";
 import { api } from "@/utils/api";
 import { runSilent, runWithToast } from "@/hooks/useToastMutation";
 import { SectionActions } from "./SectionActions";
+import { HeaderInspector } from "./HeaderInspector";
 import { HeroInspector } from "./HeroInspector";
 import { ProductInspector } from "./ProductInspector";
 import { BundlesInspector } from "./BundlesInspector";
@@ -13,6 +14,8 @@ import { LifestyleInspector } from "./LifestyleInspector";
 import { GalleryInspector } from "./GalleryInspector";
 import { TestimonialsInspector } from "./TestimonialsInspector";
 import { ValuePropsInspector } from "./ValuePropsInspector";
+import { AnnouncementInspector } from "./AnnouncementInspector";
+import { HowItWorksInspector } from "./HowItWorksInspector";
 
 type Props = {
   section: StoreSection;
@@ -121,6 +124,13 @@ const SectionForm = ({ section, store, pageId, onClose }: Props) => {
         onDelete={handleDelete}
       />
       <div className="space-y-4 border-t border-[color:var(--dw-border)] pt-4">
+        {section.type === "header" && (
+          <HeaderInspector
+            section={section}
+            storeId={store.id}
+            onCommit={commit}
+          />
+        )}
         {section.type === "hero" && (
           <HeroInspector
             section={section}
@@ -171,9 +181,17 @@ const SectionForm = ({ section, store, pageId, onClose }: Props) => {
         {section.type === "valueProps" && (
           <ValuePropsInspector section={section} onCommit={commit} />
         )}
+        {section.type === "announcement" && (
+          <AnnouncementInspector section={section} onCommit={commit} />
+        )}
+        {section.type === "howItWorks" && (
+          <HowItWorksInspector section={section} onCommit={commit} />
+        )}
         {(section.type === "video" ||
           section.type === "countdown" ||
-          section.type === "comparison") && (
+          section.type === "comparison" ||
+          section.type === "featureMarquee" ||
+          section.type === "reviewStats") && (
           <GenericInspector section={section} onCommit={commit} />
         )}
       </div>

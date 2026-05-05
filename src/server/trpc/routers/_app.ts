@@ -4,6 +4,7 @@ import { storesRouter } from "./stores";
 import { adsRouter } from "./ads";
 import { shopifyRouter } from "./shopify";
 import { scrapeRouter } from "./scrape";
+import { analyticsRouter } from "./analytics";
 
 export const appRouter = router({
   auth: authRouter,
@@ -11,6 +12,7 @@ export const appRouter = router({
   ads: adsRouter,
   shopify: shopifyRouter,
   scrape: scrapeRouter,
+  analytics: analyticsRouter,
 });
 
 export type AppRouter = typeof appRouter;

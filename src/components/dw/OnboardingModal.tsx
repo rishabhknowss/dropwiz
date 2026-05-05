@@ -95,7 +95,7 @@ export const OnboardingModal = ({ userName, onComplete }: OnboardingModalProps) 
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color:var(--dw-accent)]/50 to-transparent" />
 
         <div className="flex items-center justify-between border-b border-[color:var(--dw-border)] px-6 py-4">
-          <DWLogo size={16} />
+          <DWLogo size={28} />
           <button
             onClick={handleSkip}
             className="dw-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)] transition hover:text-[color:var(--dw-text)]"

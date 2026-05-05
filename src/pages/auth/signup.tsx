@@ -1,4 +1,4 @@
-import { useState, useMemo, type FormEvent } from "react";
+import { useState, useMemo, useEffect, type FormEvent } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -7,7 +7,6 @@ import {
   Mail01Icon,
   LockPasswordIcon,
   UserIcon,
-  GoogleIcon,
   ArrowRight01Icon,
   Tick02Icon,
   ViewIcon,
@@ -23,12 +22,6 @@ import { getErrorMessage } from "@/lib/trpc-errors";
 import { cn } from "@/lib/utils";
 import { getPendingBuild } from "@/components/dw/FakeBuildModal";
 
-const PERKS = [
-  "Unlimited draft stores on free tier",
-  "60-second store generation",
-  "Nightly agentic optimization",
-];
-
 type Errors = Partial<Record<"name" | "email" | "password", string>>;
 
 const SignUp = () => {
@@ -40,8 +33,16 @@ const SignUp = () => {
   const [touched, setTouched] = useState<Record<string, boolean>>({});
   const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
+  const [emailInitialized, setEmailInitialized] = useState(false);
 
   const signUp = api.auth.signUp.useMutation();
+
+  useEffect(() => {
+    if (!emailInitialized && router.isReady && typeof router.query.email === "string") {
+      setEmail(router.query.email);
+      setEmailInitialized(true);
+    }
+  }, [router.isReady, router.query.email, emailInitialized]);
 
   const handleGoogleAuth = () => {
     const pending = getPendingBuild();
@@ -127,35 +128,35 @@ const SignUp = () => {
         title={
           <>
             Verify your email
-            <span className="text-[color:var(--dw-accent)]">.</span>
+            <span className="text-[var(--dw-text)]">.</span>
           </>
         }
         subtitle="If the email is available, we sent a verification link. Open it to finish signing up."
         footer={
           <Link
             href="/auth/signin"
-            className="font-medium text-[color:var(--dw-text)] hover:underline"
+            className="font-semibold text-[var(--dw-accent)] hover:underline"
           >
             Back to sign in
           </Link>
         }
       >
-        <div className="rounded-[14px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-6 text-[13px] text-[color:var(--dw-text-dim)]">
-          <div className="dw-mono mb-3 text-[10px] uppercase tracking-[0.14em] text-[color:var(--dw-text-muted)]">
+        <div className="rounded-xl border border-[var(--dw-border)] bg-[var(--dw-bg-secondary)] p-6 text-[14px] text-[var(--dw-text-muted)]">
+          <div className="mb-4 text-[11px] font-medium uppercase tracking-wider text-[var(--dw-text-subtle)]">
             What happens next
           </div>
-          <ol className="space-y-2.5">
-            <li className="flex gap-3">
-              <span className="dw-mono text-[color:var(--dw-accent)]">01</span>
-              <span>Open the email we just sent to {email}</span>
+          <ol className="space-y-3">
+            <li className="flex items-start gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[11px] font-bold text-white">1</span>
+              <span className="pt-0.5">Open the email we just sent to <strong className="text-[var(--dw-text)]">{email}</strong></span>
             </li>
-            <li className="flex gap-3">
-              <span className="dw-mono text-[color:var(--dw-accent)]">02</span>
-              <span>Click the verification link (expires in 24h)</span>
+            <li className="flex items-start gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[11px] font-bold text-white">2</span>
+              <span className="pt-0.5">Click the verification link (expires in 24h)</span>
             </li>
-            <li className="flex gap-3">
-              <span className="dw-mono text-[color:var(--dw-accent)]">03</span>
-              <span>Sign in and build your first store</span>
+            <li className="flex items-start gap-3">
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[11px] font-bold text-white">3</span>
+              <span className="pt-0.5">Sign in and build your first store</span>
             </li>
           </ol>
         </div>
@@ -170,62 +171,44 @@ const SignUp = () => {
     <AuthShell
       title={
         <>
-          Build a store
-          <br />
-          in 60 seconds
-          <span className="text-[color:var(--dw-accent)]">.</span>
+          Create your account
+          <span className="text-[var(--dw-text)]">.</span>
         </>
       }
-      subtitle="Free forever. No card required."
+      subtitle="Start building high-converting stores in seconds."
       footer={
         <>
           Already have an account?{" "}
-          <Link
-            href="/auth/signin"
-            className="font-medium text-[color:var(--dw-text)] hover:underline"
-          >
+          <Link href="/auth/signin" className="font-semibold text-[var(--dw-accent)] hover:underline">
             Sign in
           </Link>
         </>
       }
     >
-      <div className="mb-7 space-y-2">
-        {PERKS.map((p) => (
-          <div
-            key={p}
-            className="flex items-center gap-2.5 text-[13px] text-[color:var(--dw-text-dim)]"
-          >
-            <HugeiconsIcon
-              icon={Tick02Icon}
-              size={13}
-              className="text-[color:var(--dw-accent)]"
-            />
-            {p}
-          </div>
-        ))}
-      </div>
-
       <Button
         variant="outline"
-        className="h-11 w-full justify-center gap-2 text-[14px]"
+        className="h-12 w-full justify-center gap-3 border-[var(--dw-border)] bg-[var(--dw-surface)] text-[15px] font-medium text-[var(--dw-text)] transition-all hover:border-[var(--dw-border-strong)] hover:bg-[var(--dw-surface-hover)]"
         onClick={handleGoogleAuth}
       >
-        <HugeiconsIcon icon={GoogleIcon} size={15} />
+        <svg className="size-5" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+        </svg>
         Continue with Google
       </Button>
 
-      <div className="relative my-7">
+      <div className="relative my-8">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-[color:var(--dw-border)]" />
+          <span className="w-full border-t border-[var(--dw-border)]" />
         </div>
-        <div className="dw-mono relative flex justify-center text-[10px] tracking-[0.14em] uppercase">
-          <span className="bg-[color:var(--dw-bg)] px-3 text-[color:var(--dw-text-muted)]">
-            Or with email
-          </span>
+        <div className="relative flex justify-center">
+          <span className="bg-[var(--dw-bg)] px-4 text-[13px] text-[var(--dw-text-subtle)]">or</span>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      <form onSubmit={handleSubmit} noValidate className="space-y-5">
         <Field
           id="name"
           label="Name (optional)"
@@ -249,18 +232,15 @@ const SignUp = () => {
           error={showError("email") ? errors.email : undefined}
         />
 
-        <div className="space-y-1.5">
-          <Label
-            htmlFor="password"
-            className="text-[12px] text-[color:var(--dw-text-dim)]"
-          >
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-[13px] font-medium text-[var(--dw-text-secondary)]">
             Password
           </Label>
           <div className="relative">
             <HugeiconsIcon
               icon={LockPasswordIcon}
-              size={15}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--dw-text-muted)]"
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)]"
             />
             <Input
               id="password"
@@ -271,54 +251,49 @@ const SignUp = () => {
               onBlur={() => handleBlur("password")}
               aria-invalid={!!showError("password")}
               className={cn(
-                "h-11 bg-[color:var(--dw-surface)] pl-10 pr-10 text-[14px]",
-                showError("password") &&
-                  "border-[color:var(--dw-signal)] focus-visible:ring-[color:var(--dw-signal)]/30",
+                "h-12 border-[var(--dw-border)] bg-[var(--dw-surface)] pl-12 pr-12 text-[15px] text-[var(--dw-text)] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20",
+                showError("password") && "border-[var(--dw-error)] focus:border-[var(--dw-error)] focus:ring-[var(--dw-error)]/20",
               )}
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-[color:var(--dw-text-muted)] hover:text-[color:var(--dw-text)]"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)] transition-colors hover:text-[var(--dw-text)]"
             >
-              <HugeiconsIcon
-                icon={showPassword ? ViewOffSlashIcon : ViewIcon}
-                size={15}
-              />
+              <HugeiconsIcon icon={showPassword ? ViewOffSlashIcon : ViewIcon} size={18} />
             </button>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 pt-1">
+          <div className="flex flex-wrap gap-2 pt-2">
             {passwordStatus.map((c) => (
               <span
                 key={c.label}
                 className={cn(
-                  "dw-mono inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] tracking-[0.08em] uppercase transition",
+                  "inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-all",
                   c.passed
-                    ? "border-[color:var(--dw-jade)]/30 bg-[color:var(--dw-jade)]/10 text-[color:var(--dw-jade)]"
-                    : "border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] text-[color:var(--dw-text-muted)]",
+                    ? "border-[var(--dw-success)]/30 bg-[var(--dw-success-bg)] text-[var(--dw-success)]"
+                    : "border-[var(--dw-border)] bg-[var(--dw-bg-secondary)] text-[var(--dw-text-subtle)]",
                 )}
               >
-                {c.passed ? "✓" : "·"} {c.label}
+                <HugeiconsIcon icon={Tick02Icon} size={10} className={c.passed ? "text-[var(--dw-success)]" : "text-[var(--dw-text-subtle)]"} />
+                {c.label}
               </span>
             ))}
           </div>
 
           {showError("password") && (
-            <p className="pt-0.5 text-[11px] text-[color:var(--dw-signal)]">
-              {errors.password}
-            </p>
+            <p className="text-[12px] text-[var(--dw-error)]">{errors.password}</p>
           )}
         </div>
 
         <Button
           type="submit"
-          className="h-11 w-full gap-2 text-[14px] font-medium"
+          className="h-12 w-full gap-2 bg-[var(--dw-accent)] text-[15px] font-semibold text-white shadow-lg shadow-[var(--dw-accent)]/30 transition-all hover:bg-[var(--dw-accent-hover)] hover:shadow-[var(--dw-accent)]/40"
           disabled={signUp.isPending || !passwordValid}
         >
-          {signUp.isPending ? "Creating..." : "Create account"}
-          <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+          {signUp.isPending ? "Creating account..." : "Create account"}
+          <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
         </Button>
       </form>
     </AuthShell>
@@ -350,15 +325,15 @@ const Field = ({
   onBlur,
   error,
 }: FieldProps) => (
-  <div className="space-y-1.5">
-    <Label htmlFor={id} className="text-[12px] text-[color:var(--dw-text-dim)]">
+  <div className="space-y-2">
+    <Label htmlFor={id} className="text-[13px] font-medium text-[var(--dw-text-secondary)]">
       {label}
     </Label>
     <div className="relative">
       <HugeiconsIcon
         icon={icon}
-        size={15}
-        className="absolute left-3 top-1/2 -translate-y-1/2 text-[color:var(--dw-text-muted)]"
+        size={18}
+        className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)]"
       />
       <Input
         id={id}
@@ -370,15 +345,12 @@ const Field = ({
         placeholder={placeholder}
         aria-invalid={!!error}
         className={cn(
-          "h-11 bg-[color:var(--dw-surface)] pl-10 text-[14px]",
-          error &&
-            "border-[color:var(--dw-signal)] focus-visible:ring-[color:var(--dw-signal)]/30",
+          "h-12 border-[var(--dw-border)] bg-[var(--dw-surface)] pl-12 text-[15px] text-[var(--dw-text)] placeholder:text-[var(--dw-text-subtle)] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20",
+          error && "border-[var(--dw-error)] focus:border-[var(--dw-error)] focus:ring-[var(--dw-error)]/20",
         )}
       />
     </div>
-    {error && (
-      <p className="pt-0.5 text-[11px] text-[color:var(--dw-signal)]">{error}</p>
-    )}
+    {error && <p className="text-[12px] text-[var(--dw-error)]">{error}</p>}
   </div>
 );
 

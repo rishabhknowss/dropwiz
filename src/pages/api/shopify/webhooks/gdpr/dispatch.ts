@@ -55,11 +55,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         shop: headers.shop,
         webhookId: headers.webhookId,
         topic,
+        processedAt: new Date().toISOString(),
       }),
     });
+    return res.status(200).json({ ok: true });
   } catch (err) {
     console.error("[shopify-webhook gdpr dispatch]", topic, err);
+    return res.status(500).json({ error: "processing_failed" });
   }
-
-  return res.status(200).json({ ok: true });
 }

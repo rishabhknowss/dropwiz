@@ -50,9 +50,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       success: 1,
       metadata: JSON.stringify({ shop: headers.shop, webhookId: headers.webhookId }),
     });
+    return res.status(200).json({ ok: true });
   } catch (err) {
     console.error("[shopify-webhook app-uninstalled]", err);
+    return res.status(500).json({ error: "processing_failed" });
   }
-
-  return res.status(200).json({ ok: true });
 }

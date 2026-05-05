@@ -12,7 +12,7 @@ import { toast } from "sonner";
 const COUNT_OPTIONS = [1, 2, 3, 4] as const;
 const FREE_TIERS = ["free", "starter"];
 
-type Kind = "hero" | "lifestyle" | "product" | "ad";
+type Kind = "hero" | "lifestyle" | "product" | "ad" | "logo";
 
 type Props = {
   label: string;

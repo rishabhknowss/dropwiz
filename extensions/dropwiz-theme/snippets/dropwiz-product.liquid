@@ -1,6 +1,9 @@
 {%- assign current_variant = product.selected_or_first_available_variant -%}
 {%- assign compare_price = current_variant.compare_at_price -%}
-{%- assign has_discount = compare_price > current_variant.price -%}
+{%- assign has_discount = false -%}
+{%- if compare_price > current_variant.price -%}
+  {%- assign has_discount = true -%}
+{%- endif -%}
 {%- assign discount_percent = 0 -%}
 {%- if has_discount -%}
   {%- assign discount_percent = compare_price | minus: current_variant.price | times: 100 | divided_by: compare_price -%}

@@ -10,6 +10,7 @@ import { createPageFromTemplate, PAGE_TEMPLATES } from "@/lib/page-templates";
 import {
   createPendingStore,
   runStoreGeneration,
+  addProductPageToStore,
 } from "@/server/jobs/store-generation";
 import {
   generateHero,
@@ -24,7 +25,7 @@ import {
   publicUrlFor,
   prefixedKey,
 } from "@/lib/storage/r2";
-import { protectedProcedure, publicProcedure, router } from "../trpc";
+import { protectedProcedure, publicProcedure, router, rateLimitedProcedure, middleware } from "../trpc";
 import { checkLimits } from "../rate-limit";
 
 const createInputSchema = z.object({
@@ -149,6 +150,10 @@ export const storesRouter = router({
         .limit(1);
       const row = rows[0];
       if (!row) throw new TRPCError({ code: "NOT_FOUND" });
+      const defaultPage = row.pages.find((p) => p.isDefault) ?? row.pages[0];
+      if (defaultPage && defaultPage.sections.length > 0) {
+        return { ...row, sections: defaultPage.sections };
+      }
       return row;
     }),
 
@@ -249,6 +254,7 @@ export const storesRouter = router({
         layout: z
           .array(
             z.enum([
+              "header",
               "hero",
               "product",
               "bundles",
@@ -262,6 +268,10 @@ export const storesRouter = router({
               "gallery",
               "testimonials",
               "valueProps",
+              "announcement",
+              "featureMarquee",
+              "reviewStats",
+              "howItWorks",
             ]),
           )
           .optional(),
@@ -300,7 +310,7 @@ export const storesRouter = router({
           sections,
           updatedAt: new Date(),
         })
-        .where(eq(stores.id, input.storeId));
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)));
       return { success: true };
     }),
 
@@ -392,6 +402,7 @@ export const storesRouter = router({
       z.object({
         storeId: z.string().uuid(),
         type: z.enum([
+          "header",
           "hero",
           "product",
           "bundles",
@@ -405,6 +416,10 @@ export const storesRouter = router({
           "gallery",
           "testimonials",
           "valueProps",
+          "announcement",
+          "featureMarquee",
+          "reviewStats",
+          "howItWorks",
         ]),
         position: z.number().int().min(0).optional(),
         variant: z.string().max(40).optional(),
@@ -554,7 +569,7 @@ export const storesRouter = router({
     .input(
       z.object({
         storeId: z.string().uuid(),
-        kind: z.enum(["hero", "lifestyle", "product", "ad"]),
+        kind: z.enum(["hero", "lifestyle", "product", "logo", "ad"]),
         prompt: z.string().min(4).max(800),
         width: z.number().int().min(256).max(2048).optional(),
         height: z.number().int().min(256).max(2048).optional(),
@@ -858,7 +873,13 @@ export const storesRouter = router({
       return { success: true };
     }),
 
-  claim: protectedProcedure
+  claim: rateLimitedProcedure({ limit: 10, windowMs: 60_000, scope: "stores.claim" })
+    .use(middleware(({ ctx, next }) => {
+      if (!ctx.session?.user) {
+        throw new TRPCError({ code: "UNAUTHORIZED", message: "You must be logged in" });
+      }
+      return next({ ctx: { ...ctx, session: ctx.session, user: ctx.session.user } });
+    }))
     .input(z.object({ claimToken: z.string().min(8).max(128) }))
     .mutation(async ({ ctx, input }) => {
       const [claimed] = await db
@@ -910,6 +931,12 @@ export const storesRouter = router({
         order: 0,
         isDefault: true,
       };
+
+      await db
+        .update(stores)
+        .set({ pages: [defaultPage], updatedAt: new Date() })
+        .where(eq(stores.id, input.storeId));
+
       return [defaultPage];
     }),
 
@@ -959,6 +986,46 @@ export const storesRouter = router({
         .where(eq(stores.id, input.storeId));
 
       return { page: newPage };
+    }),
+
+  addProductPage: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        url: z.string().url().max(2048).optional(),
+        aiPrompt: z.string().min(10).max(1000).optional(),
+        shopifyShopDomain: z.string().max(255).optional(),
+        shopifyProductId: z.string().max(255).optional(),
+        targetLanguage: z.string().min(2).max(10),
+        currency: z.string().min(3).max(8).optional(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const usingShopify = !!input.shopifyShopDomain && !!input.shopifyProductId;
+      const usingAI = !!input.aiPrompt;
+
+      if (!usingShopify && !input.url && !usingAI) {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Provide a product URL, Shopify product, or AI description",
+        });
+      }
+
+      const shopifySource = usingShopify
+        ? { shopDomain: input.shopifyShopDomain!, productId: input.shopifyProductId! }
+        : null;
+
+      const result = await addProductPageToStore({
+        storeId: input.storeId,
+        url: input.url,
+        aiPrompt: usingAI ? input.aiPrompt : undefined,
+        shopifySource,
+        targetLanguage: input.targetLanguage,
+        currency: input.currency,
+        userId: ctx.user.id,
+      });
+
+      return result;
     }),
 
   updatePage: protectedProcedure
@@ -1115,6 +1182,7 @@ export const storesRouter = router({
         storeId: z.string().uuid(),
         pageId: z.string().min(1),
         type: z.enum([
+          "header",
           "hero",
           "product",
           "bundles",
@@ -1128,6 +1196,10 @@ export const storesRouter = router({
           "gallery",
           "testimonials",
           "valueProps",
+          "announcement",
+          "featureMarquee",
+          "reviewStats",
+          "howItWorks",
         ]),
         position: z.number().int().min(0).optional(),
         variant: z.string().max(40).optional(),
@@ -1299,6 +1371,12 @@ function defaultSectionData(
   const priceCents = productData.priceCents ?? 4900;
 
   switch (type) {
+    case "header":
+      return {
+        logoUrl: "",
+        storeName: store.name ?? "Store",
+        showCartIcon: true,
+      };
     case "hero":
       return {
         headline: "New headline",
@@ -1428,6 +1506,51 @@ function defaultSectionData(
             description: "Backed by thousands of verified reviews.",
           },
         ],
+      };
+    case "announcement":
+      return {
+        badges: [
+          { icon: "🚀", text: "Free Shipping on all orders" },
+          { icon: "🔒", text: "Secure Checkout" },
+          { icon: "❤️", text: "30-Day Money Back Guarantee" },
+        ],
+        variant: "bar",
+      };
+    case "featureMarquee":
+      return {
+        items: [
+          { icon: "⚡", label: "Fast Results" },
+          { icon: "❤️", label: "Customer Favorite" },
+          { icon: "💎", label: "Premium Quality" },
+          { icon: "✅", label: "Satisfaction Guaranteed" },
+        ],
+        speed: "normal",
+      };
+    case "reviewStats":
+      return {
+        rating: 4.8,
+        reviewCount: 2500,
+        source: "trustpilot",
+        showStars: true,
+      };
+    case "howItWorks":
+      return {
+        title: "How it works",
+        steps: [
+          {
+            title: "Step 1",
+            description: "Describe the first step of using your product.",
+          },
+          {
+            title: "Step 2",
+            description: "Explain the second step clearly.",
+          },
+          {
+            title: "Step 3",
+            description: "Show the final result or benefit.",
+          },
+        ],
+        variant: "cards",
       };
     default:
       return {};

@@ -8,10 +8,12 @@ import {
   Edit02Icon,
   Tick02Icon,
   Cancel01Icon,
+  Link01Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { api } from "@/utils/api";
 import type { StorePage } from "@/db/schema";
+import { AddProductModal } from "@/components/shopify/AddProductModal";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -53,9 +55,14 @@ export const PageSelector = ({
   const router = useRouter();
   const utils = api.useUtils();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [importProductOpen, setImportProductOpen] = useState(false);
   const [renameDialogOpen, setRenameDialogOpen] = useState(false);
   const [pageToRename, setPageToRename] = useState<StorePage | null>(null);
   const [newName, setNewName] = useState("");
+
+  const shopsQuery = api.shopify.listShops.useQuery(undefined, {
+    enabled: importProductOpen,
+  });
 
   const activePage = pages.find((p) => p.id === activePageId) ?? pages[0];
   const templates = api.stores.listPageTemplates.useQuery();
@@ -192,9 +199,13 @@ export const PageSelector = ({
             </DropdownMenuItem>
           ))}
           <DropdownMenuSeparator />
+          <DropdownMenuItem onSelect={() => setImportProductOpen(true)}>
+            <HugeiconsIcon icon={Link01Icon} size={14} className="mr-2" />
+            Import Product
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={() => setAddDialogOpen(true)}>
             <HugeiconsIcon icon={Add01Icon} size={14} className="mr-2" />
-            Add new page
+            Add blank page
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -258,6 +269,18 @@ export const PageSelector = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {importProductOpen && (
+        <AddProductModal
+          onClose={() => setImportProductOpen(false)}
+          shops={(shopsQuery.data ?? []).map((s) => ({ id: s.id, shopDomain: s.shopDomain }))}
+          storeId={storeId}
+          onPageAdded={(pageId) => {
+            setImportProductOpen(false);
+            onSelectPage(pageId);
+          }}
+        />
+      )}
     </>
   );
 };

@@ -32,7 +32,7 @@ export const EditorHeader = ({
       <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
     </Link>
     <div className="hidden md:block">
-      <DWLogo size={16} />
+      <DWLogo size={28} />
     </div>
     <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[12px] text-[color:var(--dw-text-dim)] md:flex-none md:gap-2 md:text-[13px]">
       <span className="hidden opacity-50 md:inline">/</span>

@@ -53,6 +53,7 @@ const PublishModalBody = ({ storeId, onClose }: Props) => {
   const publicUrl = publicPath
     ? `${typeof window !== "undefined" ? window.location.origin : ""}${publicPath}`
     : "";
+  const shopsLoading = shops.isLoading;
   const connected = (shops.data?.length ?? 0) > 0;
 
   const handleShopifyPublish = () => {
@@ -137,7 +138,10 @@ const PublishModalBody = ({ storeId, onClose }: Props) => {
 
         <div className="flex flex-col gap-3 overflow-y-auto p-4">
           <ShopifyCard
+            loading={shopsLoading}
             connected={connected}
+            published={store.data?.status === "published"}
+            publishedShop={store.data?.publishedShopifyShop ?? null}
             selectedShop={selectedShop}
             shops={shops.data ?? []}
             onSelectShop={setShopOverride}
@@ -165,7 +169,10 @@ const PublishModalBody = ({ storeId, onClose }: Props) => {
 };
 
 const ShopifyCard = ({
+  loading,
   connected,
+  published,
+  publishedShop,
   selectedShop,
   shops,
   onSelectShop,
@@ -174,7 +181,10 @@ const ShopifyCard = ({
   onDisconnect,
   disconnecting,
 }: {
+  loading: boolean;
   connected: boolean;
+  published: boolean;
+  publishedShop: string | null;
   selectedShop: string | null;
   shops: Array<{ id: string; shopDomain: string }>;
   onSelectShop: (shop: string) => void;
@@ -191,14 +201,25 @@ const ShopifyCard = ({
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <div className="text-[13px] font-medium">Shopify</div>
-          <StatusDot connected={connected} />
+          <StatusDot loading={loading} connected={connected} published={published} />
         </div>
         <div className="mt-0.5 text-[11.5px] leading-[1.4] text-[color:var(--dw-text-dim)]">
-          Pushes the product + the Dropwiz design to your store.
+          {published && publishedShop
+            ? `Live on ${publishedShop}`
+            : "Pushes the product + the Dropwiz design to your store."}
         </div>
       </div>
     </div>
-    {connected ? (
+    {loading ? (
+      <Button
+        variant="outline"
+        size="sm"
+        className="mt-3 h-8 w-full text-[12px]"
+        disabled
+      >
+        Loading...
+      </Button>
+    ) : connected ? (
       <div className="mt-3 flex flex-col gap-2">
         {shops.length > 1 && (
           <select
@@ -221,7 +242,9 @@ const ShopifyCard = ({
         >
           {publishing
             ? "Publishing..."
-            : `Publish to ${selectedShop ?? "Shopify"}`}
+            : published
+              ? `Update on ${selectedShop ?? "Shopify"}`
+              : `Publish to ${selectedShop ?? "Shopify"}`}
         </Button>
         {selectedShop && (
           <button
@@ -297,19 +320,46 @@ const PublicUrlCard = ({
   </div>
 );
 
-const StatusDot = ({ connected }: { connected: boolean }) => (
-  <span
-    className={`dw-mono inline-flex items-center gap-1.5 text-[9.5px] font-medium tracking-[0.14em] uppercase ${
-      connected ? "text-[color:var(--dw-jade)]" : "text-[color:var(--dw-text-muted)]"
-    }`}
-  >
-    <span
-      className={`size-1.5 rounded-full ${
-        connected
-          ? "dw-pulse bg-[color:var(--dw-jade)]"
-          : "bg-[color:var(--dw-text-muted)]/50"
-      }`}
-    />
-    {connected ? "Connected" : "Not connected"}
-  </span>
-);
+const StatusDot = ({
+  loading,
+  connected,
+  published,
+}: {
+  loading: boolean;
+  connected: boolean;
+  published: boolean;
+}) => {
+  if (loading) {
+    return (
+      <span className="dw-mono inline-flex items-center gap-1.5 text-[9.5px] font-medium tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)]">
+        <span className="size-1.5 animate-pulse rounded-full bg-[color:var(--dw-text-muted)]/50" />
+        Checking...
+      </span>
+    );
+  }
+
+  if (published) {
+    return (
+      <span className="dw-mono inline-flex items-center gap-1.5 text-[9.5px] font-medium tracking-[0.14em] uppercase text-[color:var(--dw-accent)]">
+        <span className="dw-pulse size-1.5 rounded-full bg-[color:var(--dw-accent)]" />
+        Published
+      </span>
+    );
+  }
+
+  if (connected) {
+    return (
+      <span className="dw-mono inline-flex items-center gap-1.5 text-[9.5px] font-medium tracking-[0.14em] uppercase text-[color:var(--dw-jade)]">
+        <span className="dw-pulse size-1.5 rounded-full bg-[color:var(--dw-jade)]" />
+        Connected
+      </span>
+    );
+  }
+
+  return (
+    <span className="dw-mono inline-flex items-center gap-1.5 text-[9.5px] font-medium tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)]">
+      <span className="size-1.5 rounded-full bg-[color:var(--dw-text-muted)]/50" />
+      Not connected
+    </span>
+  );
+};

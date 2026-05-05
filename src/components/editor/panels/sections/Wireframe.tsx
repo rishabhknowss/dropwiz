@@ -291,6 +291,62 @@ const Frame = ({ kind }: { kind: VariantPreview }) => {
           <Btn x={84} y={74} w={32} h={8} />
         </>
       );
+    case "announcement-bar":
+      return (
+        <>
+          <rect x={0} y={0} width={160} height={18} fill="var(--dw-accent)" opacity={0.6} />
+          <Bar x={20} y={6} w={24} h={6} solid />
+          <Bar x={52} y={6} w={28} h={6} solid />
+          <Bar x={88} y={6} w={32} h={6} solid />
+          <Bar x={128} y={6} w={24} h={6} solid />
+        </>
+      );
+    case "announcement-marquee":
+      return (
+        <>
+          <rect x={0} y={0} width={160} height={18} fill="var(--dw-accent)" opacity={0.6} />
+          <Bar x={-10} y={6} w={20} h={6} solid />
+          <Bar x={18} y={6} w={24} h={6} solid />
+          <Bar x={50} y={6} w={28} h={6} solid />
+          <Bar x={86} y={6} w={32} h={6} solid />
+          <Bar x={126} y={6} w={24} h={6} solid />
+          <Bar x={158} y={6} w={20} h={6} solid />
+        </>
+      );
+    case "how-it-works-cards":
+      return (
+        <>
+          <Bar x={50} y={8} w={60} h={5} />
+          <Box x={6} y={22} w={46} h={70} />
+          <Circle cx={29} cy={32} r={6} solid />
+          <Box x={57} y={22} w={46} h={70} />
+          <Circle cx={80} cy={32} r={6} solid />
+          <Box x={108} y={22} w={46} h={70} />
+          <Circle cx={131} cy={32} r={6} solid />
+        </>
+      );
+    case "how-it-works-timeline":
+      return (
+        <>
+          <Bar x={50} y={8} w={60} h={5} />
+          <Circle cx={20} cy={30} r={5} solid />
+          <Bar x={20} y={35} w={2} h={25} soft />
+          <Bar x={32} y={26} w={50} h={4} />
+          <Bar x={32} y={34} w={40} h={3} soft />
+          <Circle cx={20} cy={65} r={5} solid />
+          <Bar x={20} y={70} w={2} h={25} soft />
+          <Bar x={32} y={61} w={50} h={4} />
+          <Bar x={32} y={69} w={40} h={3} soft />
+        </>
+      );
+    case "header-simple":
+      return (
+        <>
+          <rect x={0} y={0} width={160} height={20} fill={SOFT} opacity={0.25} />
+          <Bar x={6} y={7} w={30} h={6} />
+          <Circle cx={148} cy={10} r={5} />
+        </>
+      );
     default:
       return null;
   }

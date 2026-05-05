@@ -7,7 +7,9 @@ export type VariantPreview = "split-img-r" | "stack-center" | "fullbleed" | "min
   | "icon-grid" | "alt-rows" | "list-with-header"
   | "single-product" | "product-with-images" | "trust-row" | "footer-min"
   | "video-block" | "countdown-block" | "comparison-table"
-  | "gallery-masonry" | "lifestyle-split";
+  | "gallery-masonry" | "lifestyle-split"
+  | "announcement-bar" | "announcement-marquee" | "how-it-works-cards" | "how-it-works-timeline"
+  | "header-simple";
 
 export type Variant = {
   id: string;
@@ -24,6 +26,14 @@ export type SectionCategory = {
 };
 
 export const SECTION_CATALOG: SectionCategory[] = [
+  {
+    type: "header",
+    label: "Header",
+    description: "Logo and navigation",
+    variants: [
+      { id: "default", label: "Simple", description: "Logo left, cart right", preview: "header-simple" },
+    ],
+  },
   {
     type: "hero",
     label: "Hero",
@@ -138,6 +148,26 @@ export const SECTION_CATALOG: SectionCategory[] = [
     description: "Bottom of store",
     variants: [
       { id: "default", label: "Minimal", description: "Brand name + links", preview: "footer-min" },
+    ],
+  },
+  {
+    type: "announcement",
+    label: "Announcement",
+    description: "Top bar notification",
+    variants: [
+      { id: "bar", label: "Bar", description: "Static badges bar", preview: "announcement-bar" },
+      { id: "pills", label: "Pills", description: "Rounded badge pills", preview: "announcement-bar" },
+      { id: "marquee", label: "Marquee", description: "Scrolling ticker", preview: "announcement-marquee" },
+    ],
+  },
+  {
+    type: "howItWorks",
+    label: "How it works",
+    description: "Step-by-step guide",
+    variants: [
+      { id: "cards", label: "Cards", description: "Numbered step cards", preview: "how-it-works-cards" },
+      { id: "timeline", label: "Timeline", description: "Vertical timeline", preview: "how-it-works-timeline" },
+      { id: "numbered", label: "Numbered", description: "Simple numbered list", preview: "how-it-works-cards" },
     ],
   },
 ];

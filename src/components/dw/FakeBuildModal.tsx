@@ -180,7 +180,7 @@ export const FakeBuildModal = ({ mode, url, aiPrompt, source, onClose }: FakeBui
         <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[color:var(--dw-accent)]/50 to-transparent" />
 
         <div className="flex items-center justify-between border-b border-[color:var(--dw-border)] px-6 py-4">
-          <DWLogo size={16} />
+          <DWLogo size={28} />
           {(phase === "building" || phase === "error") && (
             <button
               onClick={handleClose}

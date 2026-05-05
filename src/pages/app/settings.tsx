@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   UserIcon,
@@ -10,35 +9,38 @@ import {
   CheckmarkCircle02Icon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
-import { DWTopNav } from "@/components/dw/TopNav";
+import { DashboardLayout } from "@/components/dashboard";
 import { api } from "@/utils/api";
-import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/trpc-errors";
 
-const TIER_INFO: Record<string, { label: string; color: string; description: string }> = {
+const TIER_INFO: Record<string, { label: string; color: string; bgColor: string; description: string }> = {
   free: {
     label: "Free",
     color: "var(--dw-text-muted)",
+    bgColor: "var(--dw-bg-tertiary)",
     description: "5 free image credits to start",
   },
   starter: {
     label: "Starter",
     color: "var(--dw-accent)",
+    bgColor: "var(--dw-accent-subtle)",
     description: "50 image credits per month",
   },
   pro: {
     label: "Pro",
-    color: "#a78bfa",
+    color: "#7C3AED",
+    bgColor: "#F5F3FF",
     description: "Unlimited image credits",
   },
   agency: {
     label: "Agency",
-    color: "#f59e0b",
+    color: "#F59E0B",
+    bgColor: "#FEF3C7",
     description: "Unlimited everything + priority support",
   },
   enterprise: {
     label: "Enterprise",
-    color: "#ef4444",
+    color: "#EF4444",
+    bgColor: "#FEE2E2",
     description: "Custom limits + dedicated support",
   },
 };
@@ -46,31 +48,15 @@ const TIER_INFO: Record<string, { label: string; color: string; description: str
 const SettingsPage = () => {
   const router = useRouter();
   const me = api.auth.me.useQuery();
-  const utils = api.useUtils();
-  const signOut = api.auth.signOut.useMutation();
 
   useEffect(() => {
     if (!me.isLoading && !me.data) router.replace("/auth/signin");
   }, [me.isLoading, me.data, router]);
 
-  const handleSignOut = () => {
-    const id = toast.loading("Signing out...");
-    signOut.mutate(undefined, {
-      onSuccess: async () => {
-        toast.success("Signed out", { id });
-        await utils.auth.me.invalidate();
-        router.push("/");
-      },
-      onError: (err) => toast.error(getErrorMessage(err), { id }),
-    });
-  };
-
   if (!me.data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[color:var(--dw-bg)]">
-        <div className="dw-mono text-xs tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)]">
-          Loading…
-        </div>
+      <div className="flex min-h-screen items-center justify-center bg-[var(--dw-bg)]">
+        <div className="text-[13px] text-[var(--dw-text-muted)]">Loading...</div>
       </div>
     );
   }
@@ -78,171 +64,114 @@ const SettingsPage = () => {
   const tierInfo = TIER_INFO[me.data.tier] ?? TIER_INFO.free;
 
   return (
-    <div className="min-h-screen bg-[color:var(--dw-bg)] text-[color:var(--dw-text)]">
-      <DWTopNav
-        active="Settings"
-        items={[
-          { label: "Stores", href: "/app/stores" },
-          { label: "Shopify", href: "/app/shopify" },
-          { label: "Settings", href: "/app/settings" },
-        ]}
-        ctaLabel="New store"
-        ctaHref="/build/new"
-        secondaryLabel={signOut.isPending ? "Signing out..." : "Sign out"}
-        secondaryOnClick={handleSignOut}
-        secondaryDisabled={signOut.isPending}
-        showCredits
-      />
+    <DashboardLayout title="Settings" subtitle="Manage your account and billing">
+      <div className="mx-auto max-w-[720px] space-y-4">
+        <section className="rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface)] p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex size-11 items-center justify-center rounded-full bg-[var(--dw-accent-subtle)]">
+              <HugeiconsIcon icon={UserIcon} size={20} className="text-[var(--dw-accent)]" />
+            </div>
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--dw-text-muted)]">
+                Profile
+              </p>
+              <h2 className="text-[15px] font-semibold text-[var(--dw-text)]">
+                {me.data.name ?? me.data.email.split("@")[0]}
+              </h2>
+            </div>
+          </div>
 
-      <main className="mx-auto max-w-[800px] px-5 py-10 md:px-8 md:py-14 lg:px-10 lg:py-16">
-        <h1 className="dw-display-sm text-[32px] md:text-[40px]">
-          Settings
-          <span className="text-[color:var(--dw-accent)]">.</span>
-        </h1>
-        <p className="mt-2 text-[14px] text-[color:var(--dw-text-dim)] md:text-[15px]">
-          Manage your account, plan, and credits
-        </p>
-
-        <div className="mt-10 space-y-6">
-          <section className="rounded-[20px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex size-12 items-center justify-center rounded-full bg-[color:var(--dw-surface2)]">
-                <HugeiconsIcon
-                  icon={UserIcon}
-                  size={20}
-                  className="text-[color:var(--dw-text-muted)]"
-                />
-              </div>
+          <div className="mt-4 space-y-2">
+            <div className="flex items-center justify-between rounded-md bg-[var(--dw-bg-secondary)] px-3 py-2.5">
               <div>
-                <div className="dw-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)]">
-                  Profile
-                </div>
-                <div className="text-[16px] font-medium">
-                  {me.data.name ?? me.data.email.split("@")[0]}
-                </div>
+                <p className="text-[10px] font-medium text-[var(--dw-text-muted)]">Email</p>
+                <p className="text-[12px] font-medium text-[var(--dw-text)]">{me.data.email}</p>
               </div>
+              {me.data.emailVerified && (
+                <div className="flex items-center gap-1 rounded-full bg-[var(--dw-success-bg)] px-2 py-0.5 text-[var(--dw-success)]">
+                  <HugeiconsIcon icon={CheckmarkCircle02Icon} size={12} />
+                  <span className="text-[9px] font-semibold uppercase">Verified</span>
+                </div>
+              )}
             </div>
 
-            <div className="mt-6 space-y-4">
-              <div className="flex items-center justify-between rounded-xl bg-[color:var(--dw-surface2)] px-4 py-3">
-                <div>
-                  <div className="text-[13px] text-[color:var(--dw-text-muted)]">Email</div>
-                  <div className="text-[14px]">{me.data.email}</div>
-                </div>
-                {me.data.emailVerified && (
-                  <div className="flex items-center gap-1.5 text-[color:var(--dw-jade)]">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />
-                    <span className="dw-mono text-[10px] tracking-[0.1em] uppercase">Verified</span>
-                  </div>
-                )}
-              </div>
+            <div className="rounded-md bg-[var(--dw-bg-secondary)] px-3 py-2.5">
+              <p className="text-[10px] font-medium text-[var(--dw-text-muted)]">Name</p>
+              <p className="text-[12px] font-medium text-[var(--dw-text)]">
+                {me.data.name ?? "Not set"}
+              </p>
+            </div>
+          </div>
+        </section>
 
-              <div className="flex items-center justify-between rounded-xl bg-[color:var(--dw-surface2)] px-4 py-3">
-                <div>
-                  <div className="text-[13px] text-[color:var(--dw-text-muted)]">Name</div>
-                  <div className="text-[14px]">{me.data.name ?? "Not set"}</div>
-                </div>
+        <section className="rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface)] p-5">
+          <div className="flex items-center gap-4">
+            <div
+              className="flex size-11 items-center justify-center rounded-full"
+              style={{ backgroundColor: tierInfo.bgColor }}
+            >
+              <HugeiconsIcon icon={CrownIcon} size={20} style={{ color: tierInfo.color }} />
+            </div>
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--dw-text-muted)]">
+                Current Plan
+              </p>
+              <h2 className="text-[15px] font-semibold" style={{ color: tierInfo.color }}>
+                {tierInfo.label}
+              </h2>
+            </div>
+          </div>
+
+          <p className="mt-3 text-[12px] text-[var(--dw-text-muted)]">{tierInfo.description}</p>
+
+          {me.data.tier === "free" && (
+            <div className="mt-4">
+              <Button className="gap-2 bg-[var(--dw-accent)] hover:bg-[var(--dw-accent-hover)]" disabled>
+                Upgrade Plan
+                <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+              </Button>
+              <p className="mt-2 text-[10px] text-[var(--dw-text-subtle)]">Paid plans coming soon</p>
+            </div>
+          )}
+        </section>
+
+        <section className="rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface)] p-5">
+          <div className="flex items-center gap-4">
+            <div className="flex size-11 items-center justify-center rounded-full bg-[var(--dw-accent-subtle)]">
+              <HugeiconsIcon icon={SparklesIcon} size={20} className="text-[var(--dw-accent)]" />
+            </div>
+            <div>
+              <p className="text-[10px] font-medium uppercase tracking-wider text-[var(--dw-text-muted)]">
+                Image Credits
+              </p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-[24px] font-bold tracking-tight text-[var(--dw-text)]">
+                  {me.data.imageCredits}
+                </span>
+                <span className="text-[12px] text-[var(--dw-text-muted)]">remaining</span>
               </div>
             </div>
-          </section>
+          </div>
 
-          <section className="rounded-[20px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-6">
-            <div className="flex items-center gap-3">
-              <div
-                className="flex size-12 items-center justify-center rounded-full"
-                style={{ backgroundColor: `${tierInfo.color}20` }}
-              >
-                <HugeiconsIcon
-                  icon={CrownIcon}
-                  size={20}
-                  style={{ color: tierInfo.color }}
-                />
-              </div>
+          <div className="mt-4 rounded-md bg-[var(--dw-bg-secondary)] p-3">
+            <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="dw-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)]">
-                  Current Plan
-                </div>
-                <div className="text-[16px] font-medium" style={{ color: tierInfo.color }}>
-                  {tierInfo.label}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-4 text-[14px] text-[color:var(--dw-text-dim)]">
-              {tierInfo.description}
-            </div>
-
-            {me.data.tier === "free" && (
-              <div className="mt-6">
-                <Button className="gap-2" disabled>
-                  Upgrade Plan
-                  <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
-                </Button>
-                <p className="mt-2 text-[12px] text-[color:var(--dw-text-muted)]">
-                  Paid plans coming soon
+                <p className="text-[12px] font-medium text-[var(--dw-text)]">Need more credits?</p>
+                <p className="text-[11px] text-[var(--dw-text-muted)]">
+                  Each AI-generated image uses 1 credit
                 </p>
               </div>
-            )}
-          </section>
-
-          <section className="rounded-[20px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex size-12 items-center justify-center rounded-full bg-[color:var(--dw-accent)]/10">
-                <HugeiconsIcon
-                  icon={SparklesIcon}
-                  size={20}
-                  className="text-[color:var(--dw-accent)]"
-                />
-              </div>
-              <div>
-                <div className="dw-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)]">
-                  Image Credits
-                </div>
-                <div className="flex items-baseline gap-2">
-                  <span className="dw-display-sm text-[32px]">{me.data.imageCredits}</span>
-                  <span className="text-[14px] text-[color:var(--dw-text-muted)]">remaining</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 rounded-xl bg-[color:var(--dw-surface2)] p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[14px] font-medium">Need more credits?</div>
-                  <div className="text-[13px] text-[color:var(--dw-text-muted)]">
-                    Each AI-generated image uses 1 credit
-                  </div>
-                </div>
-                <Button size="sm" variant="outline" disabled>
-                  Buy Credits
-                </Button>
-              </div>
-            </div>
-            <p className="mt-3 text-[12px] text-[color:var(--dw-text-muted)]">
-              Credit purchasing coming soon. Contact support for bulk credits.
-            </p>
-          </section>
-
-          <section className="rounded-[20px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-6">
-            <div className="dw-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)]">
-              Account Actions
-            </div>
-            <div className="mt-4 flex flex-wrap gap-3">
-              <Button
-                variant="outline"
-                onClick={handleSignOut}
-                disabled={signOut.isPending}
-              >
-                {signOut.isPending ? "Signing out..." : "Sign Out"}
-              </Button>
-              <Button asChild variant="ghost">
-                <Link href="/app/stores">Back to Stores</Link>
+              <Button size="sm" variant="outline" disabled className="border-[var(--dw-border)]">
+                Buy Credits
               </Button>
             </div>
-          </section>
-        </div>
-      </main>
-    </div>
+          </div>
+          <p className="mt-2 text-[10px] text-[var(--dw-text-subtle)]">
+            Credit purchasing coming soon. Contact support for bulk credits.
+          </p>
+        </section>
+      </div>
+    </DashboardLayout>
   );
 };
 

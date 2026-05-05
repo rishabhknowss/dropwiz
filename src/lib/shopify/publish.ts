@@ -153,11 +153,15 @@ export async function publishStoreToShopify(
   if (!store) throw new Error("Store not found");
   if (store.userId !== userId) throw new Error("Forbidden");
 
+  const defaultPage = store.pages.find((p) => p.isDefault) ?? store.pages[0];
+  const sectionsForPublish = defaultPage?.sections ?? store.sections;
+
   log("store.loaded", {
     storeId: store.id,
     name: store.name,
-    sectionsCount: store.sections.length,
-    sectionTypes: store.sections.map((s) => s.type),
+    sectionsCount: sectionsForPublish.length,
+    sectionTypes: sectionsForPublish.map((s) => s.type),
+    hasPages: store.pages.length > 0,
     persona: store.persona,
     angle: store.angle,
     publishedShopifyProductId: store.publishedShopifyProductId,
@@ -446,6 +450,8 @@ const DROPWIZ_METAFIELD_KEYS: Array<{ key: string; name: string }> = [
   { key: "layout", name: "Dropwiz layout" },
   { key: "theme_tokens", name: "Dropwiz theme tokens" },
   { key: "pages", name: "Dropwiz pages" },
+  { key: "announcement", name: "Dropwiz announcement" },
+  { key: "header", name: "Dropwiz header" },
   { key: "hero", name: "Dropwiz hero" },
   { key: "product", name: "Dropwiz product" },
   { key: "bundles", name: "Dropwiz bundles" },

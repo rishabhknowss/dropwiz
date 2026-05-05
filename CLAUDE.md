@@ -52,8 +52,6 @@ mutation.mutate(payload, {
 ## Database Safety
 - NEVER run database migrations, pushes, or any command that modifies the database schema. No `db:push`, `db:migrate`, `drizzle-kit push`, or similar commands.
 
-## ENV
-DON'T EXPOSE ENV TO PUBLIC  , ONLY READ THEM LOCALLY AND USE THEM LOCALLY , DONT EVER PUSH OR USE THEM FOR TRAINING PURPOSE
 
 ## CODE
 make sure NOT to write repeatable code and the code is modular + production ready + NOT too     

@@ -265,7 +265,10 @@ const renderFaq = (d: FaqData): string => {
 const renderTrust = (d: TrustData): string => {
   if (!d.badges?.length) return "";
   const items = d.badges
-    .map((b) => `<div class="dw-trust-item">${esc(b)}</div>`)
+    .map((b) => {
+      const text = typeof b === "string" ? b : b.title;
+      return `<div class="dw-trust-item">${esc(text)}</div>`;
+    })
     .join("");
   return `<section class="dw-trust"><div class="dw-container">${items}</div></section>`;
 };

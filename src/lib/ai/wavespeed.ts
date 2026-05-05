@@ -81,7 +81,10 @@ async function pollJob(
     });
     const data = res.data.data;
     if (data.status === "completed") return data.outputs;
-    if (data.status === "failed") throw new Error(data.error ?? "wavespeed failed");
+    if (data.status === "failed") {
+      const errorMsg = data.error || "Generation failed - the image provider rejected this request. Try a different prompt or image.";
+      throw new Error(errorMsg);
+    }
     await new Promise((r) => setTimeout(r, intervalMs));
   }
   throw new Error("wavespeed timeout");
@@ -96,7 +99,7 @@ export type GenerateImageInput = {
   numImages?: number;
   seed?: number;
   storeId: string;
-  kind: "hero" | "lifestyle" | "product" | "ad";
+  kind: "hero" | "lifestyle" | "product" | "logo" | "ad";
   userId?: string | null;
 };
 
@@ -312,7 +315,7 @@ export type GenerateWithReferenceInput = {
   prompt: string;
   referenceImageUrl: string;
   storeId: string;
-  kind: "hero" | "lifestyle" | "product" | "ad";
+  kind: "hero" | "lifestyle" | "product" | "logo" | "ad";
   userId?: string | null;
   width?: number;
   height?: number;

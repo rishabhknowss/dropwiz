@@ -1,9 +1,31 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import crypto from "crypto";
 import { env } from "@/env";
 
 const SHOPIFY_SCOPES =
-  "read_products,write_products,read_publications,write_publications";
+  "read_products,write_products,read_publications,write_publications,read_orders,read_customers";
+
+const MAX_RETRIES = 3;
+const BASE_DELAY_MS = 1000;
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRateLimited = (error: unknown): boolean => {
+  if (error instanceof AxiosError) {
+    return error.response?.status === 429;
+  }
+  return false;
+};
+
+const getRetryAfter = (error: unknown): number => {
+  if (error instanceof AxiosError) {
+    const retryAfter = error.response?.headers?.["retry-after"];
+    if (retryAfter) {
+      return parseInt(retryAfter, 10) * 1000;
+    }
+  }
+  return 0;
+};
 
 export function getShopifyConfig() {
   const key = env.SHOPIFY_API_KEY;
@@ -65,28 +87,45 @@ export async function exchangeShopifyCode(
   return res.data;
 }
 
-export function shopifyGraphql<T>(
+export async function shopifyGraphql<T>(
   shop: string,
   accessToken: string,
   query: string,
   variables?: Record<string, unknown>,
 ): Promise<T> {
-  return axios
-    .post<{ data: T; errors?: unknown }>(
-      `https://${shop}/admin/api/2024-10/graphql.json`,
-      { query, variables },
-      {
-        headers: {
-          "X-Shopify-Access-Token": accessToken,
-          "Content-Type": "application/json",
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await axios.post<{ data: T; errors?: unknown }>(
+        `https://${shop}/admin/api/2024-10/graphql.json`,
+        { query, variables },
+        {
+          headers: {
+            "X-Shopify-Access-Token": accessToken,
+            "Content-Type": "application/json",
+          },
+          timeout: 30_000,
         },
-        timeout: 30_000,
-      },
-    )
-    .then((res) => {
+      );
+
       if (res.data.errors) {
         throw new Error(`Shopify GraphQL: ${JSON.stringify(res.data.errors)}`);
       }
       return res.data.data;
-    });
+    } catch (error) {
+      lastError = error;
+
+      if (attempt < MAX_RETRIES && isRateLimited(error)) {
+        const retryAfter = getRetryAfter(error);
+        const delay = retryAfter || BASE_DELAY_MS * Math.pow(2, attempt);
+        await sleep(delay);
+        continue;
+      }
+
+      throw error;
+    }
+  }
+
+  throw lastError;
 }

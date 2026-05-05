@@ -37,7 +37,7 @@ const BuildGenerating = () => {
     { storeId: storeId ?? "" },
     {
       enabled: !!storeId,
-      refetchInterval: 1500,
+      refetchInterval: 750,
       refetchOnWindowFocus: false,
     },
   );

@@ -2,7 +2,6 @@ import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useRouter } from "next/router";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { getErrorMessage } from "@/lib/trpc-errors";
 import {
   ArrowRight01Icon,
   LinkSquare01Icon,
@@ -10,13 +9,15 @@ import {
   Store01Icon,
   MagicWand01Icon,
 } from "@hugeicons/core-free-icons";
-import { DWTopNav } from "@/components/dw/TopNav";
+import { DashboardLayout } from "@/components/dashboard";
+import { LandingNav } from "@/components/landing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { api } from "@/utils/api";
 import { runWithToast } from "@/hooks/useToastMutation";
 import { ShopifyConnectModal } from "@/components/shopify/ShopifyConnectModal";
 import { getPendingBuild, clearPendingBuild } from "@/components/dw/FakeBuildModal";
+import { validateProductUrl } from "@/lib/url-validation";
 
 type Source = "shopify" | "supplier" | "competitor" | "ai";
 
@@ -37,7 +38,7 @@ const SOURCES: SourceConfig[] = [
     title: "Import from supplier",
     blurb: "AliExpress, Amazon, Etsy, TikTok Shop — paste any product link.",
     icon: PackageDeliveredIcon,
-    tone: "#E16B3F",
+    tone: "#5235EF",
     placeholder: "https://www.amazon.com/dp/B0...",
     hint: "Supplier or marketplace URL",
   },
@@ -46,7 +47,7 @@ const SOURCES: SourceConfig[] = [
     title: "Import from competitor",
     blurb: "Paste any Shopify store URL — we'll learn from their listing.",
     icon: Store01Icon,
-    tone: "#C7FF3D",
+    tone: "#8771FF",
     placeholder: "https://competitor.com/products/...",
     hint: "Competitor product or store URL",
   },
@@ -64,7 +65,7 @@ const SOURCES: SourceConfig[] = [
     title: "Create with AI",
     blurb: "Describe your product idea and let AI generate everything.",
     icon: MagicWand01Icon,
-    tone: "#A855F7",
+    tone: "#5235EF",
     placeholder: "",
     hint: "Describe your product",
   },
@@ -93,25 +94,11 @@ const BuildNew = () => {
   const autoBuildTriggered = useRef(false);
 
   const me = api.auth.me.useQuery();
-  const utils = api.useUtils();
-  const signOut = api.auth.signOut.useMutation();
   const isLoggedIn = !!me.data;
   const create = api.stores.create.useMutation();
   const shops = api.shopify.listShops.useQuery(undefined, {
     refetchOnWindowFocus: false,
   });
-
-  const handleSignOut = () => {
-    const id = toast.loading("Signing out...");
-    signOut.mutate(undefined, {
-      onSuccess: async () => {
-        toast.success("Signed out", { id });
-        await utils.auth.me.invalidate();
-        router.push("/");
-      },
-      onError: (err) => toast.error(getErrorMessage(err), { id }),
-    });
-  };
 
   const active = SOURCES.find((s) => s.id === source) ?? null;
 
@@ -238,14 +225,15 @@ const BuildNew = () => {
         },
       );
     } else {
-      if (!url.startsWith("http")) {
-        toast.error("Enter a valid product URL");
+      const validation = validateProductUrl(url);
+      if (!validation.valid) {
+        toast.error(validation.error ?? "Enter a valid product URL");
         return;
       }
       runWithToast(
         create,
         {
-          url: url.trim(),
+          url: validation.normalizedUrl ?? url.trim(),
           targetLanguage: language,
           currency,
         },
@@ -263,56 +251,53 @@ const BuildNew = () => {
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[color:var(--dw-bg)] text-[color:var(--dw-text)]">
-      <DWTopNav
-        active={isLoggedIn ? "New store" : "Product"}
-        items={isLoggedIn ? [
-          { label: "Stores", href: "/app/stores" },
-          { label: "New store", href: "/build/new" },
-        ] : undefined}
-        ctaLabel={isLoggedIn ? "My stores" : "Build free"}
-        ctaHref={isLoggedIn ? "/app/stores" : "/auth/signup"}
-        secondaryLabel={isLoggedIn ? (signOut.isPending ? "Signing out..." : "Sign out") : "Sign in"}
-        secondaryHref={isLoggedIn ? undefined : "/auth/signin"}
-        secondaryOnClick={isLoggedIn ? handleSignOut : undefined}
-        secondaryDisabled={signOut.isPending}
-        showCredits={isLoggedIn}
-      />
-      <main className="mx-auto max-w-[1080px] px-5 py-10 md:px-6 md:py-14">
-        <div className="dw-mono mb-3 inline-flex items-center gap-2 text-[10px] tracking-[0.16em] uppercase text-[color:var(--dw-text-muted)]">
-          <span className="size-1 rounded-full bg-[color:var(--dw-accent)]" />
-          New store
-        </div>
-        <h1 className="dw-display-sm text-[32px] leading-[1.05] tracking-[-0.02em] md:text-[40px] lg:text-[44px] lg:leading-[1.04]">
-          How do you want to start
-          <span className="text-[color:var(--dw-accent)]">?</span>
-        </h1>
-        <p className="mt-3 max-w-[560px] text-[14px] leading-[1.5] text-[color:var(--dw-text-dim)] md:text-[15px]">
-          Choose where your product comes from — we&apos;ll scrape it, write the
-          copy, generate the imagery, and ship a full store.
-        </p>
+  const content = (
+    <>
+      <div className="mb-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-[#6B7280]">
+        <span className="size-1.5 rounded-full bg-[#5235EF]" />
+        New store
+      </div>
+      <h1 className="text-[32px] font-bold leading-[1.1] text-[#101011] md:text-[40px]">
+        How do you want to start
+        <span className="text-[#5235EF]">?</span>
+      </h1>
+      <p className="mt-3 max-w-[560px] text-[15px] leading-relaxed text-[#6B7280]">
+        Choose where your product comes from — we&apos;ll scrape it, write the
+        copy, generate the imagery, and ship a full store.
+      </p>
 
-        <div className="mt-8 grid grid-cols-1 gap-3 md:mt-10 md:grid-cols-2 lg:grid-cols-4">
-          {SOURCES.map((s) => (
-            <SourceCard
-              key={s.id}
-              source={s}
-              selected={source === s.id}
-              onSelect={() => handleSelectSource(s.id)}
-            />
-          ))}
-        </div>
+      <div className="mt-8 grid grid-cols-1 gap-4 md:mt-10 md:grid-cols-2 lg:grid-cols-4">
+        {SOURCES.map((s) => (
+          <SourceCard
+            key={s.id}
+            source={s}
+            selected={source === s.id}
+            onSelect={() => handleSelectSource(s.id)}
+          />
+        ))}
+      </div>
 
-        {active && (
+      {active && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <form
             onSubmit={handleSubmit}
-            className="mx-auto mt-8 max-w-[640px] rounded-[16px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-5"
+            className="relative w-full max-w-[500px] rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-2xl"
           >
-            <div className="flex items-center gap-2">
-              <span className="dw-mono text-[10px] tracking-[0.16em] uppercase text-[color:var(--dw-text-muted)]">
-                {active.hint}
-              </span>
+            <button
+              type="button"
+              onClick={() => setSource(null)}
+              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full text-[#9CA3AF] transition hover:bg-[#F4F4F5] hover:text-[#101011]"
+            >
+              <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            <div className="mb-1 text-[18px] font-bold text-[#101011]">{active.title}</div>
+            <div className="mb-5 text-[14px] text-[#6B7280]">{active.blurb}</div>
+
+            <div className="text-[11px] font-medium uppercase tracking-wider text-[#6B7280]">
+              {active.hint}
             </div>
             {source === "ai" ? (
               <textarea
@@ -321,14 +306,14 @@ const BuildNew = () => {
                 placeholder="e.g., A premium wireless noise-cancelling headphone for remote workers, with 40-hour battery life and comfortable memory foam ear cushions..."
                 rows={4}
                 autoFocus
-                className="mt-2 w-full rounded-[10px] border border-[color:var(--dw-border)] bg-[color:var(--dw-bg)] p-3 text-[14px] placeholder:text-[color:var(--dw-text-muted)] focus:border-[color:var(--dw-accent)] focus:outline-none"
+                className="mt-2 w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 text-[14px] text-[#101011] placeholder:text-[#9CA3AF] focus:border-[#5235EF] focus:outline-none focus:ring-2 focus:ring-[#5235EF]/20"
               />
             ) : (
               <div className="relative mt-2">
                 <HugeiconsIcon
                   icon={LinkSquare01Icon}
-                  size={15}
-                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[color:var(--dw-text-muted)]"
+                  size={16}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
                 />
                 <Input
                   type="url"
@@ -337,12 +322,12 @@ const BuildNew = () => {
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder={active.placeholder}
-                  className="h-12 bg-[color:var(--dw-bg)] pl-10 text-[14px]"
+                  className="h-12 rounded-xl border-[#E5E7EB] bg-[#F9FAFB] pl-11 text-[14px] focus:border-[#5235EF] focus:ring-[#5235EF]/20"
                 />
               </div>
             )}
 
-            <div className="mt-4 grid grid-cols-2 gap-3">
+            <div className="mt-5 grid grid-cols-2 gap-4">
               <LocaleField
                 label="Language"
                 value={language}
@@ -359,22 +344,39 @@ const BuildNew = () => {
 
             <Button
               type="submit"
-              className="mt-5 h-12 w-full gap-2 text-[14px] font-medium"
+              className="mt-6 h-12 w-full gap-2 bg-gradient-to-r from-[#5235EF] to-[#8771FF] text-[14px] font-semibold shadow-lg shadow-[#5235EF]/30 transition hover:opacity-90"
               disabled={create.isPending}
             >
               {create.isPending ? "Generating..." : source === "ai" ? "Create with AI" : "Generate my store"}
               <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
             </Button>
 
-            <p className="dw-mono mt-4 text-center text-[10.5px] tracking-[0.18em] uppercase text-[color:var(--dw-text-muted)]">
+            <p className="mt-4 text-center text-[11px] font-medium uppercase tracking-wider text-[#9CA3AF]">
               {source === "ai" ? "AI generates product details + imagery" : "60s median · No card · No signup required"}
             </p>
           </form>
-        )}
-      </main>
+        </div>
+      )}
       {showConnectModal && (
         <ShopifyConnectModal onClose={() => setShowConnectModal(false)} />
       )}
+    </>
+  );
+
+  if (isLoggedIn) {
+    return (
+      <DashboardLayout title="Create Store" subtitle="Build a new AI-powered store">
+        {content}
+      </DashboardLayout>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-white">
+      <LandingNav isLoggedIn={false} />
+      <main className="mx-auto max-w-[1080px] px-5 py-10 md:px-8 md:py-14">
+        {content}
+      </main>
     </div>
   );
 };
@@ -391,17 +393,16 @@ const SourceCard = ({
   <button
     type="button"
     onClick={onSelect}
-    className={`group relative flex flex-col items-start gap-4 overflow-hidden rounded-[20px] border p-5 text-left transition-all duration-200 ${
+    className={`group relative flex flex-col items-start gap-4 overflow-hidden rounded-2xl border p-5 text-left transition-all ${
       selected
-        ? "border-[color:var(--dw-accent)] bg-[color:var(--dw-surface)] shadow-[0_0_0_1px_var(--dw-accent),0_8px_32px_-8px_rgba(199,255,61,0.15)]"
-        : "border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] hover:border-[color:var(--dw-text-muted)]/30 hover:bg-[color:var(--dw-surface2)]"
+        ? "border-[#5235EF] bg-white shadow-lg shadow-[#5235EF]/10"
+        : "border-[#E5E7EB] bg-white hover:border-[#5235EF]/30 hover:shadow-lg"
     }`}
   >
     <div
-      className="flex size-14 items-center justify-center rounded-[14px] transition-transform duration-200 group-hover:scale-105"
+      className="flex size-14 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
       style={{
         background: `linear-gradient(135deg, ${source.tone}20 0%, ${source.tone}08 100%)`,
-        boxShadow: `0 4px 12px -4px ${source.tone}30`,
       }}
     >
       {source.image ? (
@@ -411,14 +412,14 @@ const SourceCard = ({
       ) : null}
     </div>
     <div className="space-y-1.5">
-      <div className="text-[16px] font-semibold leading-[1.2] tracking-[-0.01em]">{source.title}</div>
-      <div className="text-[13px] leading-[1.5] text-[color:var(--dw-text-dim)]">
+      <div className="text-[16px] font-semibold text-[#101011]">{source.title}</div>
+      <div className="text-[13px] leading-relaxed text-[#6B7280]">
         {source.blurb}
       </div>
     </div>
     <div
-      className={`dw-mono mt-auto inline-flex items-center gap-1.5 pt-2 text-[10px] tracking-[0.14em] uppercase transition ${
-        selected ? "text-[color:var(--dw-accent)]" : "text-[color:var(--dw-text-muted)] group-hover:text-[color:var(--dw-text)]"
+      className={`mt-auto inline-flex items-center gap-1.5 pt-2 text-[11px] font-medium uppercase tracking-wider transition ${
+        selected ? "text-[#5235EF]" : "text-[#9CA3AF] group-hover:text-[#5235EF]"
       }`}
     >
       {selected ? "Selected" : "Choose"}
@@ -442,14 +443,14 @@ const LocaleField = ({
   onChange: (v: string) => void;
   options: Array<{ value: string; label: string }>;
 }) => (
-  <div className="space-y-1.5">
-    <span className="text-[11.5px] font-medium text-[color:var(--dw-text-dim)]">
+  <div className="space-y-2">
+    <span className="text-[12px] font-medium text-[#6B7280]">
       {label}
     </span>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-12 w-full rounded-[10px] border border-[color:var(--dw-border)] bg-[color:var(--dw-bg)] px-3 text-[14px] focus:border-[color:var(--dw-accent)] focus:outline-none"
+      className="h-12 w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 text-[14px] text-[#101011] focus:border-[#5235EF] focus:outline-none focus:ring-2 focus:ring-[#5235EF]/20"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

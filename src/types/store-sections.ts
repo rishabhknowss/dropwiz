@@ -1,4 +1,5 @@
 export type SectionType =
+  | "header"
   | "hero"
   | "product"
   | "bundles"
@@ -11,14 +12,25 @@ export type SectionType =
   | "lifestyle"
   | "gallery"
   | "testimonials"
-  | "valueProps";
+  | "valueProps"
+  | "announcement"
+  | "featureMarquee"
+  | "reviewStats"
+  | "howItWorks";
+
+export type HeaderData = {
+  logoUrl?: string;
+  storeName?: string;
+  showCartIcon?: boolean;
+};
 
 export type HeroVariant =
   | "split"
   | "full-bleed"
   | "centered"
   | "minimal"
-  | "magazine";
+  | "magazine"
+  | "product-hero";
 
 export type BundlesVariant = "tiers" | "compact" | "showcase";
 export type FaqVariant = "accordion" | "two-column" | "cards";
@@ -26,6 +38,18 @@ export type TestimonialsVariant = "grid" | "marquee" | "feature";
 export type ValuePropsVariant = "grid" | "alternating" | "list";
 
 export type HeroNavLink = { label: string; href: string };
+
+export type FeatureBadge = { icon: string; label: string };
+
+export type HeroBundle = {
+  name: string;
+  quantity: number;
+  freeQuantity?: number;
+  priceCents: number;
+  originalPriceCents?: number;
+  savings?: string;
+  badge?: string | null;
+};
 
 export type HeroData = {
   headline: string;
@@ -39,19 +63,41 @@ export type HeroData = {
   brandName?: string;
   navLinks?: HeroNavLink[];
   overlayDarkness?: number;
+  featureBadges?: FeatureBadge[];
+  trustBadges?: string[];
+  rating?: number;
+  reviewCount?: number;
+  priceCents?: number;
+  originalPriceCents?: number;
+  currency?: string;
+  productBadge?: string | null;
+  bundles?: HeroBundle[];
+  sideFeatures?: FeatureBadge[];
 };
+
+export type ProductVariant = "default" | "gallery" | "compact";
 
 export type ProductData = {
   title: string;
+  subtitle?: string;
+  description?: string;
   imageUrl: string;
+  images?: string[];
   priceCents: number;
+  originalPriceCents?: number;
   currency: string;
+  badge?: string | null;
+  rating?: number;
+  reviewCount?: number;
+  features?: Array<{ icon: string; label: string }>;
+  variant?: ProductVariant;
 };
 
 export type Bundle = {
   name: string;
   description: string;
   quantity: number;
+  freeQuantity?: number;
   discountPercent: number;
   badge?: string | null;
   savings: string;
@@ -61,11 +107,32 @@ export type Bundle = {
 export type BundleData = {
   bundles: Bundle[];
   basePriceCents: number;
+  originalPriceCents?: number;
   currency: string;
   variant?: BundlesVariant;
+  productImage?: string;
 };
 
-export type TrustData = { badges: string[] };
+export type TrustBadge = {
+  icon?: string;
+  title: string;
+  description?: string;
+};
+
+export type ShippingStep = {
+  icon: string;
+  label: string;
+  date?: string;
+};
+
+export type TrustVariant = "simple" | "detailed" | "timeline";
+
+export type TrustData = {
+  badges: (string | TrustBadge)[];
+  showPaymentBadges?: boolean;
+  shippingTimeline?: ShippingStep[];
+  variant?: TrustVariant;
+};
 
 export type FaqItem = { question: string; answer: string };
 export type FaqData = { faqs: FaqItem[]; variant?: FaqVariant };
@@ -133,13 +200,49 @@ export type ValuePropsData = {
   variant?: ValuePropsVariant;
 };
 
+export type AnnouncementData = {
+  badges: Array<{ icon?: string; text: string }>;
+  variant?: "bar" | "pills" | "marquee";
+};
+
+export type FeatureMarqueeData = {
+  items: Array<{ icon: string; label: string }>;
+  speed?: "slow" | "normal" | "fast";
+};
+
+export type ReviewStatsData = {
+  rating: number;
+  reviewCount: number;
+  source?: string;
+  showStars?: boolean;
+};
+
+export type HowItWorksStep = {
+  title: string;
+  description: string;
+  icon?: string;
+  imageUrl?: string;
+};
+
+export type HowItWorksVariant = "cards" | "timeline" | "numbered";
+
+export type HowItWorksData = {
+  title?: string;
+  steps: HowItWorksStep[];
+  variant?: HowItWorksVariant;
+};
+
 export const ADDABLE_SECTION_TYPES: Array<{
   type: SectionType;
   label: string;
 }> = [
+  { type: "header", label: "Header" },
   { type: "hero", label: "Hero" },
   { type: "product", label: "Product card" },
   { type: "bundles", label: "Bundle offers" },
+  { type: "announcement", label: "Announcement bar" },
+  { type: "reviewStats", label: "Review stats" },
+  { type: "featureMarquee", label: "Feature marquee" },
   { type: "lifestyle", label: "Lifestyle" },
   { type: "gallery", label: "Image gallery" },
   { type: "testimonials", label: "Testimonials" },
@@ -149,6 +252,7 @@ export const ADDABLE_SECTION_TYPES: Array<{
   { type: "video", label: "Video" },
   { type: "countdown", label: "Countdown" },
   { type: "comparison", label: "Comparison" },
+  { type: "howItWorks", label: "How it works" },
   { type: "footer", label: "Footer" },
 ];
 
@@ -163,4 +267,5 @@ export const DEDUPABLE_SECTION_TYPES = new Set<SectionType>([
   "gallery",
   "testimonials",
   "valueProps",
+  "howItWorks",
 ]);

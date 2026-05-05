@@ -101,26 +101,78 @@ const getDefaultSectionData = (
       return {
         headline: "Your headline here",
         subheadline: "Tell the story in one line.",
-        primaryCta: "Shop now",
+        primaryCta: "Add to Cart",
         secondaryCta: null,
         urgencyBadge: null,
         socialProof: null,
         imageUrl: productImageUrl ?? "",
+        rating: 4.8,
+        reviewCount: 2500,
+        currency: "USD",
+        trustBadges: ["Free Shipping", "30-Day Guarantee", "Secure Checkout"],
+        featureBadges: [
+          { icon: "⚡", label: "Fast Results" },
+          { icon: "✓", label: "Premium Quality" },
+          { icon: "🛡", label: "Risk-Free" },
+        ],
+        bundles: [
+          {
+            name: "Starter",
+            quantity: 1,
+            freeQuantity: 1,
+            priceCents: 6998,
+            originalPriceCents: 19800,
+            savings: "65%",
+            badge: null,
+          },
+          {
+            name: "Best Value",
+            quantity: 2,
+            freeQuantity: 2,
+            priceCents: 13997,
+            originalPriceCents: 39600,
+            savings: "65%",
+            badge: "Most Popular",
+          },
+          {
+            name: "Family Pack",
+            quantity: 3,
+            freeQuantity: 3,
+            priceCents: 20996,
+            originalPriceCents: 59400,
+            savings: "65%",
+            badge: null,
+          },
+        ],
       };
     case "product":
       return {
         title: storeName,
+        subtitle: "The smart choice for modern living",
+        description: `Experience the difference with ${storeName}. Designed for those who demand the best.`,
         imageUrl: productImageUrl ?? "",
+        images: productImageUrl ? [productImageUrl] : [],
         priceCents: 4900,
+        originalPriceCents: 6900,
         currency: "USD",
+        badge: "Best Seller",
+        rating: 4.8,
+        reviewCount: 2500,
+        features: [
+          { icon: "⚡", label: "Fast Acting" },
+          { icon: "🌿", label: "All Natural" },
+          { icon: "✓", label: "Clinically Tested" },
+          { icon: "🔒", label: "Secure Purchase" },
+        ],
       };
     case "bundles":
       return {
         bundles: [
           {
             name: "Single",
-            description: "One item",
+            description: "Try it out",
             quantity: 1,
+            freeQuantity: 0,
             discountPercent: 0,
             badge: null,
             savings: "Full price",
@@ -128,28 +180,61 @@ const getDefaultSectionData = (
           },
           {
             name: "Popular",
-            description: "The most-picked bundle",
-            quantity: 3,
-            discountPercent: 20,
+            description: "Best value for most customers",
+            quantity: 2,
+            freeQuantity: 2,
+            discountPercent: 50,
             badge: "MOST POPULAR",
-            savings: "Save 20%",
+            savings: "Save 50%",
             recommended: true,
+          },
+          {
+            name: "Family Pack",
+            description: "Stock up and save big",
+            quantity: 3,
+            freeQuantity: 3,
+            discountPercent: 50,
+            badge: null,
+            savings: "Save 50%",
+            recommended: false,
           },
         ],
         basePriceCents: 4900,
+        originalPriceCents: 6900,
         currency: "USD",
+        productImage: productImageUrl ?? "",
       };
     case "trust":
       return {
         badges: [
-          "30-day money-back guarantee",
-          "Ships in 1-2 business days",
-          "Secure checkout",
+          {
+            icon: "❤️",
+            title: "Try it risk-free",
+            description: "Love it or your money back. No questions asked.",
+          },
+          {
+            icon: "🚛",
+            title: "Fast, free shipping",
+            description: "Get it delivered to your door in 3-5 business days.",
+          },
+          {
+            icon: "🔒",
+            title: "Secure checkout",
+            description: "Your payment information is always protected.",
+          },
         ],
+        showPaymentBadges: true,
+        shippingTimeline: [
+          { icon: "✅", label: "Order Confirmed", date: "Today" },
+          { icon: "🚛", label: "On Its Way", date: "1-2 days" },
+          { icon: "⭐", label: "Delivered", date: "3-5 days" },
+        ],
+        variant: "detailed",
       };
     case "faq":
       return {
         faqs: [{ question: "New question?", answer: "Write the answer here." }],
+        variant: "accordion",
       };
     case "footer":
       return { storeName };
@@ -189,28 +274,29 @@ const getDefaultSectionData = (
         title: "What customers are saying",
         testimonials: [
           {
-            quote: "This actually works. 14 days and I'm a different person.",
+            quote: "This actually works. Two weeks in and I'm already seeing results.",
             name: "Sarah K.",
-            role: "Verified buyer",
+            role: "Verified Buyer",
             rating: 5,
           },
           {
-            quote: "Exceeded expectations. Ordering two more for my family.",
+            quote: "Exceeded my expectations. Already ordered two more for my family.",
             name: "Marcus T.",
-            role: "Verified buyer",
+            role: "Verified Buyer",
             rating: 5,
           },
           {
-            quote: "Worth every penny. The learning course is a nice touch.",
+            quote: "Worth every penny. The quality is outstanding.",
             name: "Priya S.",
-            role: "Verified buyer",
+            role: "Verified Buyer",
             rating: 5,
           },
         ],
+        variant: "grid",
       };
     case "valueProps":
       return {
-        title: "Why this one",
+        title: "Why choose us",
         props: [
           {
             icon: "⚡",
@@ -228,6 +314,52 @@ const getDefaultSectionData = (
             description: "Backed by thousands of verified reviews.",
           },
         ],
+        variant: "grid",
+      };
+    case "announcement":
+      return {
+        badges: [
+          { icon: "🚀", text: "Free Shipping on all orders" },
+          { icon: "🔒", text: "Secure Checkout" },
+          { icon: "❤️", text: "30-Day Money Back Guarantee" },
+        ],
+        variant: "bar",
+      };
+    case "featureMarquee":
+      return {
+        items: [
+          { icon: "⚡", label: "Fast Results" },
+          { icon: "❤️", label: "Customer Favorite" },
+          { icon: "💎", label: "Premium Quality" },
+          { icon: "✅", label: "Satisfaction Guaranteed" },
+        ],
+        speed: "normal",
+      };
+    case "reviewStats":
+      return {
+        rating: 4.8,
+        reviewCount: 2500,
+        source: "trustpilot",
+        showStars: true,
+      };
+    case "howItWorks":
+      return {
+        title: "How it works",
+        steps: [
+          {
+            title: "Step 1",
+            description: "Describe the first step of using your product.",
+          },
+          {
+            title: "Step 2",
+            description: "Explain the second step clearly.",
+          },
+          {
+            title: "Step 3",
+            description: "Show the final result or benefit.",
+          },
+        ],
+        variant: "cards",
       };
     default:
       return {};
