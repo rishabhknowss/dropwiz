@@ -7,7 +7,6 @@ import {
   DashboardSquare01Icon,
   PlayIcon,
   Layers01Icon,
-  Settings02Icon,
   SparklesIcon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";

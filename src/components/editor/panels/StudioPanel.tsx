@@ -5,11 +5,9 @@ import {
   SparklesIcon,
   GridIcon,
   ArrowRight01Icon,
-  Download01Icon,
   Tick02Icon,
 } from "@hugeicons/core-free-icons";
 import { AnimatePresence, motion } from "motion/react";
-import { Button } from "@/components/ui/button";
 import { api } from "@/utils/api";
 import { runWithToast } from "@/hooks/useToastMutation";
 import { r2PublicUrl } from "@/lib/r2-url";

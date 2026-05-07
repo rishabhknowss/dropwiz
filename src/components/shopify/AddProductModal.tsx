@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { createPortal } from "react-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Cancel01Icon,
@@ -13,6 +12,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ClientPortal } from "@/components/ui/client-portal";
 import { api } from "@/utils/api";
 import { toast } from "sonner";
 
@@ -70,19 +70,11 @@ const CURRENCIES = [
   { code: "INR", label: "INR (₹)" },
 ];
 
-export const AddProductModal = ({ onClose, shops, preselectedShop, storeId, onPageAdded }: Props) => {
-  const [target, setTarget] = useState<HTMLElement | null>(null);
-
-  useEffect(() => {
-    setTarget(document.getElementById("dw-app-root") ?? document.body);
-  }, []);
-
-  if (!target) return null;
-  return createPortal(
-    <ModalBody onClose={onClose} shops={shops} preselectedShop={preselectedShop} storeId={storeId} onPageAdded={onPageAdded} />,
-    target
-  );
-};
+export const AddProductModal = ({ onClose, shops, preselectedShop, storeId, onPageAdded }: Props) => (
+  <ClientPortal>
+    <ModalBody onClose={onClose} shops={shops} preselectedShop={preselectedShop} storeId={storeId} onPageAdded={onPageAdded} />
+  </ClientPortal>
+);
 
 const ModalBody = ({ onClose, shops, preselectedShop, storeId, onPageAdded }: Props) => {
   const router = useRouter();

@@ -3,7 +3,7 @@ import crypto from "crypto";
 import { env } from "@/env";
 
 const SHOPIFY_SCOPES =
-  "read_products,write_products,read_publications,write_publications,read_orders,read_customers";
+  "read_products,write_products,read_publications,write_publications,read_orders,read_customers,read_themes,write_themes";
 
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;

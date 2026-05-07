@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+Allow: /guides/
+Allow: /blog/
+Allow: /glossary/
+Allow: /compare/
+Allow: /products/
+Allow: /tools/
+Allow: /niches/
+Allow: /templates/
+Allow: /p/
+
+Disallow: /app/
+Disallow: /auth/
+Disallow: /build/
+Disallow: /api/
+Disallow: /demo/
+
+Sitemap: https://www.dropwiz.ai/sitemap.xml

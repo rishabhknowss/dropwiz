@@ -1,10 +1,13 @@
 import { useRouter } from "next/router";
-import Head from "next/head";
 import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { PaintBrush02Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { StoreRenderer } from "@/components/store/StoreRenderer";
 import { api } from "@/utils/api";
+import { SEOHead } from "@/components/seo";
+import { storeMetadata } from "@/lib/seo/metadata";
+import { productSchema, breadcrumbSchema } from "@/lib/seo/schema";
+import { SITE_URL } from "@/lib/seo/constants";
 
 const PublicStorePage = () => {
   const router = useRouter();
@@ -67,12 +70,33 @@ const PublicStorePage = () => {
     );
   }
 
+  const storeCopy = store.copy as Record<string, unknown> | undefined;
+  const storeDescription =
+    typeof storeCopy?.headline === "string"
+      ? storeCopy.headline
+      : `Shop ${store.name ?? "products"} - Built with Dropwiz AI`;
+
+  const schemas = [
+    productSchema({
+      name: store.name ?? "Store",
+      description: storeDescription,
+      image: store.screenshotKey
+        ? `https://assets.dropwiz.ai/${store.screenshotKey}`
+        : `${SITE_URL}/og-default.png`,
+      url: `${SITE_URL}/p/${store.slug}`,
+    }),
+    breadcrumbSchema([
+      { name: "Stores", url: `${SITE_URL}/stores` },
+      { name: store.name ?? "Store", url: `${SITE_URL}/p/${store.slug}` },
+    ]),
+  ];
+
   return (
     <>
-      <Head>
-        <title>{store.name ?? "Store"}</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-      </Head>
+      <SEOHead
+        meta={storeMetadata(store.slug, store.name ?? "Store", storeDescription)}
+        schemas={schemas}
+      />
       {isOwner && (
         <Link
           href={`/app/stores/${store.id}/edit`}

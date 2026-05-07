@@ -1,6 +1,8 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@plugin "@tailwindcss/typography";
+
 :root {
   --dw-bg: #ffffff;
   --dw-bg-secondary: #f8fafc;
@@ -23,6 +25,12 @@
   --dw-warning-bg: #fffbeb;
   --dw-error: #ef4444;
   --dw-error-bg: #fef2f2;
+  --dw-tier-pro: #7c3aed;
+  --dw-tier-pro-bg: #f5f3ff;
+  --dw-tier-agency: #f59e0b;
+  --dw-tier-agency-bg: #fef3c7;
+  --dw-tier-enterprise: #ef4444;
+  --dw-tier-enterprise-bg: #fee2e2;
 
   --background: var(--dw-bg);
   --foreground: var(--dw-text);
@@ -67,6 +75,12 @@
   --dw-warning-bg: #451a03;
   --dw-error: #f87171;
   --dw-error-bg: #450a0a;
+  --dw-tier-pro: #a78bfa;
+  --dw-tier-pro-bg: #4c1d95;
+  --dw-tier-agency: #fbbf24;
+  --dw-tier-agency-bg: #78350f;
+  --dw-tier-enterprise: #f87171;
+  --dw-tier-enterprise-bg: #7f1d1d;
 }
 
 [data-radix-popper-content-wrapper],
@@ -157,6 +171,97 @@
   .bg-gradient-radial {
     background-image: radial-gradient(var(--tw-gradient-stops));
   }
+}
+
+.prose {
+  --tw-prose-body: var(--dw-text);
+  --tw-prose-headings: var(--dw-text);
+  --tw-prose-lead: var(--dw-text-secondary);
+  --tw-prose-links: var(--dw-accent);
+  --tw-prose-bold: var(--dw-text);
+  --tw-prose-counters: var(--dw-text-muted);
+  --tw-prose-bullets: var(--dw-text-muted);
+  --tw-prose-hr: var(--dw-border);
+  --tw-prose-quotes: var(--dw-text);
+  --tw-prose-quote-borders: var(--dw-accent);
+  --tw-prose-captions: var(--dw-text-muted);
+  --tw-prose-code: var(--dw-text);
+  --tw-prose-pre-code: var(--dw-text);
+  --tw-prose-pre-bg: var(--dw-bg-tertiary);
+  --tw-prose-th-borders: var(--dw-border);
+  --tw-prose-td-borders: var(--dw-border);
+}
+
+.prose :where(h1, h2, h3, h4, h5, h6):not(:where([class~="not-prose"] *)) {
+  color: var(--dw-text);
+}
+
+.prose :where(p, li, td, th):not(:where([class~="not-prose"] *)) {
+  color: var(--dw-text-secondary);
+}
+
+.prose :where(strong):not(:where([class~="not-prose"] *)) {
+  color: var(--dw-text);
+}
+
+.prose :where(a):not(:where([class~="not-prose"] *)) {
+  color: var(--dw-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose :where(a):not(:where([class~="not-prose"] *)):hover {
+  color: var(--dw-accent-hover);
+}
+
+.prose :where(code):not(:where([class~="not-prose"] *)) {
+  background: var(--dw-bg-tertiary);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+}
+
+.prose :where(pre):not(:where([class~="not-prose"] *)) {
+  background: var(--dw-bg-tertiary);
+  border: 1px solid var(--dw-border);
+  border-radius: 8px;
+}
+
+.prose :where(pre code):not(:where([class~="not-prose"] *)) {
+  background: transparent;
+  padding: 0;
+}
+
+.prose :where(blockquote):not(:where([class~="not-prose"] *)) {
+  border-left-color: var(--dw-accent);
+  color: var(--dw-text-secondary);
+}
+
+.prose :where(table):not(:where([class~="not-prose"] *)) {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.prose :where(th):not(:where([class~="not-prose"] *)) {
+  background: var(--dw-bg-secondary);
+  color: var(--dw-text);
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--dw-border);
+  text-align: left;
+}
+
+.prose :where(td):not(:where([class~="not-prose"] *)) {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--dw-border);
+}
+
+.prose :where(ul > li)::marker {
+  color: var(--dw-accent);
+}
+
+.prose :where(ol > li)::marker {
+  color: var(--dw-accent);
 }
 
 @keyframes fade-in {

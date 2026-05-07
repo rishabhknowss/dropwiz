@@ -10,9 +10,12 @@ import {
   getTopSellingProducts,
   getRevenueTimeSeries,
   getDateRangeFromPreset,
-  type Order,
+  getPreviousPeriod,
 } from "@/lib/shopify/analytics";
+
 import { protectedProcedure, router } from "../trpc";
+
+const MAX_ORDERS_PER_QUERY = 2500;
 
 const getShopAccount = async (userId: string, shopDomain: string) => {
   const rows = await db
@@ -70,25 +73,25 @@ export const analyticsRouter = router({
         });
       }
 
-      const { startDate, endDate } = getDateRangeFromPreset(input.range);
+      const { startDate, endDate, periodDays } = getDateRangeFromPreset(input.range);
 
       const orders = await fetchOrdersForDateRange(
         input.shopDomain,
         account.accessToken,
         startDate,
-        endDate
+        endDate,
+        MAX_ORDERS_PER_QUERY
       );
 
       const metrics = aggregateMetrics(orders);
 
-      const previousStartDate = new Date(
-        startDate.getTime() - (endDate.getTime() - startDate.getTime())
-      );
+      const { prevStartDate, prevEndDate } = getPreviousPeriod(startDate, endDate, periodDays);
       const previousOrders = await fetchOrdersForDateRange(
         input.shopDomain,
         account.accessToken,
-        previousStartDate,
-        startDate
+        prevStartDate,
+        prevEndDate,
+        MAX_ORDERS_PER_QUERY
       );
       const previousMetrics = aggregateMetrics(previousOrders);
 
@@ -133,7 +136,8 @@ export const analyticsRouter = router({
         input.shopDomain,
         account.accessToken,
         startDate,
-        endDate
+        endDate,
+        MAX_ORDERS_PER_QUERY
       );
 
       return getRevenueTimeSeries(orders);
@@ -165,7 +169,8 @@ export const analyticsRouter = router({
         input.shopDomain,
         account.accessToken,
         startDate,
-        endDate
+        endDate,
+        MAX_ORDERS_PER_QUERY
       );
 
       return getTopSellingProducts(orders, input.limit);

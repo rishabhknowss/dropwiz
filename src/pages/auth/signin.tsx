@@ -1,7 +1,8 @@
-import { useState, type FormEvent } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Mail01Icon,
@@ -16,12 +17,18 @@ import { api } from "@/utils/api";
 import { getErrorMessage } from "@/lib/trpc-errors";
 import { signInSchema } from "@/lib/auth/schemas";
 import { getPendingBuild } from "@/components/dw/FakeBuildModal";
+import type { z } from "zod";
+
+type SignInForm = z.infer<typeof signInSchema>;
 
 const SignIn = () => {
   const router = useRouter();
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const signIn = api.auth.signIn.useMutation();
+
+  const form = useForm<SignInForm>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: { email: "", password: "" },
+  });
 
   const getRedirectUrl = () => {
     const pending = getPendingBuild();
@@ -37,24 +44,15 @@ const SignIn = () => {
     return "/app";
   };
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const parsed = signInSchema.safeParse({ email, password });
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Check your inputs");
-      return;
-    }
+  const onSubmit = (data: SignInForm) => {
     const id = toast.loading("Signing in...");
-    signIn.mutate(
-      { email, password },
-      {
-        onSuccess: () => {
-          toast.success("Welcome back", { id });
-          router.push(getRedirectUrl());
-        },
-        onError: (err) => toast.error(getErrorMessage(err), { id }),
+    signIn.mutate(data, {
+      onSuccess: () => {
+        toast.success("Welcome back", { id });
+        router.push(getRedirectUrl());
       },
-    );
+      onError: (err) => toast.error(getErrorMessage(err), { id }),
+    });
   };
 
   const handleGoogleAuth = () => {
@@ -110,7 +108,7 @@ const SignIn = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
         <div className="space-y-2">
           <Label htmlFor="email" className="text-[13px] font-medium text-[var(--dw-text-secondary)]">
             Email
@@ -125,13 +123,14 @@ const SignIn = () => {
               id="email"
               type="email"
               autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              {...form.register("email")}
               placeholder="you@company.com"
               className="h-12 border-[var(--dw-border)] bg-[var(--dw-surface)] pl-12 text-[15px] text-[var(--dw-text)] placeholder:text-[var(--dw-text-subtle)] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20"
             />
           </div>
+          {form.formState.errors.email && (
+            <p className="text-[12px] text-[var(--dw-error)]">{form.formState.errors.email.message}</p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -156,12 +155,13 @@ const SignIn = () => {
               id="password"
               type="password"
               autoComplete="current-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              {...form.register("password")}
               className="h-12 border-[var(--dw-border)] bg-[var(--dw-surface)] pl-12 text-[15px] text-[var(--dw-text)] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20"
             />
           </div>
+          {form.formState.errors.password && (
+            <p className="text-[12px] text-[var(--dw-error)]">{form.formState.errors.password.message}</p>
+          )}
         </div>
 
         <Button

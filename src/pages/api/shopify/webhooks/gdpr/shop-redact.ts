@@ -54,9 +54,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         webhookId: headers.webhookId,
       }),
     });
+
+    return res.status(200).json({ ok: true });
   } catch (err) {
     console.error("[shopify-webhook gdpr shop-redact]", err);
+    return res.status(500).json({ error: "processing_failed" });
   }
-
-  return res.status(200).json({ ok: true });
 }

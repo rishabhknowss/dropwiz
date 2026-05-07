@@ -246,12 +246,12 @@ export async function runStoreGeneration(
         storeId,
         userId: storeRow.userId ?? null,
         kind: "lifestyle",
-      }).catch(() => {});
+      }).catch((err) => console.error("[store-gen] lifestyle image failed:", err));
     } catch {
       heroImageUrl = (scraped.originalImages as string[])[0];
     }
 
-    generateHooks(genCtx).catch(() => {});
+    generateHooks(genCtx).catch((err) => console.error("[store-gen] hooks failed:", err));
 
     const sections = buildSections({
       hero,
@@ -521,7 +521,7 @@ function buildSections(input: {
           { icon: "✓", label: "Premium Quality" },
           { icon: "🛡", label: "Risk-Free" },
         ],
-        bundles: bundlesWithBogo.map((b, idx) => {
+        bundles: bundlesWithBogo.map((b) => {
           const unitPrice = input.priceCents;
           const totalUnits = b.quantity + (b.freeQuantity ?? 0);
           const fullPrice = unitPrice * totalUnits;

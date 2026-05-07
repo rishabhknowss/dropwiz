@@ -79,7 +79,7 @@ const FindPage = () => {
             <span className="text-[color:var(--dw-accent)]">.</span>
           </div>
           <p className="mx-auto mt-3 max-w-md text-[14px] text-[color:var(--dw-text-dim)]">
-            We're building an AI-powered product discovery engine to help you
+            We&apos;re building an AI-powered product discovery engine to help you
             find trending products with high profit potential.
           </p>
           <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[color:var(--dw-border)] bg-[color:var(--dw-bg)] px-4 py-2">

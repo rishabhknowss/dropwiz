@@ -38,7 +38,7 @@ const ImportFeatureVisual = () => (
 );
 
 const AIWritingVisual = () => (
-  <div className="flex h-52 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-500/10 dark:from-purple-500/20 dark:to-pink-500/20">
+  <div className="flex h-52 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--dw-accent)]/10 to-[var(--dw-accent)]/5 dark:from-[var(--dw-accent)]/20 dark:to-[var(--dw-accent)]/10">
     <div className="w-full max-w-[200px] space-y-3 px-4">
       <div className="flex items-center gap-2">
         <div className="size-8 rounded-lg bg-gradient-to-br from-[var(--dw-accent)] to-[#8771FF] p-1.5">

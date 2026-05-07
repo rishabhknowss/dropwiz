@@ -1,10 +1,8 @@
 import axios, { AxiosError } from "axios";
 import type { ThemeFile } from "./theme-export";
+import { shopifyGraphql } from "./client";
 
-const API_VERSION = "2024-10";
-
-const SKELETON_THEME_ZIP =
-  "https://github.com/Shopify/skeleton-theme/archive/refs/heads/main.zip";
+const API_VERSION = "2026-01";
 
 function shopifyError(err: unknown, context: string): Error {
   if (err instanceof AxiosError) {
@@ -41,7 +39,7 @@ function adminApi(shop: string, accessToken: string) {
       "X-Shopify-Access-Token": accessToken,
       "Content-Type": "application/json",
     },
-    timeout: 30_000,
+    timeout: 60_000,
   });
 }
 
@@ -56,18 +54,12 @@ async function listThemes(shop: string, accessToken: string): Promise<Theme[]> {
   }
 }
 
-async function findDropwizTheme(
+async function findMainTheme(
   shop: string,
   accessToken: string,
-  storeId: string,
 ): Promise<Theme | null> {
   const themes = await listThemes(shop, accessToken);
-  const tag = themeTagFor(storeId);
-  return (
-    themes.find(
-      (t) => t.role === "unpublished" && t.name.includes(tag),
-    ) ?? null
-  );
+  return themes.find((t) => t.role === "main") ?? null;
 }
 
 function themeTagFor(storeId: string): string {
@@ -88,7 +80,6 @@ async function createUnpublishedTheme(
         theme: {
           name,
           role: "unpublished",
-          src: SKELETON_THEME_ZIP,
         },
       },
     );
@@ -102,20 +93,24 @@ async function waitForThemeReady(
   shop: string,
   accessToken: string,
   themeId: number,
-  maxMs = 30_000,
-): Promise<void> {
+  maxMs = 60_000,
+): Promise<boolean> {
   const deadline = Date.now() + maxMs;
+  let delay = 1000;
   while (Date.now() < deadline) {
     try {
       const res = await adminApi(shop, accessToken).get<{
         theme: Theme & { processing?: boolean };
       }>(`/themes/${themeId}.json`);
-      if (!res.data.theme.processing) return;
+      if (!res.data.theme.processing) return true;
     } catch {
       // ignore transient
     }
-    await new Promise((r) => setTimeout(r, 1500));
+    await new Promise((r) => setTimeout(r, delay));
+    delay = Math.min(delay * 1.5, 5000);
   }
+  console.warn(`[theme-push] Theme ${themeId} still processing after ${maxMs}ms, continuing anyway`);
+  return false;
 }
 
 async function uploadAsset(
@@ -123,15 +118,97 @@ async function uploadAsset(
   accessToken: string,
   themeId: number,
   file: ThemeFile,
+  maxRetries = 3,
+): Promise<void> {
+  const url = `https://${shop}/admin/api/${API_VERSION}/themes/${themeId}/assets.json`;
+  console.log(`[theme-push] PUT ${url}`);
+
+  let lastErr: Error | null = null;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await axios.put(
+        url,
+        { asset: { key: file.key, value: file.value } },
+        {
+          headers: {
+            "X-Shopify-Access-Token": accessToken,
+            "Content-Type": "application/json",
+          },
+          timeout: 60_000,
+        },
+      );
+      console.log(`[theme-push] PUT ${file.key} -> ${res.status}`);
+      return;
+    } catch (err) {
+      if (err instanceof AxiosError) {
+        console.error(`[theme-push] PUT failed:`, {
+          status: err.response?.status,
+          statusText: err.response?.statusText,
+          data: err.response?.data,
+          url: err.config?.url,
+        });
+      }
+      lastErr = shopifyError(err, `upload ${file.key}`);
+      if (attempt < maxRetries - 1) {
+        await new Promise((r) => setTimeout(r, 1000 * Math.pow(2, attempt)));
+      }
+    }
+  }
+  throw lastErr ?? new Error(`Failed to upload ${file.key}`);
+}
+
+const UPLOAD_CONCURRENCY = 5;
+
+async function uploadWithConcurrency<T>(
+  items: T[],
+  fn: (item: T) => Promise<void>,
+  concurrency: number,
+): Promise<void> {
+  const queue = [...items];
+  const workers = Array.from({ length: Math.min(concurrency, items.length) }, async () => {
+    while (queue.length > 0) {
+      const item = queue.shift();
+      if (item) await fn(item);
+    }
+  });
+  await Promise.all(workers);
+}
+
+async function publishTheme(
+  shop: string,
+  accessToken: string,
+  themeId: number,
 ): Promise<void> {
   try {
-    await adminApi(shop, accessToken).put(`/themes/${themeId}/assets.json`, {
-      asset: { key: file.key, value: file.value },
+    await adminApi(shop, accessToken).put(`/themes/${themeId}.json`, {
+      theme: { id: themeId, role: "main" },
     });
   } catch (err) {
-    throw shopifyError(err, `upload ${file.key}`);
+    throw shopifyError(err, "publish theme");
   }
 }
+
+const THEME_FILES_UPSERT_MUTATION = `
+  mutation themeFilesUpsert($themeId: ID!, $files: [OnlineStoreThemeFilesUpsertFileInput!]!) {
+    themeFilesUpsert(themeId: $themeId, files: $files) {
+      upsertedThemeFiles {
+        filename
+      }
+      userErrors {
+        field
+        message
+        code
+      }
+    }
+  }
+`;
+
+type ThemeFilesUpsertResponse = {
+  themeFilesUpsert: {
+    upsertedThemeFiles: Array<{ filename: string }> | null;
+    userErrors: Array<{ field: string[]; message: string; code: string }>;
+  };
+};
 
 export async function pushDropwizTheme(input: {
   shop: string;
@@ -139,20 +216,46 @@ export async function pushDropwizTheme(input: {
   storeId: string;
   storeName: string;
   files: ThemeFile[];
+  publish?: boolean;
 }): Promise<{ themeId: number; created: boolean }> {
-  const { shop, accessToken, storeId, storeName, files } = input;
+  const { shop, accessToken, files } = input;
 
-  let theme = await findDropwizTheme(shop, accessToken, storeId);
-  let created = false;
-  if (!theme) {
-    theme = await createUnpublishedTheme(shop, accessToken, storeId, storeName);
-    created = true;
-    await waitForThemeReady(shop, accessToken, theme.id);
+  console.log(`[theme-push] Listing themes for ${shop}...`);
+  const themes = await listThemes(shop, accessToken);
+  console.log(`[theme-push] Found ${themes.length} themes:`, themes.map(t => ({ id: t.id, name: t.name, role: t.role })));
+
+  const mainTheme = themes.find((t) => t.role === "main");
+  if (!mainTheme) {
+    throw new Error("No main theme found on the shop");
   }
 
-  for (const file of files) {
-    await uploadAsset(shop, accessToken, theme.id, file);
+  console.log(`[theme-push] Using main theme: ${mainTheme.id} (${mainTheme.name})`);
+  console.log(`[theme-push] Uploading ${files.length} files via GraphQL themeFilesUpsert...`);
+
+  const themeGid = `gid://shopify/OnlineStoreTheme/${mainTheme.id}`;
+  const graphqlFiles = files.map((f) => ({
+    filename: f.key,
+    body: {
+      type: "TEXT",
+      value: f.value,
+    },
+  }));
+
+  const result = await shopifyGraphql<ThemeFilesUpsertResponse>(
+    shop,
+    accessToken,
+    THEME_FILES_UPSERT_MUTATION,
+    { themeId: themeGid, files: graphqlFiles },
+  );
+
+  console.log(`[theme-push] GraphQL response:`, JSON.stringify(result, null, 2));
+
+  if (result.themeFilesUpsert.userErrors.length > 0) {
+    const errors = result.themeFilesUpsert.userErrors;
+    const errorMessages = errors.map((e) => `${e.code}: ${e.message}`).join("; ");
+    console.error(`[theme-push] GraphQL userErrors:`, errors);
+    throw new Error(`Shopify theme upload failed: ${errorMessages}`);
   }
 
-  return { themeId: theme.id, created };
+  return { themeId: mainTheme.id, created: false };
 }

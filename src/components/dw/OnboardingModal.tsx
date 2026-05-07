@@ -242,7 +242,7 @@ const ReadyStep = ({ onComplete }: { onComplete: () => void }) => {
       </div>
 
       <h2 className="dw-display-sm text-[28px]">
-        You're all set
+        You&apos;re all set
         <span className="text-[color:var(--dw-accent)]">!</span>
       </h2>
 
@@ -287,7 +287,7 @@ const ReadyStep = ({ onComplete }: { onComplete: () => void }) => {
         onClick={onComplete}
         className="dw-mono mt-4 text-[11px] tracking-[0.1em] uppercase text-[color:var(--dw-text-muted)] transition hover:text-[color:var(--dw-text)]"
       >
-        I'll explore first
+        I&apos;ll explore first
       </button>
     </div>
   );

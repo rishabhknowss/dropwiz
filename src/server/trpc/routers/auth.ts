@@ -254,6 +254,16 @@ export const authRouter = router({
   verifyEmail: publicProcedure
     .input(z.object({ token: z.string().length(64) }))
     .mutation(async ({ ctx, input }) => {
+      const rl = await checkLimits([
+        { key: `verify:ip:${ctx.ip}`, limit: 20, windowMs: 60 * 60 * 1000 },
+      ]);
+      if (!rl.success) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Too many verification attempts. Try again later.",
+        });
+      }
+
       const rows = await db
         .select()
         .from(users)

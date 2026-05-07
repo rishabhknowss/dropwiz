@@ -52,12 +52,12 @@ export const StatsBar = () => {
                 <img
                   src={logo.light}
                   alt={logo.alt}
-                  className="block h-10 w-auto max-w-[120px] object-contain opacity-70 transition-opacity hover:opacity-100 dark:hidden"
+                  className="block h-10 w-auto max-w-[120px] object-contain dark:hidden"
                 />
                 <img
                   src={logo.dark}
                   alt={logo.alt}
-                  className="hidden h-10 w-auto max-w-[120px] object-contain opacity-70 transition-opacity hover:opacity-100 dark:block"
+                  className="hidden h-10 w-auto max-w-[120px] object-contain dark:block"
                 />
               </div>
             ))}

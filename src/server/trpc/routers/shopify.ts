@@ -8,6 +8,7 @@ import {
   listShopifyProducts,
   getShopifyProduct,
 } from "@/lib/shopify/import";
+import { unregisterShopWebhooks } from "@/lib/shopify/webhooks";
 import { protectedProcedure, router } from "../trpc";
 
 async function getShopAccount(userId: string, shopDomain: string) {
@@ -48,6 +49,17 @@ export const shopifyRouter = router({
   disconnectShop: protectedProcedure
     .input(z.object({ shopDomain: z.string().min(4).max(255) }))
     .mutation(async ({ ctx, input }) => {
+      const account = await getShopAccount(ctx.user.id, input.shopDomain);
+      if (!account) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (account.accessToken) {
+        try {
+          await unregisterShopWebhooks(input.shopDomain, account.accessToken);
+        } catch (err) {
+          console.error("[shopify] failed to unregister webhooks:", err);
+        }
+      }
+
       const [deleted] = await db
         .delete(accounts)
         .where(
@@ -141,6 +153,13 @@ export const shopifyRouter = router({
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
           message: "Store is not ready to publish",
+        });
+      }
+
+      if (ctx.user.tier !== "pro") {
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Publishing requires a Dropwiz PRO subscription",
         });
       }
 

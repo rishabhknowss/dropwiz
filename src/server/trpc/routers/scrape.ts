@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { scrapeProduct } from "@/lib/scraper";
+import { checkLimits } from "../rate-limit";
 import { publicProcedure, router } from "../trpc";
 
 export const scrapeRouter = router({
@@ -10,7 +11,17 @@ export const scrapeRouter = router({
         url: z.string().url().max(2048),
       }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      const rl = await checkLimits([
+        { key: `scrape:ip:${ctx.ip}`, limit: 30, windowMs: 60 * 1000 },
+      ]);
+      if (!rl.success) {
+        throw new TRPCError({
+          code: "TOO_MANY_REQUESTS",
+          message: "Too many scrape requests. Please wait a moment.",
+        });
+      }
+
       try {
         const scraped = await scrapeProduct(input.url);
 

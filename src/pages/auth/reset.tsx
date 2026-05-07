@@ -1,7 +1,10 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { LockPasswordIcon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
@@ -12,27 +15,31 @@ import { api } from "@/utils/api";
 import { getErrorMessage } from "@/lib/trpc-errors";
 import { passwordSchema } from "@/lib/auth/schemas";
 
+const resetFormSchema = z.object({
+  password: passwordSchema,
+});
+
+type ResetForm = z.infer<typeof resetFormSchema>;
+
 const Reset = () => {
   const router = useRouter();
-  const [password, setPassword] = useState("");
   const [done, setDone] = useState(false);
   const reset = api.auth.resetPassword.useMutation();
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const form = useForm<ResetForm>({
+    resolver: zodResolver(resetFormSchema),
+    defaultValues: { password: "" },
+  });
+
+  const onSubmit = (data: ResetForm) => {
     const token = typeof router.query.token === "string" ? router.query.token : null;
     if (!token) {
       toast.error("Invalid reset link");
       return;
     }
-    const parsed = passwordSchema.safeParse(password);
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Password doesn't meet requirements");
-      return;
-    }
     const id = toast.loading("Updating password...");
     reset.mutate(
-      { token, password },
+      { token, password: data.password },
       {
         onSuccess: () => {
           toast.success("Password updated. Sign in with your new password.", { id });
@@ -66,7 +73,7 @@ const Reset = () => {
           Password updated. You can sign in now.
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <Label
               htmlFor="password"
@@ -84,16 +91,16 @@ const Reset = () => {
                 id="password"
                 type="password"
                 autoComplete="new-password"
-                required
-                minLength={10}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                {...form.register("password")}
                 className="h-11 bg-[color:var(--dw-surface)] pl-10 text-[14px]"
               />
             </div>
             <p className="text-[11px] text-[color:var(--dw-text-muted)]">
               Min 10 chars · uppercase · lowercase · number
             </p>
+            {form.formState.errors.password && (
+              <p className="text-[11px] text-[var(--dw-error)]">{form.formState.errors.password.message}</p>
+            )}
           </div>
           <Button
             type="submit"

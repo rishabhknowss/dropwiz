@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Cancel01Icon,
@@ -8,6 +7,7 @@ import {
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ClientPortal } from "@/components/ui/client-portal";
 import { toast } from "sonner";
 
 const SHOP_RE = /^[a-z0-9][a-z0-9-]{0,60}\.myshopify\.com$/i;
@@ -17,14 +17,11 @@ type Props = {
   storeIdForRedirect?: string;
 };
 
-export const ShopifyConnectModal = (props: Props) => {
-  const [target, setTarget] = useState<HTMLElement | null>(null);
-  useEffect(() => {
-    setTarget(document.getElementById("dw-app-root") ?? document.body);
-  }, []);
-  if (!target) return null;
-  return createPortal(<Body {...props} />, target);
-};
+export const ShopifyConnectModal = (props: Props) => (
+  <ClientPortal>
+    <Body {...props} />
+  </ClientPortal>
+);
 
 const Body = ({ onClose, storeIdForRedirect }: Props) => {
   const [domain, setDomain] = useState("");
@@ -90,7 +87,7 @@ const Body = ({ onClose, storeIdForRedirect }: Props) => {
         <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-5">
           <p className="text-[12.5px] leading-[1.5] text-[color:var(--dw-text-dim)]">
             Enter the <span className="dw-mono">.myshopify.com</span> domain of
-            the shop you want to connect. You'll be redirected to Shopify to
+            the shop you want to connect. You&apos;ll be redirected to Shopify to
             authorize Dropwiz, then sent back here.
           </p>
           <div className="space-y-1.5">
@@ -107,7 +104,7 @@ const Body = ({ onClose, storeIdForRedirect }: Props) => {
               disabled={submitting}
             />
             <span className="dw-mono text-[10.5px] tracking-[0.06em] text-[color:var(--dw-text-muted)]">
-              Don't have a shop?{" "}
+              Don&apos;t have a shop?{" "}
               <a
                 href="https://www.shopify.com/free-trial"
                 target="_blank"

@@ -61,6 +61,11 @@ export const SectionsPanel = ({ storeId, pageId }: SectionsPanelProps) => {
   const [view, setView] = useState<View>({ kind: "list" });
   const [pendingVariant, setPendingVariant] = useState<string | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
+
   if (!store.data) return null;
 
   const pages = pagesQuery.data ?? [];
@@ -139,11 +144,6 @@ export const SectionsPanel = ({ storeId, pageId }: SectionsPanelProps) => {
       );
     }
   };
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
-  );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;

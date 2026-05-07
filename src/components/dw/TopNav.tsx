@@ -37,18 +37,24 @@ type TopNavProps = {
 export const DWTopNav = ({
   active = "Product",
   items = DEFAULT_NAV,
-  ctaLabel = "Get started",
-  ctaHref = "/auth/signup",
+  ctaLabel,
+  ctaHref,
   ctaOnClick,
-  secondaryLabel = "Sign in",
-  secondaryHref = "/auth/signin",
+  secondaryLabel,
+  secondaryHref,
   secondaryOnClick,
   secondaryDisabled,
   showCredits = false,
 }: TopNavProps) => {
   const { theme, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
-  const me = api.auth.me.useQuery(undefined, { enabled: showCredits });
+  const me = api.auth.me.useQuery();
+
+  const isLoggedIn = !!me.data;
+  const resolvedCtaLabel = ctaLabel ?? (isLoggedIn ? "Dashboard" : "Get started");
+  const resolvedCtaHref = ctaHref ?? (isLoggedIn ? "/app/stores" : "/auth/signup");
+  const resolvedSecondaryLabel = secondaryLabel ?? (isLoggedIn ? undefined : "Sign in");
+  const resolvedSecondaryHref = secondaryHref ?? "/auth/signin";
 
   useEffect(() => {
     if (mobileOpen) {
@@ -112,7 +118,7 @@ export const DWTopNav = ({
             </button>
 
             <div className="hidden items-center gap-2 md:flex">
-              {secondaryLabel && (secondaryOnClick ? (
+              {resolvedSecondaryLabel && (secondaryOnClick ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -120,11 +126,11 @@ export const DWTopNav = ({
                   onClick={secondaryOnClick}
                   disabled={secondaryDisabled}
                 >
-                  {secondaryLabel}
+                  {resolvedSecondaryLabel}
                 </Button>
               ) : (
                 <Button asChild variant="ghost" size="sm" className="h-8 px-3 text-[13px] text-[#64748B] hover:text-[#0F172A]">
-                  <Link href={secondaryHref!}>{secondaryLabel}</Link>
+                  <Link href={resolvedSecondaryHref}>{resolvedSecondaryLabel}</Link>
                 </Button>
               ))}
               {ctaOnClick ? (
@@ -133,11 +139,11 @@ export const DWTopNav = ({
                   className="h-8 rounded-full bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] px-4 text-[13px] font-medium text-white"
                   onClick={ctaOnClick}
                 >
-                  {ctaLabel}
+                  {resolvedCtaLabel}
                 </Button>
               ) : (
                 <Button asChild size="sm" className="h-8 rounded-full bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] px-4 text-[13px] font-medium text-white">
-                  <Link href={ctaHref}>{ctaLabel}</Link>
+                  <Link href={resolvedCtaHref}>{resolvedCtaLabel}</Link>
                 </Button>
               )}
             </div>
@@ -148,11 +154,11 @@ export const DWTopNav = ({
                 className="h-8 rounded-full bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] px-3 text-[12px] font-medium text-white md:hidden"
                 onClick={ctaOnClick}
               >
-                {ctaLabel}
+                {resolvedCtaLabel}
               </Button>
             ) : (
               <Button asChild size="sm" className="h-8 rounded-full bg-gradient-to-r from-[#2563EB] to-[#1D4ED8] px-3 text-[12px] font-medium text-white md:hidden">
-                <Link href={ctaHref}>{ctaLabel}</Link>
+                <Link href={resolvedCtaHref}>{resolvedCtaLabel}</Link>
               </Button>
             )}
 
@@ -199,7 +205,7 @@ export const DWTopNav = ({
               </Link>
             ))}
           </nav>
-          {secondaryLabel && (
+          {resolvedSecondaryLabel && (
             <div className="shrink-0 border-t border-gray-100 bg-white p-4">
               {secondaryOnClick ? (
                 <Button
@@ -211,12 +217,12 @@ export const DWTopNav = ({
                   }}
                   disabled={secondaryDisabled}
                 >
-                  {secondaryLabel}
+                  {resolvedSecondaryLabel}
                 </Button>
               ) : (
                 <Button asChild variant="outline" className="w-full border-gray-200 text-[#64748B]">
-                  <Link href={secondaryHref!} onClick={() => setMobileOpen(false)}>
-                    {secondaryLabel}
+                  <Link href={resolvedSecondaryHref} onClick={() => setMobileOpen(false)}>
+                    {resolvedSecondaryLabel}
                   </Link>
                 </Button>
               )}

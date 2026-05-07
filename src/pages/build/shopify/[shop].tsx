@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
@@ -174,12 +175,14 @@ const ProductCard = ({
     disabled={loading}
     className="group flex flex-col overflow-hidden rounded-[14px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] text-left transition hover:-translate-y-0.5 hover:border-[color:var(--dw-accent)]/40 hover:shadow-lg disabled:opacity-60"
   >
-    <div className="aspect-[4/3] w-full overflow-hidden bg-[color:var(--dw-surface2)]">
+    <div className="relative aspect-[4/3] w-full overflow-hidden bg-[color:var(--dw-surface2)]">
       {product.imageUrl ? (
-        <img
+        <Image
           src={product.imageUrl}
           alt=""
-          className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.02]"
+          fill
+          className="object-cover transition duration-300 group-hover:scale-[1.02]"
+          unoptimized
         />
       ) : (
         <div

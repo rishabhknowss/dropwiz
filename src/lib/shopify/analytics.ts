@@ -190,7 +190,8 @@ export const getRevenueTimeSeries = (orders: Order[]): DailyRevenue[] => {
   const dailyMap = new Map<string, { revenue: number; orders: number }>();
 
   for (const order of orders) {
-    const date = order.createdAt.split("T")[0]!;
+    const orderDate = new Date(order.createdAt);
+    const date = orderDate.toISOString().split("T")[0]!;
     const existing = dailyMap.get(date) ?? { revenue: 0, orders: 0 };
     dailyMap.set(date, {
       revenue: existing.revenue + order.total,
@@ -205,27 +206,50 @@ export const getRevenueTimeSeries = (orders: Order[]): DailyRevenue[] => {
 
 export const getDateRangeFromPreset = (
   preset: "today" | "7d" | "30d" | "90d"
-): { startDate: Date; endDate: Date } => {
+): { startDate: Date; endDate: Date; periodDays: number } => {
   const now = new Date();
-  const endDate = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
-  let startDate: Date;
+  const endDate = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate(),
+    23, 59, 59, 999
+  ));
 
+  let periodDays: number;
   switch (preset) {
     case "today":
-      startDate = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      periodDays = 1;
       break;
     case "7d":
-      startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+      periodDays = 7;
       break;
     case "30d":
-      startDate = new Date(endDate.getTime() - 30 * 24 * 60 * 60 * 1000);
+      periodDays = 30;
       break;
     case "90d":
-      startDate = new Date(endDate.getTime() - 90 * 24 * 60 * 60 * 1000);
+      periodDays = 90;
       break;
     default:
-      startDate = new Date(endDate.getTime() - 7 * 24 * 60 * 60 * 1000);
+      periodDays = 7;
   }
 
-  return { startDate, endDate };
+  const startDate = new Date(Date.UTC(
+    now.getUTCFullYear(),
+    now.getUTCMonth(),
+    now.getUTCDate() - (periodDays - 1),
+    0, 0, 0, 0
+  ));
+
+  return { startDate, endDate, periodDays };
+};
+
+export const getPreviousPeriod = (
+  startDate: Date,
+  endDate: Date,
+  periodDays: number
+): { prevStartDate: Date; prevEndDate: Date } => {
+  const prevEndDate = new Date(startDate.getTime() - 1);
+  const prevStartDate = new Date(prevEndDate.getTime() - (periodDays - 1) * 24 * 60 * 60 * 1000);
+  prevStartDate.setUTCHours(0, 0, 0, 0);
+  return { prevStartDate, prevEndDate };
 };

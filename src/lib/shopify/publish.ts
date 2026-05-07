@@ -125,7 +125,6 @@ export type PublishResult = {
   shopDomain: string;
   themeEditorUrl: string;
   themeId?: number;
-  themeAdminUrl?: string;
   themeCreated?: boolean;
 };
 
@@ -326,9 +325,6 @@ export async function publishStoreToShopify(
   const numericProductId = product.id.split("/").pop();
   const productAdminUrl = `https://${shopDomain}/admin/products/${numericProductId}`;
   const productUrl = product.onlineStoreUrl ?? productAdminUrl;
-  const themeAdminUrl = themeId
-    ? `https://${shopDomain}/admin/themes/${themeId}`
-    : undefined;
   const apiKey = env.SHOPIFY_API_KEY;
   const themeEditorUrl = apiKey
     ? `https://${shopDomain}/admin/themes/current/editor` +
@@ -362,6 +358,7 @@ export async function publishStoreToShopify(
     productAdminUrl,
     themeEditorUrl,
     themeId,
+    themeCreated,
     totalTook: since(t0),
   });
 
@@ -372,7 +369,6 @@ export async function publishStoreToShopify(
     shopDomain,
     themeEditorUrl,
     themeId,
-    themeAdminUrl,
     themeCreated,
   };
 }

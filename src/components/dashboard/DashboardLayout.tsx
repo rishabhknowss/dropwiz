@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { HugeiconsIcon } from "@hugeicons/react";
@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { DWLogo } from "@/components/dw/Logo";
+import type { RouterOutputs } from "@/utils/api";
 
 type NavItem = {
   label: string;
@@ -39,6 +40,147 @@ const NAV_ITEMS: NavItem[] = [
   { label: "Shopify", href: "/app/shopify", icon: ShoppingBag01Icon },
   { label: "Analytics", href: "/app/analytics", icon: ChartLineData02Icon },
 ];
+
+type Shop = RouterOutputs["analytics"]["getConnectedShops"][number];
+
+type NavLinkProps = {
+  item: NavItem;
+  onClick?: () => void;
+  isActive: boolean;
+};
+
+const NavLink = ({ item, onClick, isActive }: NavLinkProps) => (
+  <Link
+    href={item.href}
+    onClick={onClick}
+    className={cn(
+      "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-colors",
+      isActive
+        ? "bg-[var(--dw-accent-subtle)] text-[var(--dw-accent)]"
+        : "text-[var(--dw-text-muted)] hover:bg-[var(--dw-bg-tertiary)] hover:text-[var(--dw-text)]"
+    )}
+  >
+    <HugeiconsIcon icon={item.icon} size={18} />
+    {item.label}
+  </Link>
+);
+
+type StoreSelectorProps = {
+  shops: Shop[];
+  selectedShop: string | null;
+  onSelectShop: (shop: string) => void;
+};
+
+const StoreSelector = ({ shops, selectedShop, onSelectShop }: StoreSelectorProps) => {
+  if (shops.length === 0) return null;
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface)] px-3 py-2.5 text-left transition-colors hover:bg-[var(--dw-surface-hover)]">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--dw-accent)] text-white">
+          <HugeiconsIcon icon={ShoppingBag01Icon} size={16} />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[13px] font-medium text-[var(--dw-text)]">
+            {selectedShop?.replace(".myshopify.com", "") ?? "Select store"}
+          </p>
+        </div>
+        <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="shrink-0 text-[var(--dw-text-subtle)]" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-[220px]">
+        {shops.map((shop) => (
+          <DropdownMenuItem
+            key={shop.id}
+            onClick={() => onSelectShop(shop.shopDomain)}
+            className="flex items-center gap-2 text-[14px]"
+          >
+            <span className="flex-1 truncate">
+              {shop.shopDomain.replace(".myshopify.com", "")}
+            </span>
+            {selectedShop === shop.shopDomain && (
+              <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} className="text-[var(--dw-success)]" />
+            )}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
+type SidebarContentProps = {
+  onNavClick?: () => void;
+  shops: Shop[];
+  selectedShop: string | null;
+  onSelectShop: (shop: string) => void;
+  isActive: (href: string) => boolean;
+  onSignOut: () => void;
+  isSigningOut: boolean;
+};
+
+const SidebarContent = ({
+  onNavClick,
+  shops,
+  selectedShop,
+  onSelectShop,
+  isActive,
+  onSignOut,
+  isSigningOut,
+}: SidebarContentProps) => (
+  <>
+    <div className="flex h-16 items-center px-5">
+      <Link href="/app/stores" className="flex items-center">
+        <DWLogo size={40} />
+      </Link>
+    </div>
+
+    <div className="flex flex-1 flex-col px-4">
+      {shops.length > 0 && (
+        <div className="mb-4">
+          <StoreSelector shops={shops} selectedShop={selectedShop} onSelectShop={onSelectShop} />
+        </div>
+      )}
+
+      <Link
+        href="/build/new"
+        onClick={onNavClick}
+        className="mb-5 flex items-center justify-center gap-2.5 rounded-lg bg-[var(--dw-accent)] px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--dw-accent-hover)]"
+      >
+        <HugeiconsIcon icon={Add01Icon} size={18} />
+        New Store
+      </Link>
+
+      <nav className="flex-1 space-y-1.5">
+        {NAV_ITEMS.map((item) => (
+          <NavLink key={item.label} item={item} onClick={onNavClick} isActive={isActive(item.href)} />
+        ))}
+      </nav>
+
+      <div className="border-t border-[var(--dw-border)] py-4">
+        <Link
+          href="/app/settings"
+          onClick={onNavClick}
+          className={cn(
+            "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-colors",
+            isActive("/app/settings")
+              ? "bg-[var(--dw-accent-subtle)] text-[var(--dw-accent)]"
+              : "text-[var(--dw-text-muted)] hover:bg-[var(--dw-bg-tertiary)] hover:text-[var(--dw-text)]"
+          )}
+        >
+          <HugeiconsIcon icon={Settings01Icon} size={18} />
+          Settings
+        </Link>
+        <button
+          onClick={onSignOut}
+          disabled={isSigningOut}
+          className="mt-1.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium text-[var(--dw-text-muted)] transition-colors hover:bg-[var(--dw-error-bg)] hover:text-[var(--dw-error)]"
+        >
+          <HugeiconsIcon icon={Logout01Icon} size={18} />
+          {isSigningOut ? "Signing out..." : "Sign out"}
+        </button>
+      </div>
+    </div>
+  </>
+);
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -65,11 +207,13 @@ export const DashboardLayout = ({
     refetchOnWindowFocus: false,
   });
 
+  const shopsList = useMemo(() => shops.data ?? [], [shops.data]);
+
   useEffect(() => {
-    if (shops.data && shops.data.length > 0 && !selectedShop) {
-      setSelectedShop(shops.data[0]!.shopDomain);
+    if (shopsList.length > 0 && !selectedShop) {
+      setSelectedShop(shopsList[0]!.shopDomain);
     }
-  }, [shops.data, selectedShop, setSelectedShop]);
+  }, [shopsList, selectedShop, setSelectedShop]);
 
   const handleSignOut = () => {
     const id = toast.loading("Signing out...");
@@ -85,119 +229,19 @@ export const DashboardLayout = ({
 
   const isActive = (href: string) => router.pathname === href;
 
-  const NavLink = ({ item, onClick }: { item: NavItem; onClick?: () => void }) => (
-    <Link
-      href={item.href}
-      onClick={onClick}
-      className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-colors",
-        isActive(item.href)
-          ? "bg-[var(--dw-accent-subtle)] text-[var(--dw-accent)]"
-          : "text-[var(--dw-text-muted)] hover:bg-[var(--dw-bg-tertiary)] hover:text-[var(--dw-text)]"
-      )}
-    >
-      <HugeiconsIcon icon={item.icon} size={18} />
-      {item.label}
-    </Link>
-  );
-
-  const StoreSelector = () => {
-    if (!shops.data || shops.data.length === 0) return null;
-
-    return (
-      <DropdownMenu>
-        <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface)] px-3 py-2.5 text-left transition-colors hover:bg-[var(--dw-surface-hover)]">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[var(--dw-accent)] text-white">
-            <HugeiconsIcon icon={ShoppingBag01Icon} size={16} />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-[13px] font-medium text-[var(--dw-text)]">
-              {selectedShop?.replace(".myshopify.com", "") ?? "Select store"}
-            </p>
-          </div>
-          <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="shrink-0 text-[var(--dw-text-subtle)]" />
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-[220px]">
-          {shops.data.map((shop) => (
-            <DropdownMenuItem
-              key={shop.id}
-              onClick={() => setSelectedShop(shop.shopDomain)}
-              className="flex items-center gap-2 text-[14px]"
-            >
-              <span className="flex-1 truncate">
-                {shop.shopDomain.replace(".myshopify.com", "")}
-              </span>
-              {selectedShop === shop.shopDomain && (
-                <HugeiconsIcon icon={CheckmarkCircle01Icon} size={16} className="text-[var(--dw-success)]" />
-              )}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-    );
+  const sidebarProps = {
+    shops: shopsList,
+    selectedShop,
+    onSelectShop: setSelectedShop,
+    isActive,
+    onSignOut: handleSignOut,
+    isSigningOut: signOut.isPending,
   };
-
-  const SidebarContent = ({ onNavClick }: { onNavClick?: () => void }) => (
-    <>
-      <div className="flex h-16 items-center px-5">
-        <Link href="/app/stores" className="flex items-center">
-          <DWLogo size={40} />
-        </Link>
-      </div>
-
-      <div className="flex flex-1 flex-col px-4">
-        {shops.data && shops.data.length > 0 && (
-          <div className="mb-4">
-            <StoreSelector />
-          </div>
-        )}
-
-        <Link
-          href="/build/new"
-          onClick={onNavClick}
-          className="mb-5 flex items-center justify-center gap-2.5 rounded-lg bg-[var(--dw-accent)] px-4 py-3 text-[14px] font-semibold text-white transition-colors hover:bg-[var(--dw-accent-hover)]"
-        >
-          <HugeiconsIcon icon={Add01Icon} size={18} />
-          New Store
-        </Link>
-
-        <nav className="flex-1 space-y-1.5">
-          {NAV_ITEMS.map((item) => (
-            <NavLink key={item.label} item={item} onClick={onNavClick} />
-          ))}
-        </nav>
-
-        <div className="border-t border-[var(--dw-border)] py-4">
-          <Link
-            href="/app/settings"
-            onClick={onNavClick}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium transition-colors",
-              isActive("/app/settings")
-                ? "bg-[var(--dw-accent-subtle)] text-[var(--dw-accent)]"
-                : "text-[var(--dw-text-muted)] hover:bg-[var(--dw-bg-tertiary)] hover:text-[var(--dw-text)]"
-            )}
-          >
-            <HugeiconsIcon icon={Settings01Icon} size={18} />
-            Settings
-          </Link>
-          <button
-            onClick={handleSignOut}
-            disabled={signOut.isPending}
-            className="mt-1.5 flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[14px] font-medium text-[var(--dw-text-muted)] transition-colors hover:bg-[var(--dw-error-bg)] hover:text-[var(--dw-error)]"
-          >
-            <HugeiconsIcon icon={Logout01Icon} size={18} />
-            {signOut.isPending ? "Signing out..." : "Sign out"}
-          </button>
-        </div>
-      </div>
-    </>
-  );
 
   return (
     <div className="flex min-h-screen bg-[var(--dw-bg)]">
       <aside className="fixed inset-y-0 left-0 z-50 hidden w-64 flex-col border-r border-[var(--dw-border)] bg-[var(--dw-bg-secondary)] lg:flex">
-        <SidebarContent />
+        <SidebarContent {...sidebarProps} />
       </aside>
 
       <div className="flex flex-1 flex-col lg:pl-64">
@@ -252,7 +296,7 @@ export const DashboardLayout = ({
                 <HugeiconsIcon icon={Cancel01Icon} size={20} />
               </button>
             </div>
-            <SidebarContent onNavClick={() => setSidebarOpen(false)} />
+            <SidebarContent {...sidebarProps} onNavClick={() => setSidebarOpen(false)} />
           </aside>
         </div>
       )}

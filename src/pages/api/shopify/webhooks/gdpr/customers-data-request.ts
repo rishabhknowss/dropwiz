@@ -58,13 +58,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           "Manual export will be sent to the customer-care address on file within 30 days.",
       }),
     });
+
+    return res.status(200).json({
+      received: true,
+      sla_days: 30,
+      contact: "privacy@dropwiz.ai",
+    });
   } catch (err) {
     console.error("[shopify-webhook gdpr customers-data-request]", err);
+    return res.status(500).json({ error: "processing_failed" });
   }
-
-  return res.status(200).json({
-    received: true,
-    sla_days: 30,
-    contact: "privacy@dropwiz.ai",
-  });
 }

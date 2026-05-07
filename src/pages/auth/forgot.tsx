@@ -1,6 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Mail01Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
@@ -9,31 +11,29 @@ import { Label } from "@/components/ui/label";
 import { AuthShell } from "@/components/dw/AuthShell";
 import { api } from "@/utils/api";
 import { getErrorMessage } from "@/lib/trpc-errors";
-import { emailSchema } from "@/lib/auth/schemas";
+import { forgotSchema } from "@/lib/auth/schemas";
+import type { z } from "zod";
+
+type ForgotForm = z.infer<typeof forgotSchema>;
 
 const Forgot = () => {
-  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const forgot = api.auth.forgotPassword.useMutation();
 
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const parsed = emailSchema.safeParse(email);
-    if (!parsed.success) {
-      toast.error(parsed.error.issues[0]?.message ?? "Enter a valid email");
-      return;
-    }
+  const form = useForm<ForgotForm>({
+    resolver: zodResolver(forgotSchema),
+    defaultValues: { email: "" },
+  });
+
+  const onSubmit = (data: ForgotForm) => {
     const id = toast.loading("Sending reset link...");
-    forgot.mutate(
-      { email },
-      {
-        onSuccess: (data) => {
-          toast.success(data.message, { id });
-          setSent(true);
-        },
-        onError: (err) => toast.error(getErrorMessage(err), { id }),
+    forgot.mutate(data, {
+      onSuccess: (res) => {
+        toast.success(res.message, { id });
+        setSent(true);
       },
-    );
+      onError: (err) => toast.error(getErrorMessage(err), { id }),
+    });
   };
 
   return (
@@ -63,7 +63,7 @@ const Forgot = () => {
           Email sent. Check spam if you don&apos;t see it.
         </div>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email" className="text-[12px] text-[color:var(--dw-text-dim)]">
               Email
@@ -78,13 +78,14 @@ const Forgot = () => {
                 id="email"
                 type="email"
                 autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                {...form.register("email")}
                 placeholder="you@company.com"
                 className="h-11 bg-[color:var(--dw-surface)] pl-10 text-[14px]"
               />
             </div>
+            {form.formState.errors.email && (
+              <p className="text-[11px] text-[var(--dw-error)]">{form.formState.errors.email.message}</p>
+            )}
           </div>
           <Button
             type="submit"

@@ -96,6 +96,7 @@ export const users = pgTable(
     lastRefreshAt: timestamp("last_refresh_at", { withTimezone: true }),
     tier: subscriptionTierEnum("tier").notNull().default("free"),
     billingSource: billingSourceEnum("billing_source"),
+    stripeCustomerId: varchar("stripe_customer_id", { length: 64 }),
     imageCredits: integer("image_credits").notNull().default(5),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -312,6 +313,7 @@ export const assets = pgTable(
     index("assets_kind_idx").on(t.kind),
     uniqueIndex("assets_r2_key_unique").on(t.r2Key),
     index("assets_store_kind_idx").on(t.storeId, t.kind),
+    index("assets_created_idx").on(t.createdAt.desc()),
   ],
 );
 

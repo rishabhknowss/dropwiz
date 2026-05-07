@@ -25,8 +25,8 @@ const NotFoundPage = () => {
             Page not found
           </div>
           <p className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed text-[#6B7280] md:text-[15px]">
-            The page you're looking for doesn't exist or has been moved.
-            Let's get you back on track.
+            The page you&apos;re looking for doesn&apos;t exist or has been moved.
+            Let&apos;s get you back on track.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <Button

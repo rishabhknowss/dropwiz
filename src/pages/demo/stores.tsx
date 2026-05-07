@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Image from "next/image";
 
 const DEMO_STORES = [
   {
@@ -215,11 +216,15 @@ const StorePreview = ({ store }: { store: (typeof DEMO_STORES)[0] }) => {
             className="absolute -inset-4 rounded-3xl opacity-30 blur-3xl"
             style={{ backgroundColor: theme.accent }}
           />
-          <img
-            src={store.image}
-            alt={store.name}
-            className="relative z-10 aspect-square w-full rounded-3xl object-cover shadow-2xl"
-          />
+          <div className="relative z-10 aspect-square w-full overflow-hidden rounded-3xl shadow-2xl">
+            <Image
+              src={store.image}
+              alt={store.name}
+              fill
+              className="object-cover"
+              unoptimized
+            />
+          </div>
         </div>
       </section>
 
@@ -283,7 +288,7 @@ const StorePreview = ({ store }: { store: (typeof DEMO_STORES)[0] }) => {
               style={{ backgroundColor: theme.bg }}
             >
               <div className="mb-3 text-lg">{"⭐".repeat(review.rating)}</div>
-              <p className="mb-4 text-lg">"{review.text}"</p>
+              <p className="mb-4 text-lg">&ldquo;{review.text}&rdquo;</p>
               <div className="font-semibold">{review.name}</div>
               <div className="text-sm opacity-60">Verified Buyer</div>
             </div>

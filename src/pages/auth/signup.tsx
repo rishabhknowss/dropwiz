@@ -1,7 +1,9 @@
-import { useState, useMemo, useEffect, type FormEvent } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Mail01Icon,
@@ -21,28 +23,36 @@ import { signUpSchema, passwordChecks } from "@/lib/auth/schemas";
 import { getErrorMessage } from "@/lib/trpc-errors";
 import { cn } from "@/lib/utils";
 import { getPendingBuild } from "@/components/dw/FakeBuildModal";
+import type { z } from "zod";
 
-type Errors = Partial<Record<"name" | "email" | "password", string>>;
+type SignUpForm = z.infer<typeof signUpSchema>;
+
+const getDefaultEmail = (query: { email?: string | string[] }) =>
+  typeof query.email === "string" ? query.email : "";
 
 const SignUp = () => {
   const router = useRouter();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [touched, setTouched] = useState<Record<string, boolean>>({});
-  const [errors, setErrors] = useState<Errors>({});
   const [submitted, setSubmitted] = useState(false);
-  const [emailInitialized, setEmailInitialized] = useState(false);
-
   const signUp = api.auth.signUp.useMutation();
 
-  useEffect(() => {
-    if (!emailInitialized && router.isReady && typeof router.query.email === "string") {
-      setEmail(router.query.email);
-      setEmailInitialized(true);
-    }
-  }, [router.isReady, router.query.email, emailInitialized]);
+  const form = useForm<SignUpForm>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      name: "",
+      email: getDefaultEmail(router.query),
+      password: "",
+    },
+  });
+
+  const password = form.watch("password");
+  const email = form.watch("email");
+
+  const passwordStatus = useMemo(
+    () => passwordChecks.map((c) => ({ ...c, passed: c.test(password) })),
+    [password],
+  );
+  const passwordValid = passwordStatus.every((c) => c.passed);
 
   const handleGoogleAuth = () => {
     const pending = getPendingBuild();
@@ -52,70 +62,28 @@ const SignUp = () => {
     window.location.href = "/api/auth/signin/google";
   };
 
-  const passwordStatus = useMemo(
-    () => passwordChecks.map((c) => ({ ...c, passed: c.test(password) })),
-    [password],
-  );
-  const passwordValid = passwordStatus.every((c) => c.passed);
-
-  const validate = (): boolean => {
-    const result = signUpSchema.safeParse({
-      name: name || undefined,
-      email,
-      password,
-    });
-    if (result.success) {
-      setErrors({});
-      return true;
-    }
-    const next: Errors = {};
-    for (const issue of result.error.issues) {
-      const field = issue.path[0];
-      if (field === "name" || field === "email" || field === "password") {
-        if (!next[field]) next[field] = issue.message;
-      }
-    }
-    setErrors(next);
-    return false;
-  };
-
-  const handleBlur = (field: "name" | "email" | "password") => {
-    setTouched((t) => ({ ...t, [field]: true }));
-    validate();
-  };
-
-  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setTouched({ name: true, email: true, password: true });
-    if (!validate()) {
-      toast.error("Please fix the errors above");
-      return;
-    }
-
+  const onSubmit = (data: SignUpForm) => {
     const id = toast.loading("Creating account...");
     signUp.mutate(
-      { name: name || undefined, email, password },
+      { name: data.name || undefined, email: data.email, password: data.password },
       {
-        onSuccess: (data) => {
-          toast.success(data.message, { id });
+        onSuccess: (res) => {
+          toast.success(res.message, { id });
           setSubmitted(true);
         },
         onError: (err) => {
           toast.error(getErrorMessage(err), { id });
           const fieldErrors = err.data?.zod?.fieldErrors;
           if (fieldErrors) {
-            const next: Errors = {};
             for (const [key, msgs] of Object.entries(fieldErrors)) {
               if (
                 (key === "name" || key === "email" || key === "password") &&
                 Array.isArray(msgs) &&
                 msgs[0]
               ) {
-                next[key] = String(msgs[0]);
+                form.setError(key, { message: String(msgs[0]) });
               }
             }
-            setErrors(next);
-            setTouched({ name: true, email: true, password: true });
           }
         },
       },
@@ -164,9 +132,6 @@ const SignUp = () => {
     );
   }
 
-  const showError = (field: "name" | "email" | "password") =>
-    touched[field] && errors[field];
-
   return (
     <AuthShell
       title={
@@ -208,29 +173,56 @@ const SignUp = () => {
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} noValidate className="space-y-5">
-        <Field
-          id="name"
-          label="Name (optional)"
-          icon={UserIcon}
-          value={name}
-          onChange={setName}
-          onBlur={() => handleBlur("name")}
-          error={showError("name") ? errors.name : undefined}
-        />
+      <form onSubmit={form.handleSubmit(onSubmit)} noValidate className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="name" className="text-[13px] font-medium text-[var(--dw-text-secondary)]">
+            Name (optional)
+          </Label>
+          <div className="relative">
+            <HugeiconsIcon
+              icon={UserIcon}
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)]"
+            />
+            <Input
+              id="name"
+              type="text"
+              autoComplete="name"
+              {...form.register("name")}
+              className="h-12 border-[var(--dw-border)] bg-[var(--dw-surface)] pl-12 text-[15px] text-[var(--dw-text)] placeholder:text-[var(--dw-text-subtle)] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20"
+            />
+          </div>
+          {form.formState.errors.name && (
+            <p className="text-[12px] text-[var(--dw-error)]">{form.formState.errors.name.message}</p>
+          )}
+        </div>
 
-        <Field
-          id="email"
-          label="Email"
-          type="email"
-          autoComplete="email"
-          icon={Mail01Icon}
-          placeholder="you@company.com"
-          value={email}
-          onChange={setEmail}
-          onBlur={() => handleBlur("email")}
-          error={showError("email") ? errors.email : undefined}
-        />
+        <div className="space-y-2">
+          <Label htmlFor="email" className="text-[13px] font-medium text-[var(--dw-text-secondary)]">
+            Email
+          </Label>
+          <div className="relative">
+            <HugeiconsIcon
+              icon={Mail01Icon}
+              size={18}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)]"
+            />
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              {...form.register("email")}
+              placeholder="you@company.com"
+              className={cn(
+                "h-12 border-[var(--dw-border)] bg-[var(--dw-surface)] pl-12 text-[15px] text-[var(--dw-text)] placeholder:text-[var(--dw-text-subtle)] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20",
+                form.formState.errors.email && "border-[var(--dw-error)] focus:border-[var(--dw-error)] focus:ring-[var(--dw-error)]/20",
+              )}
+            />
+          </div>
+          {form.formState.errors.email && (
+            <p className="text-[12px] text-[var(--dw-error)]">{form.formState.errors.email.message}</p>
+          )}
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="password" className="text-[13px] font-medium text-[var(--dw-text-secondary)]">
@@ -246,13 +238,10 @@ const SignUp = () => {
               id="password"
               type={showPassword ? "text" : "password"}
               autoComplete="new-password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onBlur={() => handleBlur("password")}
-              aria-invalid={!!showError("password")}
+              {...form.register("password")}
               className={cn(
                 "h-12 border-[var(--dw-border)] bg-[var(--dw-surface)] pl-12 pr-12 text-[15px] text-[var(--dw-text)] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20",
-                showError("password") && "border-[var(--dw-error)] focus:border-[var(--dw-error)] focus:ring-[var(--dw-error)]/20",
+                form.formState.errors.password && "border-[var(--dw-error)] focus:border-[var(--dw-error)] focus:ring-[var(--dw-error)]/20",
               )}
             />
             <button
@@ -282,8 +271,8 @@ const SignUp = () => {
             ))}
           </div>
 
-          {showError("password") && (
-            <p className="text-[12px] text-[var(--dw-error)]">{errors.password}</p>
+          {form.formState.errors.password && (
+            <p className="text-[12px] text-[var(--dw-error)]">{form.formState.errors.password.message}</p>
           )}
         </div>
 
@@ -299,59 +288,5 @@ const SignUp = () => {
     </AuthShell>
   );
 };
-
-type FieldProps = {
-  id: string;
-  label: string;
-  type?: string;
-  autoComplete?: string;
-  icon: typeof Mail01Icon;
-  placeholder?: string;
-  value: string;
-  onChange: (v: string) => void;
-  onBlur: () => void;
-  error?: string;
-};
-
-const Field = ({
-  id,
-  label,
-  type = "text",
-  autoComplete,
-  icon,
-  placeholder,
-  value,
-  onChange,
-  onBlur,
-  error,
-}: FieldProps) => (
-  <div className="space-y-2">
-    <Label htmlFor={id} className="text-[13px] font-medium text-[var(--dw-text-secondary)]">
-      {label}
-    </Label>
-    <div className="relative">
-      <HugeiconsIcon
-        icon={icon}
-        size={18}
-        className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)]"
-      />
-      <Input
-        id={id}
-        type={type}
-        autoComplete={autoComplete}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={onBlur}
-        placeholder={placeholder}
-        aria-invalid={!!error}
-        className={cn(
-          "h-12 border-[var(--dw-border)] bg-[var(--dw-surface)] pl-12 text-[15px] text-[var(--dw-text)] placeholder:text-[var(--dw-text-subtle)] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20",
-          error && "border-[var(--dw-error)] focus:border-[var(--dw-error)] focus:ring-[var(--dw-error)]/20",
-        )}
-      />
-    </div>
-    {error && <p className="text-[12px] text-[var(--dw-error)]">{error}</p>}
-  </div>
-);
 
 export default SignUp;

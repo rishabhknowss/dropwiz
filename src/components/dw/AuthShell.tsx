@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { ReactNode } from "react";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { DWLogo } from "@/components/dw/Logo";
@@ -34,10 +35,10 @@ export const AuthShell = ({ title, subtitle, children, footer }: AuthShellProps)
 
             <div className="mt-10 flex items-center gap-4">
               <div className="flex -space-x-3">
-                <img src="/testimonials/sarah.jpg" alt="Sarah" className="size-11 rounded-full border-2 border-white/20 object-cover" />
-                <img src="/testimonials/marcus.jpg" alt="Marcus" className="size-11 rounded-full border-2 border-white/20 object-cover" />
-                <img src="/testimonials/jessica.jpg" alt="Jessica" className="size-11 rounded-full border-2 border-white/20 object-cover" />
-                <img src="/testimonials/david.jpg" alt="David" className="size-11 rounded-full border-2 border-white/20 object-cover" />
+                <Image src="/testimonials/sarah.jpg" alt="Sarah" width={44} height={44} className="size-11 rounded-full border-2 border-white/20 object-cover" />
+                <Image src="/testimonials/marcus.jpg" alt="Marcus" width={44} height={44} className="size-11 rounded-full border-2 border-white/20 object-cover" />
+                <Image src="/testimonials/jessica.jpg" alt="Jessica" width={44} height={44} className="size-11 rounded-full border-2 border-white/20 object-cover" />
+                <Image src="/testimonials/david.jpg" alt="David" width={44} height={44} className="size-11 rounded-full border-2 border-white/20 object-cover" />
               </div>
               <div>
                 <p className="text-[14px] font-semibold text-white">2,500+ stores built</p>

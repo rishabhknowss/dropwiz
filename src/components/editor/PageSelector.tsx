@@ -1,13 +1,10 @@
 import { useState } from "react";
-import { useRouter } from "next/router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowDown01Icon,
   Add01Icon,
   Delete02Icon,
   Edit02Icon,
-  Tick02Icon,
-  Cancel01Icon,
   Link01Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
@@ -52,7 +49,6 @@ export const PageSelector = ({
   activePageId,
   onSelectPage,
 }: PageSelectorProps) => {
-  const router = useRouter();
   const utils = api.useUtils();
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [importProductOpen, setImportProductOpen] = useState(false);

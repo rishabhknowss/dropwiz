@@ -1,6 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   MagicWand01Icon,
@@ -10,6 +11,7 @@ import {
   Target02Icon,
   Add01Icon,
 } from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { DashboardLayout } from "@/components/dashboard";
 import { OnboardingModal } from "@/components/dw/OnboardingModal";
@@ -22,6 +24,11 @@ const ONBOARDING_KEY = "dropwiz_onboarding_complete";
 
 type StoreCardData = RouterOutputs["stores"]["listMine"][number];
 
+const getInitialOnboardingState = () => {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem(ONBOARDING_KEY) !== "true";
+};
+
 const StoresIndex = () => {
   const router = useRouter();
   const me = api.auth.me.useQuery();
@@ -29,32 +36,45 @@ const StoresIndex = () => {
     enabled: !!me.data,
     refetchOnWindowFocus: false,
   });
-  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  const shouldShowConnect = router.query.action === "connect-shopify";
+  const subscriptionSuccess = router.query.subscription === "success";
   const [showShopifyConnect, setShowShopifyConnect] = useState(false);
+  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const successToastShown = useRef(false);
+
+  const showOnboarding = useMemo(() => {
+    if (onboardingDismissed) return false;
+    if (!me.data || stores.data === undefined) return false;
+    if (stores.data.length > 0) return false;
+    return getInitialOnboardingState();
+  }, [me.data, stores.data, onboardingDismissed]);
 
   useEffect(() => {
     if (!me.isLoading && !me.data) router.replace("/auth/signin");
   }, [me.isLoading, me.data, router]);
 
   useEffect(() => {
-    if (router.query.action === "connect-shopify") {
-      setShowShopifyConnect(true);
-      router.replace("/app/stores", undefined, { shallow: true });
+    if (shouldShowConnect) {
+      const timer = setTimeout(() => {
+        setShowShopifyConnect(true);
+        router.replace("/app/stores", undefined, { shallow: true });
+      }, 0);
+      return () => clearTimeout(timer);
     }
-  }, [router.query.action, router]);
+  }, [shouldShowConnect, router]);
 
   useEffect(() => {
-    if (me.data && stores.data !== undefined) {
-      const hasCompleted = localStorage.getItem(ONBOARDING_KEY) === "true";
-      if (!hasCompleted && stores.data.length === 0) {
-        setShowOnboarding(true);
-      }
+    if (subscriptionSuccess && !successToastShown.current) {
+      successToastShown.current = true;
+      toast.success("Welcome to PRO! You can now publish stores.");
+      router.replace("/app/stores", undefined, { shallow: true });
     }
-  }, [me.data, stores.data]);
+  }, [subscriptionSuccess, router]);
 
   const handleOnboardingComplete = () => {
     localStorage.setItem(ONBOARDING_KEY, "true");
-    setShowOnboarding(false);
+    setOnboardingDismissed(true);
   };
 
   if (!me.data) {
@@ -137,10 +157,12 @@ const StoreCard = ({ store }: { store: StoreCardData }) => {
           }}
         >
           {hasThumb && store.thumbnailUrl && (
-            <img
+            <Image
               src={store.thumbnailUrl}
               alt=""
-              className="absolute inset-0 size-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              fill
+              unoptimized
+              className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
             />
           )}
           {inProgress && (

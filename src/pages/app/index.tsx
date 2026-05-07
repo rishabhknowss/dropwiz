@@ -1,20 +1,14 @@
-import { useEffect } from "react";
-import { useRouter } from "next/router";
+import type { GetServerSideProps } from "next";
 
-const AppIndex = () => {
-  const router = useRouter();
-
-  useEffect(() => {
-    router.replace("/app/stores");
-  }, [router]);
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[color:var(--dw-bg)]">
-      <div className="dw-mono text-xs tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)]">
-        Loading…
-      </div>
-    </div>
-  );
+export const getServerSideProps: GetServerSideProps = async () => {
+  return {
+    redirect: {
+      destination: "/app/stores",
+      permanent: false,
+    },
+  };
 };
+
+const AppIndex = () => null;
 
 export default AppIndex;

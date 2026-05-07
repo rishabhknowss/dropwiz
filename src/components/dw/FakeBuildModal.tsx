@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import { AnimatePresence, motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -92,6 +93,7 @@ export const FakeBuildModal = ({ mode, url, aiPrompt, source, onClose }: FakeBui
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const scrape = api.scrape.preview.useMutation();
+  const timerRefs = useRef<NodeJS.Timeout[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsVisible(true), 50);
@@ -99,27 +101,44 @@ export const FakeBuildModal = ({ mode, url, aiPrompt, source, onClose }: FakeBui
   }, []);
 
   const runFakeSteps = useCallback((startIndex: number, stepList: FakeBuildStep[]) => {
-    if (startIndex >= stepList.length) {
+    let cumulativeDelay = 0;
+
+    for (let i = startIndex; i < stepList.length; i++) {
+      const step = stepList[i];
+      if (step.isReal) continue;
+
+      const currentIndex = i;
+      const stepDelay = cumulativeDelay;
+      const completionDelay = cumulativeDelay + step.duration;
+
+      const stepTimer = setTimeout(() => {
+        setCurrentStep(currentIndex);
+      }, stepDelay);
+
+      const completeTimer = setTimeout(() => {
+        setCompletedSteps((prev) => [...prev, step.id]);
+      }, completionDelay);
+
+      timerRefs.current.push(stepTimer, completeTimer);
+      cumulativeDelay = completionDelay;
+    }
+
+    const readyTimer = setTimeout(() => {
       setPhase("ready");
-      return;
-    }
-
-    const step = stepList[startIndex];
-    if (step.isReal) {
-      runFakeSteps(startIndex + 1, stepList);
-      return;
-    }
-
-    setCurrentStep(startIndex);
-
-    setTimeout(() => {
-      setCompletedSteps((prev) => [...prev, step.id]);
-      runFakeSteps(startIndex + 1, stepList);
-    }, step.duration);
+    }, cumulativeDelay);
+    timerRefs.current.push(readyTimer);
   }, []);
 
   useEffect(() => {
-    setCurrentStep(0);
+    return () => {
+      timerRefs.current.forEach(clearTimeout);
+      timerRefs.current = [];
+    };
+  }, []);
+
+  useEffect(() => {
+    timerRefs.current.forEach(clearTimeout);
+    timerRefs.current = [];
 
     if (mode === "ai") {
       setTimeout(() => runFakeSteps(0, AI_STEPS), 300);
@@ -139,7 +158,7 @@ export const FakeBuildModal = ({ mode, url, aiPrompt, source, onClose }: FakeBui
         },
       );
     }
-  }, [mode, url]);
+  }, [mode, url, runFakeSteps, scrape]);
 
   const handleClose = () => {
     setIsVisible(false);
@@ -207,7 +226,7 @@ export const FakeBuildModal = ({ mode, url, aiPrompt, source, onClose }: FakeBui
                 </div>
 
                 <h2 className="dw-display-sm text-[24px]">
-                  Couldn't scrape product
+                  Couldn&apos;t scrape product
                 </h2>
                 <p className="mt-3 text-[14px] text-[color:var(--dw-text-dim)]">
                   {errorMessage}
@@ -261,10 +280,12 @@ export const FakeBuildModal = ({ mode, url, aiPrompt, source, onClose }: FakeBui
                     className="mb-4 flex justify-center"
                   >
                     <div className="relative size-24 overflow-hidden rounded-[12px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)]">
-                      <img
+                      <Image
                         src={productImage}
                         alt={scrapedProduct?.title ?? "Product"}
-                        className="size-full object-cover"
+                        fill
+                        className="object-cover"
+                        unoptimized
                       />
                     </div>
                   </motion.div>
@@ -369,10 +390,12 @@ export const FakeBuildModal = ({ mode, url, aiPrompt, source, onClose }: FakeBui
                     </div>
                   ) : productImage && (
                     <div className="relative size-20 shrink-0 overflow-hidden rounded-[12px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)]">
-                      <img
+                      <Image
                         src={productImage}
                         alt={scrapedProduct?.title ?? "Product"}
-                        className="size-full object-cover"
+                        fill
+                        className="object-cover"
+                        unoptimized
                       />
                     </div>
                   )}

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Cancel01Icon,
@@ -7,33 +6,38 @@ import {
   Link02Icon,
   Copy01Icon,
   Tick02Icon,
+  CrownIcon,
 } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
+import { ClientPortal } from "@/components/ui/client-portal";
 import { api } from "@/utils/api";
 import { runWithToast } from "@/hooks/useToastMutation";
 import { toast } from "sonner";
 import { ShopifyConnectModal } from "@/components/shopify/ShopifyConnectModal";
+import { UpgradeModal } from "@/components/billing/UpgradeModal";
 
 type Props = { storeId: string; onClose: () => void };
 
-export const PublishModal = (props: Props) => {
-  const [target, setTarget] = useState<HTMLElement | null>(null);
-  useEffect(() => {
-    setTarget(document.getElementById("dw-app-root") ?? document.body);
-  }, []);
-  if (!target) return null;
-  return createPortal(<PublishModalBody {...props} />, target);
-};
+export const PublishModal = (props: Props) => (
+  <ClientPortal>
+    <PublishModalBody {...props} />
+  </ClientPortal>
+);
 
 const PublishModalBody = ({ storeId, onClose }: Props) => {
   const store = api.stores.getMine.useQuery({ storeId });
   const shops = api.shopify.listShops.useQuery();
+  const me = api.auth.me.useQuery();
   const publish = api.shopify.publishStore.useMutation();
   const disconnect = api.shopify.disconnectShop.useMutation();
   const utils = api.useUtils();
   const [shopOverride, setShopOverride] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [showConnect, setShowConnect] = useState(false);
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+  const tier = me.data?.tier ?? "free";
+  const isPro = tier === "pro";
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -63,15 +67,14 @@ const PublishModalBody = ({ storeId, onClose }: Props) => {
     }
     runWithToast(
       publish,
-      { storeId, withTheme: false },
+      { storeId, withTheme: true },
       {
         loading: `Publishing to ${selectedShop}…`,
         success: `Published to ${selectedShop}`,
         toastId: "shopify-publish",
         onSuccess: (data) => {
           utils.stores.getMine.invalidate({ storeId });
-          const target = data.themeEditorUrl ?? data.productUrl;
-          window.open(target, "_blank", "noopener");
+          window.open(data.themeEditorUrl, "_blank", "noopener");
           onClose();
         },
       },
@@ -149,6 +152,8 @@ const PublishModalBody = ({ storeId, onClose }: Props) => {
             onPublish={handleShopifyPublish}
             onDisconnect={handleDisconnect}
             disconnecting={disconnect.isPending}
+            isPro={isPro}
+            onUpgrade={() => setShowUpgrade(true)}
           />
           <PublicUrlCard
             path={publicPath}
@@ -164,6 +169,7 @@ const PublishModalBody = ({ storeId, onClose }: Props) => {
           storeIdForRedirect={storeId}
         />
       )}
+      {showUpgrade && <UpgradeModal onClose={() => setShowUpgrade(false)} />}
     </div>
   );
 };
@@ -180,6 +186,8 @@ const ShopifyCard = ({
   onPublish,
   onDisconnect,
   disconnecting,
+  isPro,
+  onUpgrade,
 }: {
   loading: boolean;
   connected: boolean;
@@ -192,6 +200,8 @@ const ShopifyCard = ({
   onPublish: () => void;
   onDisconnect: (shopDomain: string) => void;
   disconnecting: boolean;
+  isPro: boolean;
+  onUpgrade: () => void;
 }) => (
   <div className="rounded-[10px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-3.5">
     <div className="flex items-start gap-3">
@@ -218,6 +228,15 @@ const ShopifyCard = ({
         disabled
       >
         Loading...
+      </Button>
+    ) : !isPro ? (
+      <Button
+        size="sm"
+        className="mt-3 h-8 w-full gap-1.5 text-[12px]"
+        onClick={onUpgrade}
+      >
+        <HugeiconsIcon icon={CrownIcon} size={12} />
+        Upgrade to Publish
       </Button>
     ) : connected ? (
       <div className="mt-3 flex flex-col gap-2">

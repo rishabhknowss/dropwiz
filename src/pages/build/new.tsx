@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useRouter } from "next/router";
+import Image from "next/image";
 import { toast } from "sonner";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
@@ -90,7 +91,6 @@ const BuildNew = () => {
   const [language, setLanguage] = useState("en");
   const [currency, setCurrency] = useState("USD");
   const [showConnectModal, setShowConnectModal] = useState(false);
-  const [isAutoBuilding, setIsAutoBuilding] = useState(false);
   const autoBuildTriggered = useRef(false);
 
   const me = api.auth.me.useQuery();
@@ -103,8 +103,7 @@ const BuildNew = () => {
   const active = SOURCES.find((s) => s.id === source) ?? null;
 
   const triggerBuild = (buildUrl: string, buildLanguage: string, buildCurrency: string) => {
-    setIsAutoBuilding(true);
-    runWithToast(
+        runWithToast(
       create,
       {
         url: buildUrl.trim(),
@@ -122,15 +121,13 @@ const BuildNew = () => {
           router.push(`/build/${data.storeId}/generating${claim}`);
         },
         onError: () => {
-          setIsAutoBuilding(false);
-        },
+                  },
       },
     );
   };
 
   const triggerAIBuild = (prompt: string, buildLanguage: string, buildCurrency: string) => {
-    setIsAutoBuilding(true);
-    runWithToast(
+        runWithToast(
       create,
       {
         aiPrompt: prompt.trim(),
@@ -148,8 +145,7 @@ const BuildNew = () => {
           router.push(`/build/${data.storeId}/generating${claim}`);
         },
         onError: () => {
-          setIsAutoBuilding(false);
-        },
+                  },
       },
     );
   };
@@ -253,15 +249,15 @@ const BuildNew = () => {
 
   const content = (
     <>
-      <div className="mb-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-[#6B7280]">
-        <span className="size-1.5 rounded-full bg-[#5235EF]" />
+      <div className="mb-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-[var(--dw-text-muted)]">
+        <span className="size-1.5 rounded-full bg-[var(--dw-accent)]" />
         New store
       </div>
-      <h1 className="text-[32px] font-bold leading-[1.1] text-[#101011] md:text-[40px]">
+      <h1 className="text-[32px] font-bold leading-[1.1] text-[var(--dw-text)] md:text-[40px]">
         How do you want to start
-        <span className="text-[#5235EF]">?</span>
+        <span className="text-[var(--dw-accent)]">?</span>
       </h1>
-      <p className="mt-3 max-w-[560px] text-[15px] leading-relaxed text-[#6B7280]">
+      <p className="mt-3 max-w-[560px] text-[15px] leading-relaxed text-[var(--dw-text-muted)]">
         Choose where your product comes from — we&apos;ll scrape it, write the
         copy, generate the imagery, and ship a full store.
       </p>
@@ -281,22 +277,22 @@ const BuildNew = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
           <form
             onSubmit={handleSubmit}
-            className="relative w-full max-w-[500px] rounded-2xl border border-[#E5E7EB] bg-white p-6 shadow-2xl"
+            className="relative w-full max-w-[500px] rounded-2xl border border-[var(--dw-border)] bg-[var(--dw-surface)] p-6 shadow-2xl"
           >
             <button
               type="button"
               onClick={() => setSource(null)}
-              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full text-[#9CA3AF] transition hover:bg-[#F4F4F5] hover:text-[#101011]"
+              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full text-[var(--dw-text-subtle)] transition hover:bg-[var(--dw-bg-tertiary)] hover:text-[var(--dw-text)]"
             >
               <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
 
-            <div className="mb-1 text-[18px] font-bold text-[#101011]">{active.title}</div>
-            <div className="mb-5 text-[14px] text-[#6B7280]">{active.blurb}</div>
+            <div className="mb-1 text-[18px] font-bold text-[var(--dw-text)]">{active.title}</div>
+            <div className="mb-5 text-[14px] text-[var(--dw-text-muted)]">{active.blurb}</div>
 
-            <div className="text-[11px] font-medium uppercase tracking-wider text-[#6B7280]">
+            <div className="text-[11px] font-medium uppercase tracking-wider text-[var(--dw-text-muted)]">
               {active.hint}
             </div>
             {source === "ai" ? (
@@ -306,14 +302,14 @@ const BuildNew = () => {
                 placeholder="e.g., A premium wireless noise-cancelling headphone for remote workers, with 40-hour battery life and comfortable memory foam ear cushions..."
                 rows={4}
                 autoFocus
-                className="mt-2 w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] p-4 text-[14px] text-[#101011] placeholder:text-[#9CA3AF] focus:border-[#5235EF] focus:outline-none focus:ring-2 focus:ring-[#5235EF]/20"
+                className="mt-2 w-full rounded-xl border border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] p-4 text-[14px] text-[var(--dw-text)] placeholder:text-[var(--dw-text-subtle)] focus:border-[var(--dw-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--dw-accent)]/20"
               />
             ) : (
               <div className="relative mt-2">
                 <HugeiconsIcon
                   icon={LinkSquare01Icon}
                   size={16}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9CA3AF]"
+                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)]"
                 />
                 <Input
                   type="url"
@@ -322,7 +318,7 @@ const BuildNew = () => {
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder={active.placeholder}
-                  className="h-12 rounded-xl border-[#E5E7EB] bg-[#F9FAFB] pl-11 text-[14px] focus:border-[#5235EF] focus:ring-[#5235EF]/20"
+                  className="h-12 rounded-xl border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] pl-11 text-[14px] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20"
                 />
               </div>
             )}
@@ -344,14 +340,14 @@ const BuildNew = () => {
 
             <Button
               type="submit"
-              className="mt-6 h-12 w-full gap-2 bg-gradient-to-r from-[#5235EF] to-[#8771FF] text-[14px] font-semibold shadow-lg shadow-[#5235EF]/30 transition hover:opacity-90"
+              className="mt-6 h-12 w-full gap-2 bg-gradient-to-r from-[var(--dw-accent)] to-[#8771FF] text-[14px] font-semibold text-white shadow-lg shadow-[var(--dw-accent)]/30 transition hover:opacity-90"
               disabled={create.isPending}
             >
               {create.isPending ? "Generating..." : source === "ai" ? "Create with AI" : "Generate my store"}
               <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
             </Button>
 
-            <p className="mt-4 text-center text-[11px] font-medium uppercase tracking-wider text-[#9CA3AF]">
+            <p className="mt-4 text-center text-[11px] font-medium uppercase tracking-wider text-[var(--dw-text-subtle)]">
               {source === "ai" ? "AI generates product details + imagery" : "60s median · No card · No signup required"}
             </p>
           </form>
@@ -372,7 +368,7 @@ const BuildNew = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[var(--dw-bg)]">
       <LandingNav isLoggedIn={false} />
       <main className="mx-auto max-w-[1080px] px-5 py-10 md:px-8 md:py-14">
         {content}
@@ -395,8 +391,8 @@ const SourceCard = ({
     onClick={onSelect}
     className={`group relative flex flex-col items-start gap-4 overflow-hidden rounded-2xl border p-5 text-left transition-all ${
       selected
-        ? "border-[#5235EF] bg-white shadow-lg shadow-[#5235EF]/10"
-        : "border-[#E5E7EB] bg-white hover:border-[#5235EF]/30 hover:shadow-lg"
+        ? "border-[var(--dw-accent)] bg-[var(--dw-surface)] shadow-lg shadow-[var(--dw-accent)]/10"
+        : "border-[var(--dw-border)] bg-[var(--dw-surface)] hover:border-[var(--dw-accent)]/30 hover:shadow-lg"
     }`}
   >
     <div
@@ -406,20 +402,20 @@ const SourceCard = ({
       }}
     >
       {source.image ? (
-        <img src={source.image} alt="" className="size-8 object-contain" />
+        <Image src={source.image} alt="" width={32} height={32} className="size-8 object-contain" unoptimized />
       ) : source.icon ? (
         <HugeiconsIcon icon={source.icon} size={26} style={{ color: source.tone }} />
       ) : null}
     </div>
     <div className="space-y-1.5">
-      <div className="text-[16px] font-semibold text-[#101011]">{source.title}</div>
-      <div className="text-[13px] leading-relaxed text-[#6B7280]">
+      <div className="text-[16px] font-semibold text-[var(--dw-text)]">{source.title}</div>
+      <div className="text-[13px] leading-relaxed text-[var(--dw-text-muted)]">
         {source.blurb}
       </div>
     </div>
     <div
       className={`mt-auto inline-flex items-center gap-1.5 pt-2 text-[11px] font-medium uppercase tracking-wider transition ${
-        selected ? "text-[#5235EF]" : "text-[#9CA3AF] group-hover:text-[#5235EF]"
+        selected ? "text-[var(--dw-accent)]" : "text-[var(--dw-text-subtle)] group-hover:text-[var(--dw-accent)]"
       }`}
     >
       {selected ? "Selected" : "Choose"}
@@ -444,13 +440,13 @@ const LocaleField = ({
   options: Array<{ value: string; label: string }>;
 }) => (
   <div className="space-y-2">
-    <span className="text-[12px] font-medium text-[#6B7280]">
+    <span className="text-[12px] font-medium text-[var(--dw-text-muted)]">
       {label}
     </span>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-12 w-full rounded-xl border border-[#E5E7EB] bg-[#F9FAFB] px-4 text-[14px] text-[#101011] focus:border-[#5235EF] focus:outline-none focus:ring-2 focus:ring-[#5235EF]/20"
+      className="h-12 w-full rounded-xl border border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] px-4 text-[14px] text-[var(--dw-text)] focus:border-[var(--dw-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--dw-accent)]/20"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

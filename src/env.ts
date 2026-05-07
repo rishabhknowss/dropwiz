@@ -32,10 +32,12 @@ const serverSchema = z.object({
   SHOPIFY_APP_URL: z.string().url().optional(),
   STRIPE_SECRET_KEY: z.string().optional(),
   STRIPE_WEBHOOK_SECRET: z.string().optional(),
+  STRIPE_PRO_PRICE_ID: z.string().optional(),
 });
 
 const clientSchema = z.object({
   NEXT_PUBLIC_APP_URL: z.string().url(),
+  NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: z.string().optional(),
 });
 
 const isServer = typeof window === "undefined";
@@ -44,6 +46,7 @@ const parsed = isServer
   ? serverSchema.merge(clientSchema).safeParse(process.env)
   : clientSchema.safeParse({
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+      NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY,
     });
 
 if (!parsed.success) {

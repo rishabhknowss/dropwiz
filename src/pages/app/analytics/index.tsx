@@ -107,7 +107,7 @@ const AnalyticsPage = () => {
   }
 
   const currency = overview.data?.currency ?? "USD";
-  const isLoading = overview.isLoading || timeSeries.isLoading;
+  const isLoading = overview.isLoading || timeSeries.isLoading || topProducts.isLoading || recentOrders.isLoading;
 
   return (
     <DashboardLayout

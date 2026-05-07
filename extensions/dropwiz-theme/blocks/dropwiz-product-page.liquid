@@ -24,6 +24,10 @@
       --store-accent: {{ tokens.accent | default: '#fef08a' }};
       --store-radius: {{ tokens.radius | default: '12px' }};
       --store-font-display: {{ tokens.font_display | default: 'inherit' }};
+      width: 100vw !important;
+      max-width: 100vw !important;
+      margin-left: calc(-50vw + 50%) !important;
+      box-sizing: border-box !important;
     "
   >
     {%- for section_type in layout -%}

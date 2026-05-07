@@ -1,66 +1,46 @@
 import Link from "next/link";
-import { useState } from "react";
 import { motion } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const PLANS = [
   {
-    name: "Starter",
-    description: "For new dropshippers getting started",
-    price: { monthly: "$19", yearly: "$15" },
+    name: "Free Trial",
+    description: "Everything you need to get started",
+    price: "$0",
     features: [
-      "1 Shopify store connection",
-      "25 AI-generated pages/month",
+      "Unlimited store creation",
+      "57+ premium sections",
+      "Fresh sections monthly",
       "Basic product import",
-      "Standard templates",
-      "Email support",
-      "Community access",
+      "Community support",
     ],
-    cta: "Get Started",
-    href: "/auth/signup?plan=starter",
+    cta: "Start Free",
+    href: "/auth/signup",
     highlight: false,
   },
   {
-    name: "Pro",
-    description: "For serious sellers scaling up",
-    price: { monthly: "$49", yearly: "$39" },
+    name: "Dropwiz PRO",
+    description: "For serious sellers ready to scale",
+    price: "$79",
     features: [
-      "3 Shopify store connections",
-      "Unlimited AI-generated pages",
-      "Advanced product import",
-      "Premium templates & customization",
-      "Priority email & chat support",
-      "Analytics dashboard",
+      "Everything in Free, plus:",
+      "Unlimited AI copywriter",
+      "AI image generation",
+      "One-click product import",
+      "Publish to Shopify",
+      "Priority support",
     ],
-    cta: "Get Started",
+    cta: "Upgrade to PRO",
     href: "/auth/signup?plan=pro",
     highlight: true,
-  },
-  {
-    name: "Agency",
-    description: "For agencies & power sellers",
-    price: { monthly: "$99", yearly: "$79" },
-    features: [
-      "Unlimited store connections",
-      "Unlimited AI-generated pages",
-      "White-label options",
-      "Team collaboration tools",
-      "API access",
-      "Dedicated account manager",
-    ],
-    cta: "Get Started",
-    href: "/auth/signup?plan=agency",
-    highlight: false,
   },
 ];
 
 export const PricingSection = () => {
-  const [isYearly, setIsYearly] = useState(false);
-
   return (
     <section id="pricing" className="bg-[var(--dw-bg)] px-4 py-20 lg:px-8 lg:py-28">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -74,37 +54,11 @@ export const PricingSection = () => {
             pricing
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-[17px] leading-relaxed text-[var(--dw-text-muted)]">
-            Start free and scale as you grow. No hidden fees, cancel anytime.
+            Start free and upgrade when you're ready to publish. No hidden fees, cancel anytime.
           </p>
-
-          <div className="mt-8 inline-flex items-center gap-3 rounded-full bg-[var(--dw-bg-tertiary)] p-1">
-            <button
-              type="button"
-              onClick={() => setIsYearly(false)}
-              className={cn(
-                "rounded-full px-5 py-2.5 text-[14px] font-medium transition-all",
-                !isYearly ? "bg-[var(--dw-surface)] text-[var(--dw-text)] shadow-sm" : "text-[var(--dw-text-muted)]"
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsYearly(true)}
-              className={cn(
-                "flex items-center gap-2 rounded-full px-5 py-2.5 text-[14px] font-medium transition-all",
-                isYearly ? "bg-[var(--dw-surface)] text-[var(--dw-text)] shadow-sm" : "text-[var(--dw-text-muted)]"
-              )}
-            >
-              Yearly
-              <span className="rounded-full bg-[var(--dw-text)] px-2 py-0.5 text-[11px] font-bold text-[var(--dw-bg)]">
-                20% off
-              </span>
-            </button>
-          </div>
         </motion.div>
 
-        <div className="grid gap-6 lg:grid-cols-3 lg:gap-8">
+        <div className="grid gap-6 lg:grid-cols-2 lg:gap-8">
           {PLANS.map((plan, i) => (
             <motion.div
               key={plan.name}
@@ -119,25 +73,33 @@ export const PricingSection = () => {
                   : "border border-[var(--dw-border)] bg-[var(--dw-surface)] hover:border-[var(--dw-accent)]/20 hover:shadow-xl"
               )}
             >
+              {plan.highlight && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                  <span className="rounded-full bg-white px-4 py-1.5 text-[12px] font-bold text-[var(--dw-accent)] shadow-lg">
+                    MOST POPULAR
+                  </span>
+                </div>
+              )}
+
               <div className="mb-8">
                 <h3
                   className={cn(
-                    "mb-2 text-[18px] font-bold",
+                    "mb-2 text-[20px] font-bold",
                     plan.highlight ? "text-white" : "text-[var(--dw-text)]"
                   )}
                 >
                   {plan.name}
                 </h3>
-                <p className={cn("text-[14px]", plan.highlight ? "text-white/60" : "text-[var(--dw-text-muted)]")}>
+                <p className={cn("text-[14px]", plan.highlight ? "text-white/70" : "text-[var(--dw-text-muted)]")}>
                   {plan.description}
                 </p>
               </div>
 
               <div className="mb-8 flex items-baseline gap-1">
-                <span className={cn("text-[48px] font-bold", plan.highlight ? "text-white" : "text-[var(--dw-text)]")}>
-                  {isYearly ? plan.price.yearly : plan.price.monthly}
+                <span className={cn("text-[56px] font-bold tracking-tight", plan.highlight ? "text-white" : "text-[var(--dw-text)]")}>
+                  {plan.price}
                 </span>
-                <span className={cn("text-[15px]", plan.highlight ? "text-white/60" : "text-[var(--dw-text-muted)]")}>
+                <span className={cn("text-[16px]", plan.highlight ? "text-white/60" : "text-[var(--dw-text-muted)]")}>
                   /month
                 </span>
               </div>
@@ -179,6 +141,10 @@ export const PricingSection = () => {
             </motion.div>
           ))}
         </div>
+
+        <p className="mt-8 text-center text-[13px] text-[var(--dw-text-muted)]">
+          All plans include SSL security, 99.9% uptime, and regular updates.
+        </p>
       </div>
     </section>
   );

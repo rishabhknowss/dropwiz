@@ -24,6 +24,14 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "assets.dropwiz.ai" },
     ],
   },
+  async rewrites() {
+    return [
+      {
+        source: "/sitemap.xml",
+        destination: "/api/sitemap.xml",
+      },
+    ];
+  },
   async headers() {
     return [
       {
