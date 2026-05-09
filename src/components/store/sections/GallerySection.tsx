@@ -1,7 +1,10 @@
 import type { GalleryData } from "@/types/store-sections";
 
 export const GallerySection = ({ data }: { data: GalleryData }) => (
-  <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+  <section
+    className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto max-w-[1200px]">
       {data.title && (
         <h2 className="mb-7 text-[26px] font-medium tracking-[-0.03em] @3xl/store:mb-10 @3xl/store:text-[36px] @5xl/store:text-[40px]">
@@ -12,6 +15,7 @@ export const GallerySection = ({ data }: { data: GalleryData }) => (
         {data.images.map((img, i) => (
           <figure
             key={i}
+            data-img-styled
             className="relative aspect-square overflow-hidden"
             style={{ borderRadius: "var(--store-radius)" }}
           >

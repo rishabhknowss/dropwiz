@@ -87,8 +87,8 @@ export const SectionsPanel = ({ storeId, pageId }: SectionsPanelProps) => {
         addPage,
         { storeId, pageId: effectivePageId, type, variant: variantId },
         {
-          loading: "Adding section...",
-          success: "Section added",
+          loading: "Generating copy with AI...",
+          success: "Section added with AI copy",
           toastId: "section-add",
           onSuccess: () => {
             invalidate();
@@ -103,8 +103,8 @@ export const SectionsPanel = ({ storeId, pageId }: SectionsPanelProps) => {
         addLegacy,
         { storeId, type, variant: variantId },
         {
-          loading: "Adding section...",
-          success: "Section added",
+          loading: "Generating copy with AI...",
+          success: "Section added with AI copy",
           toastId: "section-add",
           onSuccess: () => {
             invalidate();

@@ -3,7 +3,7 @@ import { db } from "@/db";
 import { stores, accounts, type Store } from "@/db/schema";
 import { env } from "@/env";
 import { shopifyGraphql } from "./client";
-import { buildThemeFiles } from "./theme-export";
+import { buildThemeFiles, type PublishMode } from "./theme-export";
 import { pushDropwizTheme } from "./theme-push";
 
 type ProductNode = {
@@ -116,6 +116,7 @@ const METAFIELD_DEFINITION_CREATE_MUTATION = `
 
 export type PublishOptions = {
   withTheme?: boolean;
+  publishMode?: PublishMode;
 };
 
 export type PublishResult = {
@@ -194,8 +195,8 @@ export async function publishStoreToShopify(
   let themeId: number | undefined;
   let themeCreated = false;
   if (options.withTheme) {
-    log("theme.push.start", { storeId });
-    const files = buildThemeFiles(store);
+    log("theme.push.start", { storeId, publishMode: options.publishMode });
+    const files = buildThemeFiles(store, { publishMode: options.publishMode });
     const pushed = await pushDropwizTheme({
       shop: shopDomain,
       accessToken: shopify.accessToken,

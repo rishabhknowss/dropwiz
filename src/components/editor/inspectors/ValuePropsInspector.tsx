@@ -7,7 +7,7 @@ import type {
   ValueProp,
   ValuePropsVariant,
 } from "@/types/store-sections";
-import { TextField, VariantPicker } from "./fields";
+import { TextField, VariantPicker, IconPickerField } from "./fields";
 
 const VALUEPROPS_VARIANTS: Array<{
   id: ValuePropsVariant;
@@ -77,9 +77,9 @@ export const ValuePropsInspector = ({
               <HugeiconsIcon icon={Delete01Icon} size={11} />
             </button>
           </div>
-          <TextField
-            label="Icon (emoji or symbol)"
-            defaultValue={p.icon ?? ""}
+          <IconPickerField
+            label="Icon"
+            value={p.icon ?? ""}
             onCommit={(v) => update(i, { icon: v || undefined })}
           />
           <TextField

@@ -1,7 +1,10 @@
 import { useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import { PlusSignIcon, Delete01Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/ui/button";
 import type { StoreSection } from "@/db/schema";
 import type { AnnouncementData } from "@/types/store-sections";
-import { TextField, VariantPicker } from "./fields";
+import { TextField, VariantPicker, IconPickerField } from "./fields";
 
 type Commit = (data: Record<string, unknown>) => void;
 
@@ -13,6 +16,8 @@ const VARIANT_OPTIONS: { id: AnnouncementVariant; label: string }[] = [
   { id: "marquee", label: "Marquee" },
 ];
 
+type Badge = { icon?: string; text: string };
+
 export const AnnouncementInspector = ({
   section,
   onCommit,
@@ -21,17 +26,17 @@ export const AnnouncementInspector = ({
   onCommit: Commit;
 }) => {
   const data = section.data as AnnouncementData;
-  const [badges, setBadges] = useState(data.badges ?? []);
+  const [badges, setBadges] = useState<Badge[]>(data.badges ?? []);
 
-  const updateBadge = (index: number, text: string) => {
+  const updateBadge = (index: number, patch: Partial<Badge>) => {
     const updated = [...badges];
-    updated[index] = { ...updated[index], text };
+    updated[index] = { ...updated[index], ...patch };
     setBadges(updated);
     onCommit({ badges: updated });
   };
 
   const addBadge = () => {
-    const updated = [...badges, { text: "New badge" }];
+    const updated = [...badges, { icon: "Truck01Icon", text: "New badge" }];
     setBadges(updated);
     onCommit({ badges: updated });
   };
@@ -50,33 +55,50 @@ export const AnnouncementInspector = ({
         options={VARIANT_OPTIONS}
         onChange={(v) => onCommit({ variant: v })}
       />
-      <div className="space-y-2">
+      <div className="space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-[12px] font-medium text-[color:var(--dw-text-secondary)]">
             Badges
           </label>
-          <button
-            onClick={addBadge}
-            className="text-[11px] font-medium text-[color:var(--dw-accent)] hover:underline"
-          >
-            + Add
-          </button>
         </div>
         {badges.map((badge, i) => (
-          <div key={i} className="flex items-center gap-2">
-            <TextField
-              label=""
-              defaultValue={badge.text}
-              onCommit={(v) => updateBadge(i, v)}
+          <div
+            key={i}
+            className="space-y-2 rounded-[10px] border border-[color:var(--dw-border)] p-3"
+          >
+            <div className="flex items-center justify-between">
+              <div className="dw-mono text-[10px] tracking-[0.14em] uppercase text-[color:var(--dw-text-muted)]">
+                Badge {i + 1}
+              </div>
+              <button
+                onClick={() => removeBadge(i)}
+                aria-label="Remove"
+                className="flex size-6 items-center justify-center rounded-md text-[color:var(--dw-text-muted)] hover:bg-[color:var(--dw-signal)]/10 hover:text-[color:var(--dw-signal)]"
+              >
+                <HugeiconsIcon icon={Delete01Icon} size={11} />
+              </button>
+            </div>
+            <IconPickerField
+              label="Icon"
+              value={badge.icon ?? ""}
+              onCommit={(v) => updateBadge(i, { icon: v || undefined })}
             />
-            <button
-              onClick={() => removeBadge(i)}
-              className="shrink-0 text-[11px] text-red-500 hover:underline"
-            >
-              ×
-            </button>
+            <TextField
+              label="Text"
+              defaultValue={badge.text}
+              onCommit={(v) => updateBadge(i, { text: v })}
+            />
           </div>
         ))}
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full gap-1.5"
+          onClick={addBadge}
+        >
+          <HugeiconsIcon icon={PlusSignIcon} size={11} />
+          Add badge
+        </Button>
       </div>
     </div>
   );

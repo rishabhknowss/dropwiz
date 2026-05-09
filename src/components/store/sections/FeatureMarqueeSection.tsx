@@ -1,4 +1,5 @@
 import type { FeatureMarqueeData } from "@/types/store-sections";
+import { StoreIcon } from "@/components/editor/inspectors/fields/IconPickerField";
 
 type Props = { data: FeatureMarqueeData };
 
@@ -10,7 +11,7 @@ export const FeatureMarqueeSection = ({ data }: Props) => {
   return (
     <section
       className="overflow-hidden border-y py-3 @3xl/store:py-4"
-      style={{ borderColor: "rgba(10,10,10,0.06)" }}
+      style={{ borderColor: "color-mix(in srgb, var(--store-text) 6%, transparent)" }}
     >
       <div
         className="flex gap-6 whitespace-nowrap @3xl/store:gap-8"
@@ -23,9 +24,10 @@ export const FeatureMarqueeSection = ({ data }: Props) => {
           <div
             key={i}
             className="flex shrink-0 items-center gap-2 text-[12px] font-medium @3xl/store:gap-2.5 @3xl/store:text-[13px]"
+            style={{ color: "var(--store-text)" }}
           >
-            <span className="text-[14px] @3xl/store:text-[16px]">{item.icon}</span>
-            <span style={{ color: "var(--store-text)" }}>{item.label}</span>
+            <StoreIcon name={item.icon} size={16} className="@3xl/store:!h-[18px] @3xl/store:!w-[18px]" />
+            <span>{item.label}</span>
           </div>
         ))}
       </div>

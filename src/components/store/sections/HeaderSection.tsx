@@ -5,25 +5,29 @@ type Props = { data: HeaderData };
 export const HeaderSection = ({ data }: Props) => (
   <header className="px-5 py-4 @3xl/store:px-12 @3xl/store:py-5">
     <div className="mx-auto flex max-w-[1200px] items-center justify-between">
-      <div className="flex items-center gap-3">
-        {data.logoUrl ? (
+      <div className="flex items-center gap-2.5">
+        {data.logoUrl && (
           <img
             src={data.logoUrl}
             alt={data.storeName ?? "Store"}
             className="h-8 w-auto object-contain @3xl/store:h-10"
           />
-        ) : (
+        )}
+        {(!data.logoUrl || data.showNameWithLogo) && data.storeName && (
           <span
             className="text-[16px] font-semibold tracking-[-0.01em] @3xl/store:text-[18px]"
             style={{ color: "var(--store-text)" }}
           >
-            {data.storeName ?? "Store"}
+            {data.storeName}
           </span>
         )}
       </div>
       {data.showCartIcon !== false && (
         <button
-          className="flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-black/5 @3xl/store:h-10 @3xl/store:w-10"
+          className="flex h-9 w-9 items-center justify-center rounded-full transition @3xl/store:h-10 @3xl/store:w-10"
+          style={{ background: "transparent" }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = "color-mix(in srgb, var(--store-text) 5%, transparent)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
           aria-label="Cart"
         >
           <svg

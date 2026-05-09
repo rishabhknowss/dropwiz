@@ -40,6 +40,31 @@ import {
   type ProductOutput,
 } from "./product-v1";
 import type { ProductContext, TargetingContext } from "./types";
+export {
+  generateTestimonials,
+  generateValueProps,
+  generateComparison,
+  generateLifestyle,
+  generateHowItWorks,
+  generateTrust,
+  generateAnnouncement,
+  generateFeatureCards,
+  generateProductSection,
+  generateGallerySection,
+  generateFeatureMarquee,
+  type SectionGenerateContext,
+  type TestimonialsOutput,
+  type ValuePropsOutput,
+  type ComparisonOutput,
+  type LifestyleOutput,
+  type HowItWorksOutput,
+  type TrustOutput,
+  type AnnouncementOutput,
+  type FeatureCardsOutput,
+  type ProductSectionOutput,
+  type GallerySectionOutput,
+  type FeatureMarqueeOutput,
+} from "./section-v1";
 
 export type GenerateContext = {
   product: ProductContext;

@@ -5,6 +5,7 @@ import {
   products,
   stores,
   type StoreSection,
+  type StorePage,
   type ThemeTokens,
 } from "@/db/schema";
 import { scrapeProduct, analyzeProduct, type ScrapedProduct } from "@/lib/scraper";
@@ -24,7 +25,7 @@ import {
   generateHooks,
   generateProductFromAI,
 } from "@/lib/ai/prompts";
-import { generateImage } from "@/lib/ai/wavespeed";
+import { generateImage, generateImageWithReference } from "@/lib/ai/wavespeed";
 import type { HeroOutput, BundleOutput, FaqOutput } from "@/lib/ai/prompts";
 import { generateSecureToken } from "@/lib/auth/tokens";
 
@@ -215,45 +216,73 @@ export async function runStoreGeneration(
     ]);
 
     let heroImageUrl: string | undefined;
+    const originalImages = scraped.originalImages as string[];
+    const referenceImageUrl = originalImages[0];
+
     try {
-      const heroPrompts = buildHeroImagePrompts(
-        scraped.title ?? "product",
-        targeting.persona,
-      );
-      const heroResults = await Promise.all(
-        heroPrompts.map((prompt) =>
-          generateImage({
-            model: "flux_schnell",
-            prompt,
+      if (referenceImageUrl) {
+        const heroPrompt = buildHeroImagePromptWithReference(
+          scraped.title ?? "product",
+          targeting.persona,
+        );
+        const heroResult = await generateImageWithReference({
+          prompt: heroPrompt,
+          referenceImageUrl,
+          width: 1024,
+          height: 1024,
+          storeId,
+          userId: storeRow.userId ?? null,
+          kind: "hero",
+          count: 1,
+        }).catch((err) => {
+          console.error("[store-gen] image-to-image failed, falling back:", err);
+          return null;
+        });
+        heroImageUrl = heroResult?.variants[0]?.imageUrl;
+
+        if (heroImageUrl) {
+          generateImageWithReference({
+            prompt: buildLifestylePromptWithReference(scraped.title ?? "product", targeting.persona),
+            referenceImageUrl,
             width: 1024,
             height: 1024,
-            numImages: 1,
             storeId,
             userId: storeRow.userId ?? null,
-            kind: "hero",
-          }).catch(() => null),
-        ),
-      );
-      heroImageUrl = heroResults.find((r) => r?.assets[0]?.publicUrl)?.assets[0]
-        ?.publicUrl;
+            kind: "lifestyle",
+            count: 1,
+          }).catch((err) => console.error("[store-gen] lifestyle image-to-image failed:", err));
+        }
+      }
 
-      generateImage({
-        model: "flux_schnell",
-        prompt: buildLifestylePrompt(scraped.title ?? "product", targeting.persona),
-        width: 1024,
-        height: 1024,
-        numImages: 1,
-        storeId,
-        userId: storeRow.userId ?? null,
-        kind: "lifestyle",
-      }).catch((err) => console.error("[store-gen] lifestyle image failed:", err));
+      if (!heroImageUrl) {
+        const heroPrompts = buildHeroImagePrompts(
+          scraped.title ?? "product",
+          targeting.persona,
+        );
+        const heroResults = await Promise.all(
+          heroPrompts.slice(0, 1).map((prompt) =>
+            generateImage({
+              model: "flux_schnell",
+              prompt,
+              width: 1024,
+              height: 1024,
+              numImages: 1,
+              storeId,
+              userId: storeRow.userId ?? null,
+              kind: "hero",
+            }).catch(() => null),
+          ),
+        );
+        heroImageUrl = heroResults.find((r) => r?.assets[0]?.publicUrl)?.assets[0]
+          ?.publicUrl;
+      }
     } catch {
-      heroImageUrl = (scraped.originalImages as string[])[0];
+      heroImageUrl = referenceImageUrl;
     }
 
     generateHooks(genCtx).catch((err) => console.error("[store-gen] hooks failed:", err));
 
-    const sections = buildSections({
+    const { pages, sections } = buildPages({
       hero,
       bundles,
       faq,
@@ -273,6 +302,7 @@ export async function runStoreGeneration(
     await db
       .update(stores)
       .set({
+        pages,
         sections,
         copy: { hero, bundles, faq },
         status: "ready",
@@ -453,6 +483,14 @@ function buildLifestylePrompt(productTitle: string, persona: string): string {
   return `Candid lifestyle photograph showing ${productTitle} in use by the target customer (${persona}), natural golden-hour light, shallow depth of field, authentic documentary style, no text, no watermark, no logos.`;
 }
 
+function buildHeroImagePromptWithReference(productTitle: string, persona: string): string {
+  return `Premium e-commerce hero shot of this exact product (${productTitle}), professional studio lighting, clean minimal background, editorial quality, high-end DTC brand aesthetic. Target customer: ${persona}. Preserve the product's exact appearance, colors, and details.`;
+}
+
+function buildLifestylePromptWithReference(productTitle: string, persona: string): string {
+  return `Lifestyle product photograph showing this exact product (${productTitle}) in a real-world context for ${persona}. Natural lighting, authentic setting, premium brand feel. Keep the product's exact appearance while placing it in an aspirational scene.`;
+}
+
 function buildSections(input: {
   hero: HeroOutput;
   bundles: BundleOutput;
@@ -483,9 +521,9 @@ function buildSections(input: {
       order: 0,
       data: {
         badges: [
-          { icon: "🚚", text: "Free Shipping on all orders" },
-          { icon: "🔒", text: "Secure Checkout" },
-          { icon: "❤️", text: "30-Day Money Back Guarantee" },
+          { icon: "Truck01Icon", text: "Free Shipping on all orders" },
+          { icon: "Lock01Icon", text: "Secure Checkout" },
+          { icon: "HeartCheckIcon", text: "30-Day Money Back Guarantee" },
         ],
         variant: "marquee",
       },
@@ -517,9 +555,9 @@ function buildSections(input: {
         currency: input.currency,
         trustBadges: ["Free Shipping", "30-Day Guarantee", "Secure Checkout"],
         featureBadges: [
-          { icon: "⚡", label: "Fast Results" },
-          { icon: "✓", label: "Premium Quality" },
-          { icon: "🛡", label: "Risk-Free" },
+          { icon: "ZapIcon", label: "Fast Results" },
+          { icon: "CheckmarkCircle01Icon", label: "Premium Quality" },
+          { icon: "ShieldCheckIcon", label: "Risk-Free" },
         ],
         bundles: bundlesWithBogo.map((b) => {
           const unitPrice = input.priceCents;
@@ -555,10 +593,10 @@ function buildSections(input: {
         rating: 4.8,
         reviewCount: 2500,
         features: [
-          { icon: "⚡", label: "Fast Acting" },
-          { icon: "🌿", label: "All Natural" },
-          { icon: "✓", label: "Clinically Tested" },
-          { icon: "🔒", label: "Secure Purchase" },
+          { icon: "ZapIcon", label: "Fast Acting" },
+          { icon: "Leaf01Icon", label: "All Natural" },
+          { icon: "CheckmarkBadge01Icon", label: "Clinically Tested" },
+          { icon: "Lock01Icon", label: "Secure Purchase" },
         ],
       },
     },
@@ -581,26 +619,26 @@ function buildSections(input: {
       data: {
         badges: [
           {
-            icon: "❤️",
+            icon: "HeartCheckIcon",
             title: "Try it risk-free",
             description: "Love it or your money back. No questions asked.",
           },
           {
-            icon: "🚛",
+            icon: "Truck01Icon",
             title: "Fast, free shipping",
             description: "Get it delivered to your door in 3-5 business days.",
           },
           {
-            icon: "🔒",
+            icon: "Lock01Icon",
             title: "Secure checkout",
             description: "Your payment information is always protected.",
           },
         ],
         showPaymentBadges: true,
         shippingTimeline: [
-          { icon: "✅", label: "Order Confirmed", date: "Today" },
-          { icon: "🚛", label: "On Its Way", date: "1-2 days" },
-          { icon: "⭐", label: "Delivered", date: "3-5 days" },
+          { icon: "CheckmarkCircle01Icon", label: "Order Confirmed", date: "Today" },
+          { icon: "Truck01Icon", label: "On Its Way", date: "1-2 days" },
+          { icon: "StarIcon", label: "Delivered", date: "3-5 days" },
         ],
         variant: "detailed",
       },
@@ -648,6 +686,207 @@ function buildSections(input: {
     },
   ];
 }
+
+type BuildPagesInput = {
+  hero: HeroOutput;
+  bundles: BundleOutput;
+  faq: FaqOutput;
+  heroImageUrl?: string;
+  productImageUrl: string;
+  productImages?: string[];
+  productTitle: string;
+  productDescription?: string;
+  priceCents: number;
+  originalPriceCents?: number;
+  currency: string;
+};
+
+const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: StoreSection[] } => {
+  const originalPrice = input.originalPriceCents ?? Math.round(input.priceCents * 1.4);
+  const productImages = input.productImages?.length
+    ? input.productImages
+    : [input.productImageUrl];
+
+  const bundlesWithBogo = input.bundles.bundles.map((b, i) => ({
+    ...b,
+    freeQuantity: i === 0 ? 0 : b.quantity,
+  }));
+
+  const announcementData = {
+    badges: [
+      { icon: "Truck01Icon", text: "Free Shipping on all orders" },
+      { icon: "Lock01Icon", text: "Secure Checkout" },
+      { icon: "HeartCheckIcon", text: "30-Day Money Back Guarantee" },
+    ],
+    variant: "marquee",
+  };
+
+  const headerData = {
+    logoUrl: "",
+    storeName: input.productTitle,
+    showCartIcon: true,
+  };
+
+  const heroData = {
+    headline: input.hero.headline,
+    subheadline: input.hero.subheadline,
+    primaryCta: "SHOP NOW",
+    secondaryCta: input.hero.secondaryCta,
+    urgencyBadge: input.hero.urgencyBadge,
+    socialProof: input.hero.socialProof,
+    imageUrl: input.heroImageUrl ?? input.productImageUrl,
+    rating: 4.8,
+    reviewCount: 2500,
+    currency: input.currency,
+    trustBadges: ["Free Shipping", "30-Day Guarantee", "Secure Checkout"],
+    featureBadges: [
+      { icon: "ZapIcon", label: "Fast Results" },
+      { icon: "CheckmarkCircle01Icon", label: "Premium Quality" },
+      { icon: "ShieldCheckIcon", label: "Risk-Free" },
+    ],
+    ctaMode: "navigate" as const,
+    ctaLink: "/products",
+    bundles: bundlesWithBogo.map((b) => {
+      const unitPrice = input.priceCents;
+      const totalUnits = b.quantity + (b.freeQuantity ?? 0);
+      const fullPrice = unitPrice * totalUnits;
+      const discountedPrice = Math.round(fullPrice * (1 - b.discountPercent / 100));
+      return {
+        name: b.name,
+        quantity: b.quantity,
+        freeQuantity: b.freeQuantity,
+        priceCents: discountedPrice,
+        originalPriceCents: fullPrice,
+        savings: b.savings,
+        badge: b.badge,
+      };
+    }),
+  };
+
+  const productData = {
+    title: input.productTitle,
+    subtitle: "The smart choice for modern living",
+    description: input.productDescription ?? `Experience the difference with ${input.productTitle}. Designed for those who demand the best, this premium product delivers exceptional results every time.`,
+    imageUrl: input.productImageUrl,
+    images: productImages,
+    priceCents: input.priceCents,
+    originalPriceCents: originalPrice,
+    currency: input.currency,
+    badge: "Best Seller",
+    rating: 4.8,
+    reviewCount: 2500,
+    features: [
+      { icon: "ZapIcon", label: "Fast Acting" },
+      { icon: "Leaf01Icon", label: "All Natural" },
+      { icon: "CheckmarkBadge01Icon", label: "Clinically Tested" },
+      { icon: "Lock01Icon", label: "Secure Purchase" },
+    ],
+  };
+
+  const bundlesData = {
+    bundles: bundlesWithBogo,
+    basePriceCents: input.priceCents,
+    originalPriceCents: originalPrice,
+    currency: input.currency,
+    productImage: input.productImageUrl,
+  };
+
+  const trustData = {
+    badges: [
+      {
+        icon: "HeartCheckIcon",
+        title: "Try it risk-free",
+        description: "Love it or your money back. No questions asked.",
+      },
+      {
+        icon: "Truck01Icon",
+        title: "Fast, free shipping",
+        description: "Get it delivered to your door in 3-5 business days.",
+      },
+      {
+        icon: "Lock01Icon",
+        title: "Secure checkout",
+        description: "Your payment information is always protected.",
+      },
+    ],
+    showPaymentBadges: true,
+    shippingTimeline: [
+      { icon: "CheckmarkCircle01Icon", label: "Order Confirmed", date: "Today" },
+      { icon: "Truck01Icon", label: "On Its Way", date: "1-2 days" },
+      { icon: "StarIcon", label: "Delivered", date: "3-5 days" },
+    ],
+    variant: "detailed",
+  };
+
+  const testimonialsData = {
+    title: "What customers are saying",
+    testimonials: [
+      {
+        quote: "This actually works. Two weeks in and I'm already seeing results.",
+        name: "Sarah K.",
+        role: "Verified Buyer",
+        rating: 5,
+      },
+      {
+        quote: "Exceeded my expectations. Already ordered two more for my family.",
+        name: "Marcus T.",
+        role: "Verified Buyer",
+        rating: 5,
+      },
+      {
+        quote: "Worth every penny. The quality is outstanding.",
+        name: "Priya S.",
+        role: "Verified Buyer",
+        rating: 5,
+      },
+    ],
+    variant: "grid",
+  };
+
+  const faqData = { faqs: input.faq.faqs, variant: "accordion" };
+  const footerData = { storeName: input.productTitle };
+
+  const landingPage: StorePage = {
+    id: nanoid(10),
+    type: "landing",
+    name: "Home",
+    slug: "",
+    isDefault: true,
+    order: 0,
+    sections: [
+      { id: nanoid(8), type: "announcement", order: 0, data: announcementData },
+      { id: nanoid(8), type: "header", order: 1, data: headerData },
+      { id: nanoid(8), type: "hero", order: 2, data: heroData },
+      { id: nanoid(8), type: "testimonials", order: 3, data: testimonialsData },
+      { id: nanoid(8), type: "faq", order: 4, data: faqData },
+      { id: nanoid(8), type: "footer", order: 5, data: footerData },
+    ],
+  };
+
+  const productPage: StorePage = {
+    id: nanoid(10),
+    type: "product",
+    name: "Product",
+    slug: "product",
+    isDefault: false,
+    order: 1,
+    sections: [
+      { id: nanoid(8), type: "header", order: 0, data: headerData },
+      { id: nanoid(8), type: "product", order: 1, data: productData },
+      { id: nanoid(8), type: "bundles", order: 2, data: bundlesData },
+      { id: nanoid(8), type: "trust", order: 3, data: trustData },
+      { id: nanoid(8), type: "faq", order: 4, data: faqData },
+      { id: nanoid(8), type: "footer", order: 5, data: footerData },
+    ],
+  };
+
+  const allSections = [...landingPage.sections, ...productPage.sections];
+
+  return {
+    pages: [landingPage, productPage],
+    sections: allSections,
+  };
+};
 
 export type AddProductPageInput = {
   storeId: string;

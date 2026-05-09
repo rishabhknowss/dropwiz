@@ -15,6 +15,10 @@ import { runWithToast } from "@/hooks/useToastMutation";
 import { toast } from "sonner";
 import { ShopifyConnectModal } from "@/components/shopify/ShopifyConnectModal";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
+import type { StorePage } from "@/db/schema";
+import confetti from "canvas-confetti";
+
+type PublishMode = "all" | "landing" | "product" | string;
 
 type Props = { storeId: string; onClose: () => void };
 
@@ -35,9 +39,11 @@ const PublishModalBody = ({ storeId, onClose }: Props) => {
   const [copied, setCopied] = useState(false);
   const [showConnect, setShowConnect] = useState(false);
   const [showUpgrade, setShowUpgrade] = useState(false);
+  const [publishMode, setPublishMode] = useState<PublishMode>("all");
 
   const tier = me.data?.tier ?? "free";
   const isPro = tier === "pro";
+  const pages = store.data?.pages ?? [];
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -60,22 +66,54 @@ const PublishModalBody = ({ storeId, onClose }: Props) => {
   const shopsLoading = shops.isLoading;
   const connected = (shops.data?.length ?? 0) > 0;
 
+  const fireConfetti = () => {
+    const duration = 500;
+    const end = Date.now() + duration;
+    const colors = ["#c7ff3d", "#0a0a0a", "#ffffff", "#fbbf24", "#22c55e"];
+
+    const frame = () => {
+      confetti({
+        particleCount: 3,
+        angle: 60,
+        spread: 55,
+        origin: { x: 0 },
+        colors,
+      });
+      confetti({
+        particleCount: 3,
+        angle: 120,
+        spread: 55,
+        origin: { x: 1 },
+        colors,
+      });
+
+      if (Date.now() < end) {
+        requestAnimationFrame(frame);
+      }
+    };
+    frame();
+  };
+
   const handleShopifyPublish = () => {
     if (!selectedShop) {
       setShowConnect(true);
       return;
     }
+    const modeLabel = publishMode === "all" ? "all pages" : publishMode === "landing" ? "home page" : publishMode === "product" ? "product page" : "selected page";
     runWithToast(
       publish,
-      { storeId, withTheme: true },
+      { storeId, withTheme: true, publishMode },
       {
-        loading: `Publishing to ${selectedShop}…`,
-        success: `Published to ${selectedShop}`,
+        loading: `Publishing ${modeLabel} to ${selectedShop}…`,
+        success: `Published ${modeLabel} to ${selectedShop}`,
         toastId: "shopify-publish",
         onSuccess: (data) => {
           utils.stores.getMine.invalidate({ storeId });
-          window.open(data.themeEditorUrl, "_blank", "noopener");
-          onClose();
+          fireConfetti();
+          setTimeout(() => {
+            window.open(data.themeEditorUrl, "_blank", "noopener");
+            onClose();
+          }, 800);
         },
       },
     );
@@ -154,6 +192,9 @@ const PublishModalBody = ({ storeId, onClose }: Props) => {
             disconnecting={disconnect.isPending}
             isPro={isPro}
             onUpgrade={() => setShowUpgrade(true)}
+            pages={pages}
+            publishMode={publishMode}
+            onPublishModeChange={setPublishMode}
           />
           <PublicUrlCard
             path={publicPath}
@@ -188,6 +229,9 @@ const ShopifyCard = ({
   disconnecting,
   isPro,
   onUpgrade,
+  pages,
+  publishMode,
+  onPublishModeChange,
 }: {
   loading: boolean;
   connected: boolean;
@@ -202,7 +246,15 @@ const ShopifyCard = ({
   disconnecting: boolean;
   isPro: boolean;
   onUpgrade: () => void;
-}) => (
+  pages: StorePage[];
+  publishMode: PublishMode;
+  onPublishModeChange: (mode: PublishMode) => void;
+}) => {
+  const hasPages = pages.length > 0;
+  const hasLanding = pages.some((p) => p.type === "landing");
+  const hasProduct = pages.some((p) => p.type === "product");
+
+  return (
   <div className="rounded-[10px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-3.5">
     <div className="flex items-start gap-3">
       <div className="flex size-8 shrink-0 items-center justify-center rounded-[8px] bg-[color:var(--dw-surface2)] text-[color:var(--dw-text-muted)]">
@@ -253,6 +305,27 @@ const ShopifyCard = ({
             ))}
           </select>
         )}
+        {hasPages && (
+          <div className="flex flex-col gap-1.5">
+            <label className="text-[11px] font-medium text-[color:var(--dw-text-muted)]">
+              Pages to publish
+            </label>
+            <select
+              value={publishMode}
+              onChange={(e) => onPublishModeChange(e.target.value as PublishMode)}
+              className="h-8 w-full rounded-[7px] border border-[color:var(--dw-border)] bg-[color:var(--dw-bg)] px-2 text-[12px] focus:border-[color:var(--dw-accent)] focus:outline-none"
+            >
+              <option value="all">All pages</option>
+              {hasLanding && <option value="landing">Home page only</option>}
+              {hasProduct && <option value="product">Product page only</option>}
+              {pages.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name} ({p.type})
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
         <Button
           size="sm"
           className="h-8 w-full text-[12px]"
@@ -286,7 +359,8 @@ const ShopifyCard = ({
       </Button>
     )}
   </div>
-);
+  );
+};
 
 const PublicUrlCard = ({
   path,

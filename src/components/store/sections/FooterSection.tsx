@@ -9,7 +9,11 @@ const PaymentBadges = () => (
     {PAYMENT_METHODS.map((p) => (
       <div
         key={p}
-        className="flex h-10 w-14 items-center justify-center rounded-md border border-black/8 bg-white"
+        className="flex h-10 w-14 items-center justify-center rounded-md"
+        style={{
+          border: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)",
+          background: "var(--store-bg)",
+        }}
       >
         <img
           src={`/payment/${p}.png`}
@@ -32,7 +36,10 @@ export const FooterSection = ({
   store: Store;
 }) => {
   return (
-    <footer className="border-t border-black/5 px-5 py-9 @3xl/store:px-12 @3xl/store:py-12">
+    <footer
+      className="px-5 py-9 @3xl/store:px-12 @3xl/store:py-12"
+      style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+    >
       <div className="mx-auto max-w-[1200px]">
         <div className="mb-6 flex justify-center">
           <PaymentBadges />

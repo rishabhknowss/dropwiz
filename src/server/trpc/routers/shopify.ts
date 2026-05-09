@@ -140,6 +140,7 @@ export const shopifyRouter = router({
       z.object({
         storeId: z.string().uuid(),
         withTheme: z.boolean().optional(),
+        publishMode: z.enum(["all", "landing", "product"]).or(z.string()).optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -182,6 +183,7 @@ export const shopifyRouter = router({
       try {
         const result = await publishStoreToShopify(input.storeId, ctx.user.id, {
           withTheme: input.withTheme,
+          publishMode: input.publishMode,
         });
         return result;
       } catch (err) {

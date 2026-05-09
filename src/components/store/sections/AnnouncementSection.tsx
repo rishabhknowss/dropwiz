@@ -1,4 +1,5 @@
 import type { AnnouncementData } from "@/types/store-sections";
+import { StoreIcon } from "@/components/editor/inspectors/fields/IconPickerField";
 
 type Props = { data: AnnouncementData };
 
@@ -27,7 +28,7 @@ const AnnouncementBar = ({ data }: Props) => (
           key={i}
           className="flex items-center gap-1.5 text-[11px] font-medium @3xl/store:text-[12px]"
         >
-          {badge.icon && <span className="text-[13px] @3xl/store:text-[14px]">{badge.icon}</span>}
+          {badge.icon && <StoreIcon name={badge.icon} size={14} className="@3xl/store:!h-[15px] @3xl/store:!w-[15px]" />}
           <span>{badge.text}</span>
         </div>
       ))}
@@ -47,7 +48,7 @@ const AnnouncementPills = ({ data }: Props) => (
             color: "var(--store-primary)",
           }}
         >
-          {badge.icon && <span className="text-[13px] @3xl/store:text-[14px]">{badge.icon}</span>}
+          {badge.icon && <StoreIcon name={badge.icon} size={14} className="@3xl/store:!h-[15px] @3xl/store:!w-[15px]" />}
           <span>{badge.text}</span>
         </div>
       ))}
@@ -62,8 +63,7 @@ const MarqueeContent = ({ badges }: { badges: AnnouncementData["badges"] }) => (
         key={i}
         className="flex shrink-0 items-center gap-2 px-6 text-[12px] font-medium @3xl/store:px-8 @3xl/store:text-[13px]"
       >
-        <span className="text-[14px] @3xl/store:text-[15px]">✓</span>
-        {badge.icon && <span className="text-[14px] @3xl/store:text-[15px]">{badge.icon}</span>}
+        <StoreIcon name={badge.icon || "CheckmarkCircle01Icon"} size={15} className="@3xl/store:!h-[16px] @3xl/store:!w-[16px]" />
         <span>{badge.text}</span>
       </div>
     ))}

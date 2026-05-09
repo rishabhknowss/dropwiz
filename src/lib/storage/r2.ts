@@ -161,8 +161,5 @@ export async function presignPutUrl(
 export function publicUrlFor(key: string): string | undefined {
   if (!env.R2_PUBLIC_URL) return undefined;
   const base = env.R2_PUBLIC_URL.replace(/\/+$/, "");
-  const relativeKey = R2_PREFIX && key.startsWith(`${R2_PREFIX}/`)
-    ? key.slice(R2_PREFIX.length + 1)
-    : key;
-  return `${base}/${relativeKey}`;
+  return `${base}/${key}`;
 }

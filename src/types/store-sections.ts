@@ -22,6 +22,7 @@ export type HeaderData = {
   logoUrl?: string;
   storeName?: string;
   showCartIcon?: boolean;
+  showNameWithLogo?: boolean;
 };
 
 export type HeroVariant =
@@ -31,6 +32,8 @@ export type HeroVariant =
   | "minimal"
   | "magazine"
   | "product-hero";
+
+export type HeroCtaMode = "cart" | "navigate";
 
 export type BundlesVariant = "tiers" | "compact" | "showcase";
 export type FaqVariant = "accordion" | "two-column" | "cards";
@@ -51,6 +54,37 @@ export type HeroBundle = {
   badge?: string | null;
 };
 
+export type HeroImageBadge = {
+  icon?: string;
+  text: string;
+};
+
+export type HeroBenefit = {
+  icon?: string;
+  text: string;
+};
+
+export type HeroQuickFeature = {
+  text: string;
+};
+
+export type HeroInlineFaq = {
+  question: string;
+  answer: string;
+};
+
+export type HeroTrustCard = {
+  icon?: string;
+  title: string;
+  description: string;
+};
+
+export type HeroSideFeature = {
+  icon: string;
+  label: string;
+  description?: string;
+};
+
 export type HeroData = {
   headline: string;
   subheadline: string;
@@ -67,15 +101,36 @@ export type HeroData = {
   trustBadges?: string[];
   rating?: number;
   reviewCount?: number;
+  ratingSource?: string;
   priceCents?: number;
   originalPriceCents?: number;
   currency?: string;
   productBadge?: string | null;
   bundles?: HeroBundle[];
-  sideFeatures?: FeatureBadge[];
+  sideFeatures?: (FeatureBadge | HeroSideFeature)[];
+  additionalImages?: string[];
+  imageBadge?: HeroImageBadge;
+  stockBadge?: string;
+  benefits?: HeroBenefit[];
+  quickFeatures?: HeroQuickFeature[];
+  inlineFaqs?: HeroInlineFaq[];
+  trustCards?: HeroTrustCard[];
+  bottomMessage?: { icon?: string; text: string };
+  showHeader?: boolean;
+  showBundleSelector?: boolean;
+  galleryImages?: string[];
+  showPaymentBadges?: boolean;
+  paymentMethods?: PaymentMethod[];
+  ctaMode?: HeroCtaMode;
+  ctaLink?: string;
 };
 
-export type ProductVariant = "default" | "gallery" | "compact";
+export type ProductVariant = "default" | "gallery" | "compact" | "rich";
+
+export type ProductSideFeature = {
+  icon: string;
+  label: string;
+};
 
 export type ProductData = {
   title: string;
@@ -91,6 +146,10 @@ export type ProductData = {
   reviewCount?: number;
   features?: Array<{ icon: string; label: string }>;
   variant?: ProductVariant;
+  showPaymentBadges?: boolean;
+  paymentMethods?: PaymentMethod[];
+  sideFeatures?: ProductSideFeature[];
+  galleryImages?: string[];
 };
 
 export type Bundle = {

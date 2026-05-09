@@ -2,6 +2,11 @@ import axios, { AxiosError } from "axios";
 import crypto from "crypto";
 import { env } from "@/env";
 
+const log = (event: string, data: Record<string, unknown> = {}) => {
+  const ts = new Date().toISOString();
+  console.log(`[shopify-client ${ts}] ${event}`, JSON.stringify(data, null, 2));
+};
+
 const SHOPIFY_SCOPES =
   "read_products,write_products,read_publications,write_publications,read_orders,read_customers,read_themes,write_themes";
 
@@ -94,9 +99,19 @@ export async function shopifyGraphql<T>(
   variables?: Record<string, unknown>,
 ): Promise<T> {
   let lastError: unknown;
+  const operationMatch = query.match(/(?:query|mutation)\s+(\w+)/);
+  const operationName = operationMatch?.[1] ?? "unknown";
+  const t0 = Date.now();
+
+  log("graphql.start", {
+    shop,
+    operation: operationName,
+    variableKeys: variables ? Object.keys(variables) : [],
+  });
 
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
+      const tAttempt = Date.now();
       const res = await axios.post<{ data: T; errors?: unknown }>(
         `https://${shop}/admin/api/2024-10/graphql.json`,
         { query, variables },
@@ -110,8 +125,23 @@ export async function shopifyGraphql<T>(
       );
 
       if (res.data.errors) {
+        log("graphql.errors", {
+          shop,
+          operation: operationName,
+          attempt,
+          errors: res.data.errors,
+          took: `${Date.now() - tAttempt}ms`,
+        });
         throw new Error(`Shopify GraphQL: ${JSON.stringify(res.data.errors)}`);
       }
+
+      log("graphql.success", {
+        shop,
+        operation: operationName,
+        attempt,
+        took: `${Date.now() - tAttempt}ms`,
+        totalTook: `${Date.now() - t0}ms`,
+      });
       return res.data.data;
     } catch (error) {
       lastError = error;
@@ -119,10 +149,24 @@ export async function shopifyGraphql<T>(
       if (attempt < MAX_RETRIES && isRateLimited(error)) {
         const retryAfter = getRetryAfter(error);
         const delay = retryAfter || BASE_DELAY_MS * Math.pow(2, attempt);
+        log("graphql.rateLimited", {
+          shop,
+          operation: operationName,
+          attempt,
+          retryAfter,
+          delay,
+        });
         await sleep(delay);
         continue;
       }
 
+      log("graphql.failed", {
+        shop,
+        operation: operationName,
+        attempt,
+        error: error instanceof Error ? error.message : String(error),
+        totalTook: `${Date.now() - t0}ms`,
+      });
       throw error;
     }
   }

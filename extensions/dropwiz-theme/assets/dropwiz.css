@@ -1,3 +1,7 @@
+html {
+  scroll-behavior: smooth;
+}
+
 .dw-store {
   width: 100vw;
   max-width: 100vw;
@@ -13,6 +17,18 @@
 
 .dw-store * {
   box-sizing: border-box;
+}
+
+.dw-store a {
+  text-decoration: none;
+  color: inherit;
+}
+
+body:has(.dw-store) > footer:last-of-type:not(.dw-footer-section),
+body:has(.dw-store) footer.site-footer,
+body:has(.dw-store) .footer-section:not(.dw-footer-section),
+body:has(.dw-store) #shopify-section-footer {
+  display: none !important;
 }
 
 .dw-store-placeholder {

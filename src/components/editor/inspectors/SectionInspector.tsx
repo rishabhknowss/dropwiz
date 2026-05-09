@@ -1,5 +1,6 @@
-import type { Store, StoreSection } from "@/db/schema";
-import { api } from "@/utils/api";
+import { useState, useCallback, useRef, useEffect } from "react";
+import type { Store, StoreSection, StorePage } from "@/db/schema";
+import { api, type RouterOutputs } from "@/utils/api";
 import { runSilent, runWithToast } from "@/hooks/useToastMutation";
 import { SectionActions } from "./SectionActions";
 import { HeaderInspector } from "./HeaderInspector";
@@ -16,6 +17,7 @@ import { TestimonialsInspector } from "./TestimonialsInspector";
 import { ValuePropsInspector } from "./ValuePropsInspector";
 import { AnnouncementInspector } from "./AnnouncementInspector";
 import { HowItWorksInspector } from "./HowItWorksInspector";
+import { VideoInspector } from "./VideoInspector";
 
 type Props = {
   section: StoreSection;
@@ -27,7 +29,7 @@ type Props = {
 const REGENERATABLE: Array<StoreSection["type"]> = ["hero", "bundles", "faq"];
 
 export const SectionInspector = ({ section, store, pageId, onClose }: Props) => {
-  const key = `${store.id}-${section.id}-${store.updatedAt.toISOString()}`;
+  const key = `${store.id}-${section.id}`;
   return (
     <SectionForm
       key={key}
@@ -39,7 +41,7 @@ export const SectionInspector = ({ section, store, pageId, onClose }: Props) => 
   );
 };
 
-const SectionForm = ({ section, store, pageId, onClose }: Props) => {
+const SectionForm = ({ section: initialSection, store, pageId, onClose }: Props) => {
   const utils = api.useUtils();
   const pagesQuery = api.stores.getPages.useQuery({ storeId: store.id });
   const updateLegacy = api.stores.updateSection.useMutation();
@@ -51,31 +53,87 @@ const SectionForm = ({ section, store, pageId, onClose }: Props) => {
   const pages = pagesQuery.data ?? [];
   const effectivePageId = pageId ?? pages[0]?.id ?? null;
 
-  const invalidate = () => {
-    utils.stores.getMine.invalidate({ storeId: store.id });
-    utils.stores.getPages.invalidate({ storeId: store.id });
-  };
+  const [localData, setLocalData] = useState<Record<string, unknown>>(
+    initialSection.data as Record<string, unknown>
+  );
+  const pendingRef = useRef<Record<string, unknown>>({});
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const commit = (data: Record<string, unknown>) => {
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  const section = { ...initialSection, data: localData };
+
+  const updateOptimisticCache = useCallback((data: Record<string, unknown>) => {
+    const newSectionData = { ...localData, ...data };
+
+    utils.stores.getPages.setData({ storeId: store.id }, (old) => {
+      if (!old) return old;
+      return old.map((page) => ({
+        ...page,
+        sections: page.sections.map((s) =>
+          s.id === initialSection.id
+            ? { ...s, data: newSectionData }
+            : s
+        ),
+      }));
+    });
+
+    utils.stores.getMine.setData({ storeId: store.id }, (old) => {
+      if (!old) return old;
+      return {
+        ...old,
+        sections: old.sections.map((s) =>
+          s.id === initialSection.id
+            ? { ...s, data: newSectionData }
+            : s
+        ),
+      };
+    });
+  }, [utils, store.id, initialSection.id, localData]);
+
+  const sendToServer = useCallback(() => {
+    const data = { ...pendingRef.current };
+    pendingRef.current = {};
+
+    if (Object.keys(data).length === 0) return;
+
     if (effectivePageId) {
       runSilent(
         updatePage,
-        { storeId: store.id, pageId: effectivePageId, sectionId: section.id, data },
-        { onSuccess: invalidate },
+        { storeId: store.id, pageId: effectivePageId, sectionId: initialSection.id, data },
+        {},
       );
     } else {
       runSilent(
         updateLegacy,
-        { storeId: store.id, sectionId: section.id, data },
-        { onSuccess: invalidate },
+        { storeId: store.id, sectionId: initialSection.id, data },
+        {},
       );
     }
-  };
+  }, [effectivePageId, store.id, initialSection.id, updatePage, updateLegacy]);
+
+  const commit = useCallback((data: Record<string, unknown>) => {
+    setLocalData((prev) => ({ ...prev, ...data }));
+    pendingRef.current = { ...pendingRef.current, ...data };
+    updateOptimisticCache(data);
+
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(sendToServer, 150);
+  }, [updateOptimisticCache, sendToServer]);
+
+  const invalidate = useCallback(() => {
+    utils.stores.getMine.invalidate({ storeId: store.id });
+    utils.stores.getPages.invalidate({ storeId: store.id });
+  }, [utils, store.id]);
 
   const handleRegenerate = () =>
     runWithToast(
       regen,
-      { storeId: store.id, sectionId: section.id },
+      { storeId: store.id, sectionId: initialSection.id },
       {
         loading: "Regenerating with Claude...",
         success: "Regenerated",
@@ -88,7 +146,7 @@ const SectionForm = ({ section, store, pageId, onClose }: Props) => {
     if (effectivePageId) {
       runWithToast(
         removePage,
-        { storeId: store.id, pageId: effectivePageId, sectionId: section.id },
+        { storeId: store.id, pageId: effectivePageId, sectionId: initialSection.id },
         {
           loading: "Deleting...",
           success: "Deleted",
@@ -101,7 +159,7 @@ const SectionForm = ({ section, store, pageId, onClose }: Props) => {
     } else {
       runWithToast(
         removeLegacy,
-        { storeId: store.id, sectionId: section.id },
+        { storeId: store.id, sectionId: initialSection.id },
         {
           loading: "Deleting...",
           success: "Deleted",
@@ -187,8 +245,10 @@ const SectionForm = ({ section, store, pageId, onClose }: Props) => {
         {section.type === "howItWorks" && (
           <HowItWorksInspector section={section} onCommit={commit} />
         )}
-        {(section.type === "video" ||
-          section.type === "countdown" ||
+        {section.type === "video" && (
+          <VideoInspector section={section} onCommit={commit} />
+        )}
+        {(section.type === "countdown" ||
           section.type === "comparison" ||
           section.type === "featureMarquee" ||
           section.type === "reviewStats") && (

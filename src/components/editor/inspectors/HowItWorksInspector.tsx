@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { StoreSection } from "@/db/schema";
 import type { HowItWorksData, HowItWorksVariant } from "@/types/store-sections";
-import { TextField, VariantPicker } from "./fields";
+import { TextField, VariantPicker, IconPickerField } from "./fields";
 
 type Commit = (data: Record<string, unknown>) => void;
 
@@ -29,7 +29,7 @@ export const HowItWorksInspector = ({
   };
 
   const addStep = () => {
-    const updated = [...steps, { title: "New step", description: "Description", icon: "✨" }];
+    const updated = [...steps, { title: "New step", description: "Description", icon: "SparklesIcon" }];
     setSteps(updated);
     onCommit({ steps: updated });
   };
@@ -81,9 +81,9 @@ export const HowItWorksInspector = ({
                 Remove
               </button>
             </div>
-            <TextField
+            <IconPickerField
               label="Icon"
-              defaultValue={step.icon ?? ""}
+              value={step.icon ?? ""}
               onCommit={(v) => updateStep(i, "icon", v)}
             />
             <TextField

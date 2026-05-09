@@ -2,6 +2,7 @@ import type {
   ValuePropsData,
   ValuePropsVariant,
 } from "@/types/store-sections";
+import { StoreIcon } from "@/components/editor/inspectors/fields/IconPickerField";
 
 type Props = { data: ValuePropsData };
 
@@ -26,12 +27,15 @@ const IconBadge = ({ icon }: { icon?: string }) => (
       color: "var(--store-primary)",
     }}
   >
-    <span className="text-[20px] @3xl/store:text-[22px]">{icon ?? "✦"}</span>
+    <StoreIcon name={icon} size={22} className="@3xl/store:!h-[24px] @3xl/store:!w-[24px]" />
   </div>
 );
 
 const ValuePropsGrid = ({ data }: Props) => (
-  <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+  <section
+    className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto max-w-[1100px]">
       {data.title && (
         <h2 className="mb-7 text-center text-[26px] font-medium tracking-[-0.03em] @3xl/store:mb-10 @3xl/store:text-[36px] @5xl/store:text-[40px]">
@@ -58,7 +62,10 @@ const ValuePropsGrid = ({ data }: Props) => (
 );
 
 const ValuePropsAlternating = ({ data }: Props) => (
-  <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+  <section
+    className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto max-w-[920px]">
       {data.title && (
         <h2 className="mb-9 text-[26px] font-medium tracking-[-0.03em] @3xl/store:mb-12 @3xl/store:text-[36px] @5xl/store:text-[40px]">
@@ -92,7 +99,10 @@ const ValuePropsAlternating = ({ data }: Props) => (
 );
 
 const ValuePropsList = ({ data }: Props) => (
-  <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+  <section
+    className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto grid max-w-[1100px] grid-cols-1 gap-8 @3xl/store:gap-12 @5xl/store:grid-cols-[0.9fr_1.4fr]">
       <div>
         <div className="dw-mono mb-3 text-[10px] tracking-[0.16em] uppercase opacity-60 @3xl/store:text-[11px]">
@@ -104,9 +114,15 @@ const ValuePropsList = ({ data }: Props) => (
           </h2>
         )}
       </div>
-      <div className="divide-y divide-black/5">
+      <div>
         {data.props.map((p, i) => (
-          <div key={i} className="flex items-start gap-4 py-4 @3xl/store:py-5">
+          <div
+            key={i}
+            className="flex items-start gap-4 py-4 @3xl/store:py-5"
+            style={{
+              borderBottom: i < data.props.length - 1 ? "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" : "none",
+            }}
+          >
             <div
               className="mt-1 flex size-8 shrink-0 items-center justify-center rounded-full"
               style={{
@@ -115,9 +131,7 @@ const ValuePropsList = ({ data }: Props) => (
                 color: "var(--store-primary)",
               }}
             >
-              <span className="text-[13.5px] @3xl/store:text-[14px]">
-                {p.icon ?? "✦"}
-              </span>
+              <StoreIcon name={p.icon} size={14} />
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-[15px] font-semibold @3xl/store:text-[16px]">

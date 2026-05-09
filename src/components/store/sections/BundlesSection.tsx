@@ -51,7 +51,11 @@ const PaymentBadgesSmall = () => (
     {["visa", "mastercard", "amex", "paypal", "applepay", "gpay"].map((p) => (
       <div
         key={p}
-        className="flex h-10 w-14 items-center justify-center rounded-md border border-black/8 bg-white"
+        className="flex h-10 w-14 items-center justify-center rounded-md"
+        style={{
+          border: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)",
+          background: "var(--store-bg)",
+        }}
       >
         <img
           src={`/payment/${p}.png`}
@@ -120,7 +124,10 @@ const BundlesTiers = ({ data }: Props) => {
   };
 
   return (
-    <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+    <section
+      className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+      style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+    >
       <div className="mx-auto max-w-[1100px]">
         <div className="mb-8 text-center @3xl/store:mb-12">
           <h2 className="text-[26px] font-semibold tracking-[-0.02em] @3xl/store:text-[34px] @5xl/store:text-[38px]">
@@ -148,15 +155,14 @@ const BundlesTiers = ({ data }: Props) => {
                 onClick={() => handleSelect(i)}
                 className={cn(
                   "relative flex cursor-pointer flex-col overflow-hidden p-5 transition @3xl/store:p-6",
-                  isSelected
-                    ? "ring-2 ring-[color:var(--store-primary)]"
-                    : "border border-black/10 hover:border-black/20",
+                  isSelected && "ring-2 ring-[color:var(--store-primary)]",
                 )}
                 style={{
                   borderRadius: "var(--store-radius)",
                   background: isSelected
                     ? "linear-gradient(to bottom, color-mix(in oklab, var(--store-accent) 8%, var(--store-bg)), var(--store-bg))"
                     : "var(--store-bg)",
+                  border: isSelected ? "none" : "1px solid color-mix(in srgb, var(--store-text) 10%, transparent)",
                 }}
               >
                 {b.badge && (
@@ -176,10 +182,11 @@ const BundlesTiers = ({ data }: Props) => {
                   <div
                     className={cn(
                       "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition",
-                      isSelected
-                        ? "border-[color:var(--store-primary)] bg-[color:var(--store-primary)]"
-                        : "border-black/20"
+                      isSelected && "border-[color:var(--store-primary)] bg-[color:var(--store-primary)]",
                     )}
+                    style={{
+                      borderColor: isSelected ? undefined : "color-mix(in srgb, var(--store-text) 20%, transparent)",
+                    }}
                   >
                     {isSelected && (
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--store-bg)" strokeWidth="3">
@@ -197,7 +204,10 @@ const BundlesTiers = ({ data }: Props) => {
                     <span className="text-[28px] font-bold @3xl/store:text-[34px]">
                       {formatPrice(price, data.currency)}
                     </span>
-                    <span className="text-[14px] text-black/40 line-through @3xl/store:text-[15px]">
+                    <span
+                      className="text-[14px] line-through @3xl/store:text-[15px]"
+                      style={{ color: "color-mix(in srgb, var(--store-text) 40%, transparent)" }}
+                    >
                       {formatPrice(originalPrice, data.currency)}
                     </span>
                   </div>
@@ -216,7 +226,8 @@ const BundlesTiers = ({ data }: Props) => {
                       (_, idx) => (
                         <div
                           key={idx}
-                          className="size-12 overflow-hidden rounded-md border border-black/5 @3xl/store:size-14"
+                          className="size-12 overflow-hidden rounded-md @3xl/store:size-14"
+                          style={{ border: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
                         >
                           <img
                             src={data.productImage}
@@ -227,13 +238,20 @@ const BundlesTiers = ({ data }: Props) => {
                       )
                     )}
                     {b.quantity + (b.freeQuantity ?? 0) > 4 && (
-                      <div className="flex size-12 items-center justify-center rounded-md border border-black/5 bg-black/[0.02] text-[11px] font-medium opacity-60 @3xl/store:size-14">
+                      <div
+                        className="flex size-12 items-center justify-center rounded-md text-[11px] font-medium opacity-60 @3xl/store:size-14"
+                        style={{
+                          border: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)",
+                          background: "color-mix(in srgb, var(--store-text) 2%, transparent)",
+                        }}
+                      >
                         +{b.quantity + (b.freeQuantity ?? 0) - 4}
                       </div>
                     )}
                   </div>
                 )}
                 <button
+                  data-btn-styled
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAddToCart(i);
@@ -248,7 +266,7 @@ const BundlesTiers = ({ data }: Props) => {
                       : "transparent",
                     color: isSelected ? "var(--store-bg)" : "var(--store-text)",
                     border: isSelected ? "none" : "1.5px solid var(--store-primary)",
-                    borderRadius: "var(--store-radius)",
+                    borderRadius: "var(--store-button-radius)",
                   }}
                 >
                   Add to cart
@@ -310,15 +328,18 @@ const BundlesCompact = ({ data }: Props) => {
   };
 
   return (
-    <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+    <section
+      className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+      style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+    >
       <div className="mx-auto max-w-[680px]">
         <h2 className="mb-6 text-center text-[24px] font-semibold tracking-[-0.02em] @3xl/store:mb-8 @3xl/store:text-[30px]">
           BUNDLE &amp; SAVE
         </h2>
         <div
-          className="overflow-hidden border"
+          className="overflow-hidden"
           style={{
-            borderColor: "rgba(10,10,10,0.1)",
+            border: "1px solid color-mix(in srgb, var(--store-text) 10%, transparent)",
             borderRadius: "var(--store-radius)",
           }}
         >
@@ -338,23 +359,22 @@ const BundlesCompact = ({ data }: Props) => {
               <label
                 key={i}
                 onClick={() => handleSelect(i)}
-                className={cn(
-                  "flex cursor-pointer items-center gap-3 px-4 py-4 transition @3xl/store:gap-4 @3xl/store:px-5 @3xl/store:py-5",
-                  !isLast && "border-b border-black/5",
-                )}
+                className="flex cursor-pointer items-center gap-3 px-4 py-4 transition @3xl/store:gap-4 @3xl/store:px-5 @3xl/store:py-5"
                 style={{
                   background: isSelected
                     ? "color-mix(in oklab, var(--store-accent) 14%, transparent)"
                     : "transparent",
+                  borderBottom: isLast ? "none" : "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)",
                 }}
               >
                 <div
                   className={cn(
                     "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 transition",
-                    isSelected
-                      ? "border-[color:var(--store-primary)] bg-[color:var(--store-primary)]"
-                      : "border-black/20"
+                    isSelected && "border-[color:var(--store-primary)] bg-[color:var(--store-primary)]",
                   )}
+                  style={{
+                    borderColor: isSelected ? undefined : "color-mix(in srgb, var(--store-text) 20%, transparent)",
+                  }}
                 >
                   {isSelected && (
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--store-bg)" strokeWidth="3">
@@ -387,7 +407,10 @@ const BundlesCompact = ({ data }: Props) => {
                   <div className="text-[17px] font-bold @3xl/store:text-[19px]">
                     {formatPrice(price, data.currency)}
                   </div>
-                  <div className="text-[12px] text-black/40 line-through @3xl/store:text-[13px]">
+                  <div
+                    className="text-[12px] line-through @3xl/store:text-[13px]"
+                    style={{ color: "color-mix(in srgb, var(--store-text) 40%, transparent)" }}
+                  >
                     {formatPrice(originalPrice, data.currency)}
                   </div>
                 </div>
@@ -396,6 +419,7 @@ const BundlesCompact = ({ data }: Props) => {
           })}
         </div>
         <button
+          data-btn-styled
           onClick={handleAddToCart}
           className={cn(
             "mt-5 w-full px-4 py-3.5 text-[14px] font-semibold transition @3xl/store:mt-6 @3xl/store:py-4 @3xl/store:text-[15px]",
@@ -404,7 +428,7 @@ const BundlesCompact = ({ data }: Props) => {
           style={{
             background: "var(--store-primary)",
             color: "var(--store-bg)",
-            borderRadius: "var(--store-radius)",
+            borderRadius: "var(--store-button-radius)",
           }}
         >
           Add to cart
@@ -471,7 +495,10 @@ const BundlesShowcase = ({ data }: Props) => {
   );
 
   return (
-    <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+    <section
+      className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+      style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+    >
       <div className="mx-auto max-w-[1100px]">
         <h2 className="mb-7 text-center text-[26px] font-semibold tracking-[-0.02em] @3xl/store:mb-10 @3xl/store:text-[34px]">
           BUNDLE &amp; SAVE
@@ -513,7 +540,8 @@ const BundlesShowcase = ({ data }: Props) => {
                   (_, idx) => (
                     <div
                       key={idx}
-                      className="size-14 overflow-hidden rounded-lg border border-black/5 @3xl/store:size-16"
+                      className="size-14 overflow-hidden rounded-lg @3xl/store:size-16"
+                      style={{ border: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
                     >
                       <img
                         src={data.productImage}
@@ -531,7 +559,10 @@ const BundlesShowcase = ({ data }: Props) => {
                   <span className="text-[34px] font-bold leading-none @3xl/store:text-[44px]">
                     {formatPrice(recPrice, data.currency)}
                   </span>
-                  <span className="text-[16px] text-black/40 line-through @3xl/store:text-[18px]">
+                  <span
+                    className="text-[16px] line-through @3xl/store:text-[18px]"
+                    style={{ color: "color-mix(in srgb, var(--store-text) 40%, transparent)" }}
+                  >
                     {formatPrice(recOriginalPrice, data.currency)}
                   </span>
                 </div>
@@ -542,6 +573,7 @@ const BundlesShowcase = ({ data }: Props) => {
                 )}
               </div>
               <button
+                data-btn-styled
                 onClick={() => handleAddToCart(recommendedIndex)}
                 className={cn(
                   "px-6 py-3.5 text-[14px] font-semibold transition @3xl/store:px-8 @3xl/store:py-4 @3xl/store:text-[15px]",
@@ -550,7 +582,7 @@ const BundlesShowcase = ({ data }: Props) => {
                 style={{
                   background: "var(--store-primary)",
                   color: "var(--store-bg)",
-                  borderRadius: "var(--store-radius)",
+                  borderRadius: "var(--store-button-radius)",
                 }}
               >
                 Add to cart
@@ -577,11 +609,11 @@ const BundlesShowcase = ({ data }: Props) => {
                     cart?.setSelectedBundleIndex(bundleIndex);
                   }}
                   className={cn(
-                    "flex cursor-pointer items-center justify-between gap-3 border p-4 transition @3xl/store:p-5",
+                    "flex cursor-pointer items-center justify-between gap-3 p-4 transition @3xl/store:p-5",
                     selected === bundleIndex && "ring-2 ring-[color:var(--store-primary)]"
                   )}
                   style={{
-                    borderColor: "rgba(10,10,10,0.1)",
+                    border: "1px solid color-mix(in srgb, var(--store-text) 10%, transparent)",
                     borderRadius: "var(--store-radius)",
                   }}
                 >
@@ -598,19 +630,27 @@ const BundlesShowcase = ({ data }: Props) => {
                       <div className="text-[17px] font-bold @3xl/store:text-[19px]">
                         {formatPrice(price, data.currency)}
                       </div>
-                      <div className="text-[12px] text-black/40 line-through @3xl/store:text-[13px]">
+                      <div
+                        className="text-[12px] line-through @3xl/store:text-[13px]"
+                        style={{ color: "color-mix(in srgb, var(--store-text) 40%, transparent)" }}
+                      >
                         {formatPrice(originalPrice, data.currency)}
                       </div>
                     </div>
                     <button
+                      data-btn-styled
                       onClick={(e) => {
                         e.stopPropagation();
                         handleAddToCart(bundleIndex);
                       }}
                       className={cn(
-                        "rounded-lg border border-black/20 px-3 py-2 text-[12px] font-medium transition hover:bg-black/5",
+                        "px-3 py-2 text-[12px] font-medium transition",
                         addingIndex === bundleIndex && "scale-95"
                       )}
+                      style={{
+                        borderRadius: "var(--store-button-radius)",
+                        border: "1px solid color-mix(in srgb, var(--store-text) 20%, transparent)",
+                      }}
                     >
                       Add
                     </button>

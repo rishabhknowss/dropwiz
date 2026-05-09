@@ -8,6 +8,7 @@ import type {
   TrustData,
   FaqData,
   FooterData,
+  VideoData,
   LifestyleData,
   GalleryData,
   TestimonialsData,
@@ -33,6 +34,7 @@ import { AnnouncementSection } from "./AnnouncementSection";
 import { FeatureMarqueeSection } from "./FeatureMarqueeSection";
 import { ReviewStatsSection } from "./ReviewStatsSection";
 import { HowItWorksSection } from "./HowItWorksSection";
+import { VideoSection } from "./VideoSection";
 
 const getBundlesFromStore = (store: Store, sections: StoreSection[]): HeroBundle[] | null => {
   const bundlesSection = sections.find((s) => s.type === "bundles");
@@ -114,6 +116,8 @@ export const Section = ({
       return <ReviewStatsSection data={section.data as ReviewStatsData} />;
     case "howItWorks":
       return <HowItWorksSection data={section.data as HowItWorksData} />;
+    case "video":
+      return <VideoSection data={section.data as VideoData} />;
     default:
       return null;
   }
@@ -127,6 +131,7 @@ export {
   TrustSection,
   FaqSection,
   FooterSection,
+  VideoSection,
   LifestyleSection,
   GallerySection,
   TestimonialsSection,

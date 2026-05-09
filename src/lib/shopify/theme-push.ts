@@ -4,6 +4,13 @@ import { shopifyGraphql } from "./client";
 
 const API_VERSION = "2026-01";
 
+const log = (event: string, data: Record<string, unknown> = {}) => {
+  const ts = new Date().toISOString();
+  console.log(`[theme-push ${ts}] ${event}`, JSON.stringify(data, null, 2));
+};
+
+const since = (start: number) => `${Date.now() - start}ms`;
+
 function shopifyError(err: unknown, context: string): Error {
   if (err instanceof AxiosError) {
     const status = err.response?.status;
@@ -44,12 +51,25 @@ function adminApi(shop: string, accessToken: string) {
 }
 
 async function listThemes(shop: string, accessToken: string): Promise<Theme[]> {
+  log("listThemes.start", { shop });
+  const t0 = Date.now();
   try {
     const res = await adminApi(shop, accessToken).get<ThemesResponse>(
       "/themes.json",
     );
+    log("listThemes.success", {
+      shop,
+      count: res.data.themes.length,
+      themes: res.data.themes.map((t) => ({ id: t.id, name: t.name, role: t.role })),
+      took: since(t0),
+    });
     return res.data.themes;
   } catch (err) {
+    log("listThemes.error", {
+      shop,
+      error: err instanceof Error ? err.message : String(err),
+      took: since(t0),
+    });
     throw shopifyError(err, "list themes");
   }
 }
@@ -219,18 +239,35 @@ export async function pushDropwizTheme(input: {
   publish?: boolean;
 }): Promise<{ themeId: number; created: boolean }> {
   const { shop, accessToken, files } = input;
+  const t0 = Date.now();
 
-  console.log(`[theme-push] Listing themes for ${shop}...`);
+  log("pushDropwizTheme.start", {
+    shop,
+    storeId: input.storeId,
+    storeName: input.storeName,
+    fileCount: files.length,
+    fileKeys: files.map((f) => f.key),
+    fileSizes: files.map((f) => ({ key: f.key, bytes: f.value.length })),
+    totalBytes: files.reduce((sum, f) => sum + f.value.length, 0),
+  });
+
+  log("pushDropwizTheme.listingThemes", { shop });
   const themes = await listThemes(shop, accessToken);
-  console.log(`[theme-push] Found ${themes.length} themes:`, themes.map(t => ({ id: t.id, name: t.name, role: t.role })));
 
   const mainTheme = themes.find((t) => t.role === "main");
   if (!mainTheme) {
+    log("pushDropwizTheme.noMainTheme", {
+      shop,
+      availableThemes: themes.map((t) => ({ id: t.id, name: t.name, role: t.role })),
+    });
     throw new Error("No main theme found on the shop");
   }
 
-  console.log(`[theme-push] Using main theme: ${mainTheme.id} (${mainTheme.name})`);
-  console.log(`[theme-push] Uploading ${files.length} files via GraphQL themeFilesUpsert...`);
+  log("pushDropwizTheme.mainThemeFound", {
+    themeId: mainTheme.id,
+    themeName: mainTheme.name,
+    themeRole: mainTheme.role,
+  });
 
   const themeGid = `gid://shopify/OnlineStoreTheme/${mainTheme.id}`;
   const graphqlFiles = files.map((f) => ({
@@ -241,6 +278,13 @@ export async function pushDropwizTheme(input: {
     },
   }));
 
+  log("pushDropwizTheme.uploadingViaGraphQL", {
+    themeGid,
+    fileCount: graphqlFiles.length,
+    filenames: graphqlFiles.map((f) => f.filename),
+  });
+
+  const tUpload = Date.now();
   const result = await shopifyGraphql<ThemeFilesUpsertResponse>(
     shop,
     accessToken,
@@ -248,14 +292,31 @@ export async function pushDropwizTheme(input: {
     { themeId: themeGid, files: graphqlFiles },
   );
 
-  console.log(`[theme-push] GraphQL response:`, JSON.stringify(result, null, 2));
+  log("pushDropwizTheme.graphqlResponse", {
+    uploadTook: since(tUpload),
+    upsertedFiles: result.themeFilesUpsert.upsertedThemeFiles?.map((f) => f.filename) ?? [],
+    upsertedCount: result.themeFilesUpsert.upsertedThemeFiles?.length ?? 0,
+    userErrorsCount: result.themeFilesUpsert.userErrors.length,
+    userErrors: result.themeFilesUpsert.userErrors,
+  });
 
   if (result.themeFilesUpsert.userErrors.length > 0) {
     const errors = result.themeFilesUpsert.userErrors;
     const errorMessages = errors.map((e) => `${e.code}: ${e.message}`).join("; ");
-    console.error(`[theme-push] GraphQL userErrors:`, errors);
+    log("pushDropwizTheme.failed", {
+      errors,
+      errorMessages,
+      totalTook: since(t0),
+    });
     throw new Error(`Shopify theme upload failed: ${errorMessages}`);
   }
+
+  log("pushDropwizTheme.success", {
+    themeId: mainTheme.id,
+    themeName: mainTheme.name,
+    filesUploaded: files.length,
+    totalTook: since(t0),
+  });
 
   return { themeId: mainTheme.id, created: false };
 }

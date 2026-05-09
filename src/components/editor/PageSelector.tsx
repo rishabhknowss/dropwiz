@@ -68,12 +68,12 @@ export const PageSelector = ({
   const deletePageMutation = api.stores.deletePage.useMutation();
 
   const handleAddPage = (type: StorePage["type"]) => {
-    const toastId = toast.loading("Creating page...");
+    const toastId = toast.loading("Generating page copy with AI...");
     addPageMutation.mutate(
       { storeId, type },
       {
         onSuccess: (data) => {
-          toast.success("Page created", { id: toastId });
+          toast.success("Page created with AI copy", { id: toastId });
           utils.stores.getPages.invalidate({ storeId });
           utils.stores.getMine.invalidate({ storeId });
           onSelectPage(data.page.id);

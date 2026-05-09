@@ -3,7 +3,10 @@ import type { LifestyleData } from "@/types/store-sections";
 export const LifestyleSection = ({ data }: { data: LifestyleData }) => {
   const imageOnRight = (data.imagePosition ?? "right") === "right";
   return (
-    <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+    <section
+      className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+      style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+    >
       <div
         className={`mx-auto grid max-w-[1100px] grid-cols-1 items-center gap-7 @3xl/store:grid-cols-2 @3xl/store:gap-10 ${
           imageOnRight ? "" : "@3xl/store:[direction:rtl]"
@@ -18,6 +21,7 @@ export const LifestyleSection = ({ data }: { data: LifestyleData }) => {
           </p>
         </div>
         <div
+          data-img-styled
           className="overflow-hidden @3xl/store:[direction:ltr]"
           style={{
             borderRadius: "var(--store-radius)",

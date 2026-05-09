@@ -16,6 +16,18 @@ import {
   generateHero,
   generateBundles,
   generateFaq,
+  generateTestimonials,
+  generateValueProps,
+  generateComparison,
+  generateLifestyle,
+  generateHowItWorks,
+  generateTrust,
+  generateAnnouncement,
+  generateFeatureCards,
+  generateProductSection,
+  generateGallerySection,
+  generateFeatureMarquee,
+  type SectionGenerateContext,
 } from "@/lib/ai/prompts";
 import { generateImage, generateImageWithReference } from "@/lib/ai/wavespeed";
 import { resolveProductImageUrl } from "@/lib/ai/product-image";
@@ -27,6 +39,177 @@ import {
 } from "@/lib/storage/r2";
 import { protectedProcedure, publicProcedure, router, rateLimitedProcedure, middleware } from "../trpc";
 import { checkLimits } from "../rate-limit";
+
+type GenerateSectionCopyOptions = {
+  type: StoreSection["type"];
+  ctx: SectionGenerateContext;
+  variant?: string;
+  existingData?: Record<string, unknown>;
+};
+
+async function generateSectionCopyForType(
+  opts: GenerateSectionCopyOptions
+): Promise<Record<string, unknown>> {
+  const { type, ctx, variant, existingData = {} } = opts;
+
+  try {
+    switch (type) {
+      case "hero": {
+        const hero = await generateHero(ctx);
+        return {
+          ...existingData,
+          headline: hero.headline,
+          subheadline: hero.subheadline,
+          primaryCta: hero.primaryCta,
+          secondaryCta: hero.secondaryCta,
+          urgencyBadge: hero.urgencyBadge,
+          socialProof: hero.socialProof,
+          variant: variant ?? existingData.variant,
+        };
+      }
+      case "bundles": {
+        const bundles = await generateBundles(ctx);
+        return {
+          ...existingData,
+          bundles: bundles.bundles,
+          variant: variant ?? existingData.variant,
+        };
+      }
+      case "faq": {
+        const faq = await generateFaq(ctx);
+        return {
+          ...existingData,
+          faqs: faq.faqs,
+          variant: variant ?? existingData.variant ?? "accordion",
+        };
+      }
+      case "testimonials": {
+        const testimonials = await generateTestimonials(ctx);
+        return {
+          ...existingData,
+          title: testimonials.title,
+          testimonials: testimonials.testimonials,
+          variant: variant ?? existingData.variant ?? "grid",
+        };
+      }
+      case "valueProps": {
+        const valueProps = await generateValueProps(ctx);
+        return {
+          ...existingData,
+          title: valueProps.title,
+          props: valueProps.props,
+          variant: variant ?? existingData.variant ?? "grid",
+        };
+      }
+      case "comparison": {
+        const comparison = await generateComparison(ctx);
+        return {
+          ...existingData,
+          rows: comparison.rows,
+        };
+      }
+      case "lifestyle": {
+        const lifestyle = await generateLifestyle(ctx);
+        return {
+          ...existingData,
+          headline: lifestyle.headline,
+          body: lifestyle.body,
+          imagePosition: existingData.imagePosition ?? "right",
+        };
+      }
+      case "howItWorks": {
+        const howItWorks = await generateHowItWorks(ctx);
+        return {
+          ...existingData,
+          title: howItWorks.title,
+          steps: howItWorks.steps,
+          variant: variant ?? existingData.variant ?? "cards",
+        };
+      }
+      case "trust": {
+        const trust = await generateTrust(ctx);
+        return {
+          ...existingData,
+          badges: trust.badges,
+          showPaymentBadges: true,
+          variant: variant ?? existingData.variant ?? "detailed",
+        };
+      }
+      case "announcement": {
+        const announcement = await generateAnnouncement(ctx);
+        return {
+          ...existingData,
+          badges: announcement.badges,
+          variant: variant ?? existingData.variant ?? "bar",
+        };
+      }
+      case "product": {
+        const productCopy = await generateProductSection(ctx);
+        return {
+          ...existingData,
+          title: productCopy.title,
+          subtitle: productCopy.subtitle,
+          description: productCopy.description,
+          badge: productCopy.badge,
+          features: productCopy.features,
+          variant: variant ?? existingData.variant,
+        };
+      }
+      case "gallery": {
+        const gallery = await generateGallerySection(ctx);
+        return {
+          ...existingData,
+          title: gallery.title,
+        };
+      }
+      case "featureMarquee": {
+        const marquee = await generateFeatureMarquee(ctx);
+        return {
+          ...existingData,
+          items: marquee.items,
+          speed: existingData.speed ?? "normal",
+        };
+      }
+      default:
+        return existingData;
+    }
+  } catch (err) {
+    console.error(`[generateSectionCopy] failed for ${type}:`, err);
+    return existingData;
+  }
+}
+
+async function buildSectionGenerateContext(
+  store: typeof stores.$inferSelect,
+  userId: string
+): Promise<SectionGenerateContext> {
+  const productSection = store.sections.find((s) => s.type === "product");
+  const productData = (productSection?.data ?? {}) as {
+    title?: string;
+    description?: string;
+    priceCents?: number;
+    currency?: string;
+    imageUrl?: string;
+    images?: string[];
+  };
+
+  return {
+    product: {
+      title: productData.title ?? store.name ?? "Product",
+      description: productData.description ?? "",
+      priceCents: productData.priceCents ?? 4900,
+      currency: productData.currency ?? store.currency ?? "USD",
+      originalImages: productData.images ?? (productData.imageUrl ? [productData.imageUrl] : []),
+    },
+    targeting: {
+      persona: store.persona ?? "General consumer",
+      angle: store.angle ?? "Problem-solution",
+      targetLanguage: store.targetLanguage ?? "en",
+    },
+    storeId: store.id,
+    userId,
+  };
+}
 
 const createInputSchema = z.object({
   url: z.string().url().max(2048).optional(),
@@ -423,6 +606,7 @@ export const storesRouter = router({
         ]),
         position: z.number().int().min(0).optional(),
         variant: z.string().max(40).optional(),
+        generateCopy: z.boolean().optional().default(true),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -435,7 +619,18 @@ export const storesRouter = router({
       if (!store) throw new TRPCError({ code: "NOT_FOUND" });
 
       const baseData = defaultSectionData(input.type, store) as Record<string, unknown>;
-      const data = input.variant ? { ...baseData, variant: input.variant } : baseData;
+      let data = input.variant ? { ...baseData, variant: input.variant } : baseData;
+
+      if (input.generateCopy) {
+        const genCtx = await buildSectionGenerateContext(store, ctx.user.id);
+        data = await generateSectionCopyForType({
+          type: input.type,
+          ctx: genCtx,
+          variant: input.variant,
+          existingData: data,
+        });
+      }
+
       const newSection: StoreSection = {
         id: nanoid(8),
         type: input.type,
@@ -563,6 +758,30 @@ export const storesRouter = router({
         .set({ sections: next, updatedAt: new Date() })
         .where(eq(stores.id, store.id));
       return { success: true };
+    }),
+
+  generateFeatureCardsForSection: protectedProcedure
+    .input(
+      z.object({
+        storeId: z.string().uuid(),
+        count: z.number().int().min(2).max(6).optional().default(4),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select()
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = rows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      const genCtx = await buildSectionGenerateContext(store, ctx.user.id);
+      const features = await generateFeatureCards(genCtx);
+
+      return {
+        features: features.features.slice(0, input.count),
+      };
     }),
 
   generateImage: protectedProcedure
@@ -945,6 +1164,7 @@ export const storesRouter = router({
       z.object({
         storeId: z.string().uuid(),
         type: z.enum(["product", "landing", "about", "faq", "gallery", "blog"]),
+        generateCopy: z.boolean().optional().default(true),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -978,6 +1198,21 @@ export const storesRouter = router({
         pages.length,
         productData.imageUrl,
       );
+
+      if (input.generateCopy) {
+        const genCtx = await buildSectionGenerateContext(store, ctx.user.id);
+        const updatedSections = await Promise.all(
+          newPage.sections.map(async (section) => {
+            const aiData = await generateSectionCopyForType({
+              type: section.type,
+              ctx: genCtx,
+              existingData: section.data,
+            });
+            return { ...section, data: aiData };
+          })
+        );
+        newPage.sections = updatedSections;
+      }
 
       const updatedPages = [...pages, newPage];
       await db
@@ -1203,6 +1438,7 @@ export const storesRouter = router({
         ]),
         position: z.number().int().min(0).optional(),
         variant: z.string().max(40).optional(),
+        generateCopy: z.boolean().optional().default(true),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -1220,7 +1456,18 @@ export const storesRouter = router({
 
       const page = pages[pageIdx];
       const baseData = defaultSectionData(input.type, store) as Record<string, unknown>;
-      const data = input.variant ? { ...baseData, variant: input.variant } : baseData;
+      let data = input.variant ? { ...baseData, variant: input.variant } : baseData;
+
+      if (input.generateCopy) {
+        const genCtx = await buildSectionGenerateContext(store, ctx.user.id);
+        data = await generateSectionCopyForType({
+          type: input.type,
+          ctx: genCtx,
+          variant: input.variant,
+          existingData: data,
+        });
+      }
+
       const newSection: StoreSection = {
         id: nanoid(8),
         type: input.type,

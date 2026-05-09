@@ -30,6 +30,11 @@ export const HeaderInspector = ({
         onPick={(url) => onCommit({ logoUrl: url })}
       />
       <CheckboxField
+        label="Show name with logo"
+        defaultChecked={data.showNameWithLogo === true}
+        onCommit={(v) => onCommit({ showNameWithLogo: v })}
+      />
+      <CheckboxField
         label="Show cart icon"
         defaultChecked={data.showCartIcon !== false}
         onCommit={(v) => onCommit({ showCartIcon: v })}

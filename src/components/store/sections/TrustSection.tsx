@@ -9,8 +9,10 @@ import {
   Award01Icon,
 } from "@hugeicons/core-free-icons";
 import type { TrustData, TrustBadge, TrustVariant } from "@/types/store-sections";
+import { StoreIcon } from "@/components/editor/inspectors/fields/IconPickerField";
 
 const ICONS = [Shield01Icon, ShippingTruck01Icon, SecurityLockIcon, Award01Icon, TimeQuarterIcon, CreditCardIcon];
+const DEFAULT_ICON_NAMES = ["Shield01Icon", "ShippingTruck01Icon", "SecurityLockIcon", "Award01Icon", "TimeQuarterIcon", "CreditCardIcon"];
 
 type Props = { data: TrustData };
 
@@ -31,7 +33,11 @@ const PaymentBadges = () => (
     {["visa", "mastercard", "amex", "paypal", "applepay", "gpay", "shopify"].map((p) => (
       <div
         key={p}
-        className="flex h-10 w-14 items-center justify-center rounded-md border border-black/8 bg-white"
+        className="flex h-10 w-14 items-center justify-center rounded-md"
+        style={{
+          border: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)",
+          background: "var(--store-bg)",
+        }}
       >
         <img
           src={`/payment/${p}.png`}
@@ -54,7 +60,13 @@ const getBadgeContent = (badge: string | TrustBadge): { icon?: string; title: st
 };
 
 const TrustSimple = ({ data }: Props) => (
-  <section className="border-t border-black/5 bg-black/[0.02] px-5 py-8 @3xl/store:px-12 @3xl/store:py-10">
+  <section
+    className="px-5 py-8 @3xl/store:px-12 @3xl/store:py-10"
+    style={{
+      borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)",
+      background: "color-mix(in srgb, var(--store-text) 2%, var(--store-bg))",
+    }}
+  >
     <div className="mx-auto max-w-[1100px]">
       <div className="grid grid-cols-1 gap-4 @3xl/store:grid-cols-3 @3xl/store:gap-6">
         {data.badges.map((badge, i) => {
@@ -71,15 +83,11 @@ const TrustSimple = ({ data }: Props) => (
                   color: "var(--store-primary)",
                 }}
               >
-                {content.icon ? (
-                  <span className="text-[18px] @3xl/store:text-[20px]">{content.icon}</span>
-                ) : (
-                  <HugeiconsIcon
-                    icon={ICONS[i] ?? Tick02Icon}
-                    size={18}
-                    className="@3xl/store:size-[20px]"
-                  />
-                )}
+                <StoreIcon
+                  name={content.icon || DEFAULT_ICON_NAMES[i] || "ShieldCheckIcon"}
+                  size={18}
+                  className="@3xl/store:!h-[20px] @3xl/store:!w-[20px]"
+                />
               </div>
               <div>
                 <div className="text-[13.5px] font-semibold @3xl/store:text-[14px]">
@@ -105,7 +113,10 @@ const TrustSimple = ({ data }: Props) => (
 );
 
 const TrustDetailed = ({ data }: Props) => (
-  <section className="border-t border-black/5 px-5 py-12 @3xl/store:px-12 @3xl/store:py-16">
+  <section
+    className="px-5 py-12 @3xl/store:px-12 @3xl/store:py-16"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto max-w-[1100px]">
       <div className="grid grid-cols-1 gap-4 @3xl/store:grid-cols-3 @3xl/store:gap-5">
         {data.badges.map((badge, i) => {
@@ -127,15 +138,11 @@ const TrustDetailed = ({ data }: Props) => (
                   color: "var(--store-primary)",
                 }}
               >
-                {content.icon ? (
-                  <span className="text-[22px] @3xl/store:text-[24px]">{content.icon}</span>
-                ) : (
-                  <HugeiconsIcon
-                    icon={ICONS[i] ?? Tick02Icon}
-                    size={22}
-                    className="@3xl/store:size-[24px]"
-                  />
-                )}
+                <StoreIcon
+                  name={content.icon || DEFAULT_ICON_NAMES[i] || "ShieldCheckIcon"}
+                  size={22}
+                  className="@3xl/store:!h-[24px] @3xl/store:!w-[24px]"
+                />
               </div>
               <div className="text-[14px] font-semibold @3xl/store:text-[15px]">
                 {content.title}
@@ -159,7 +166,10 @@ const TrustDetailed = ({ data }: Props) => (
 );
 
 const TrustTimeline = ({ data }: Props) => (
-  <section className="border-t border-black/5 px-5 py-12 @3xl/store:px-12 @3xl/store:py-16">
+  <section
+    className="px-5 py-12 @3xl/store:px-12 @3xl/store:py-16"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto max-w-[900px]">
       {data.shippingTimeline && data.shippingTimeline.length > 0 && (
         <div className="mb-8 @3xl/store:mb-10">
@@ -178,7 +188,7 @@ const TrustTimeline = ({ data }: Props) => (
                     border: i === 0 ? "none" : "2px solid var(--store-primary)",
                   }}
                 >
-                  <span className="text-[16px] @3xl/store:text-[18px]">{step.icon}</span>
+                  <StoreIcon name={step.icon} size={16} className="@3xl/store:!h-[18px] @3xl/store:!w-[18px]" />
                 </div>
                 <div className="text-center">
                   <div className="text-[12px] font-semibold @3xl/store:text-[13px]">
@@ -210,15 +220,11 @@ const TrustTimeline = ({ data }: Props) => (
                   color: "var(--store-primary)",
                 }}
               >
-                {content.icon ? (
-                  <span className="text-[16px] @3xl/store:text-[18px]">{content.icon}</span>
-                ) : (
-                  <HugeiconsIcon
-                    icon={ICONS[i] ?? Tick02Icon}
-                    size={16}
-                    className="@3xl/store:size-[18px]"
-                  />
-                )}
+                <StoreIcon
+                  name={content.icon || DEFAULT_ICON_NAMES[i] || "ShieldCheckIcon"}
+                  size={16}
+                  className="@3xl/store:!h-[18px] @3xl/store:!w-[18px]"
+                />
               </div>
               <div>
                 <div className="text-[13px] font-semibold @3xl/store:text-[14px]">

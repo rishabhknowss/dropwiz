@@ -41,7 +41,10 @@ const Avatar = ({ t }: { t: Testimonial }) => (
 );
 
 const TestimonialsGrid = ({ data }: Props) => (
-  <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+  <section
+    className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto max-w-[1100px]">
       {data.title && (
         <h2 className="mb-7 text-[26px] font-medium tracking-[-0.03em] @3xl/store:mb-10 @3xl/store:text-[36px] @5xl/store:text-[40px]">
@@ -52,10 +55,12 @@ const TestimonialsGrid = ({ data }: Props) => (
         {data.testimonials.map((t, i) => (
           <div
             key={i}
+            data-card-styled
             className="flex flex-col p-5 @3xl/store:p-6"
             style={{
               borderRadius: "var(--store-radius)",
-              border: "1px solid rgba(10,10,10,0.08)",
+              border: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)",
+              background: "color-mix(in srgb, var(--store-text) 2%, var(--store-bg))",
             }}
           >
             {t.rating && (
@@ -66,7 +71,10 @@ const TestimonialsGrid = ({ data }: Props) => (
             <p className="flex-1 text-[14.5px] leading-[1.55] @3xl/store:text-[15px]">
               &ldquo;{t.quote}&rdquo;
             </p>
-            <div className="mt-4 flex items-center gap-3 border-t border-black/5 pt-4 @3xl/store:mt-5">
+            <div
+              className="mt-4 flex items-center gap-3 pt-4 @3xl/store:mt-5"
+              style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+            >
               <Avatar t={t} />
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[13.5px] font-medium @3xl/store:text-[14px]">
@@ -89,7 +97,10 @@ const TestimonialsGrid = ({ data }: Props) => (
 const TestimonialsMarquee = ({ data }: Props) => {
   const items = [...data.testimonials, ...data.testimonials];
   return (
-    <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+    <section
+      className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+      style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+    >
       <div className="mx-auto max-w-[1200px]">
         {data.title && (
           <h2 className="mb-7 text-center text-[26px] font-medium tracking-[-0.03em] @3xl/store:mb-10 @3xl/store:text-[36px] @5xl/store:text-[40px]">
@@ -107,11 +118,12 @@ const TestimonialsMarquee = ({ data }: Props) => {
             {items.map((t, i) => (
               <div
                 key={i}
+                data-card-styled
                 className="flex w-[280px] shrink-0 flex-col p-4 @3xl/store:w-[340px] @3xl/store:p-5"
                 style={{
                   borderRadius: "var(--store-radius)",
-                  border: "1px solid rgba(10,10,10,0.08)",
-                  background: "var(--store-bg)",
+                  border: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)",
+                  background: "color-mix(in srgb, var(--store-text) 2%, var(--store-bg))",
                 }}
               >
                 {t.rating && (
@@ -148,7 +160,10 @@ const TestimonialsFeature = ({ data }: Props) => {
   const [hero, ...rest] = data.testimonials;
   if (!hero) return null;
   return (
-    <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+    <section
+      className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+      style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+    >
       <div className="mx-auto max-w-[1100px]">
         {data.title && (
           <div className="dw-mono mb-5 text-[10px] tracking-[0.16em] uppercase opacity-60 @3xl/store:mb-6 @3xl/store:text-[11px]">
@@ -183,10 +198,12 @@ const TestimonialsFeature = ({ data }: Props) => {
             {rest.slice(0, 3).map((t, i) => (
               <div
                 key={i}
+                data-card-styled
                 className="flex flex-col p-3.5 @3xl/store:p-4"
                 style={{
                   borderRadius: "var(--store-radius)",
-                  border: "1px solid rgba(10,10,10,0.08)",
+                  border: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)",
+                  background: "color-mix(in srgb, var(--store-text) 2%, var(--store-bg))",
                 }}
               >
                 <p className="text-[13px] leading-[1.5] opacity-85 @3xl/store:text-[13.5px]">

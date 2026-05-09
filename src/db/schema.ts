@@ -193,6 +193,10 @@ export const products = pgTable(
   ],
 );
 
+export type ButtonStyle = "classic" | "brick" | "bubble" | "gradient" | "soft" | "ghost" | "solid";
+export type ImageStyle = "none" | "brick" | "light" | "solid" | "polaroid" | "shadow";
+export type CardStyle = "default" | "brick" | "solid" | "shadow";
+
 export type ThemeTokens = {
   preset?: string;
   colors?: {
@@ -204,7 +208,18 @@ export type ThemeTokens = {
   };
   typography?: { sans?: string; display?: string; mono?: string };
   radius?: number;
-  buttons?: { shape?: "sharp" | "rounded" | "pill"; size?: "sm" | "md" | "lg" };
+  buttonRadius?: number;
+  buttons?: {
+    shape?: "sharp" | "rounded" | "pill";
+    style?: ButtonStyle;
+    size?: "sm" | "md" | "lg";
+  };
+  images?: {
+    style?: ImageStyle;
+  };
+  cards?: {
+    style?: CardStyle;
+  };
   icons?: string;
 };
 

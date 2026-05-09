@@ -7,17 +7,20 @@ export const ReviewStatsSection = ({ data }: Props) => {
   const showStars = data.showStars ?? true;
 
   return (
-    <section className="border-t border-black/5 px-5 py-4 @3xl/store:px-12 @3xl/store:py-5">
+    <section
+      className="px-5 py-4 @3xl/store:px-12 @3xl/store:py-5"
+      style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+    >
       <div className="mx-auto flex max-w-[1100px] flex-wrap items-center justify-center gap-3 @3xl/store:gap-4">
         {showStars && (
           <div className="flex items-center gap-0.5">
             {[1, 2, 3, 4, 5].map((star) => (
               <span
                 key={star}
-                className={cn(
-                  "text-[16px] @3xl/store:text-[18px]",
-                  star <= Math.round(data.rating) ? "text-amber-400" : "text-black/15"
-                )}
+                className="text-[16px] @3xl/store:text-[18px]"
+                style={{
+                  color: star <= Math.round(data.rating) ? "#fbbf24" : "color-mix(in srgb, var(--store-text) 15%, transparent)"
+                }}
               >
                 ★
               </span>

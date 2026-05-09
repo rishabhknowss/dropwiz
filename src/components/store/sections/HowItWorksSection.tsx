@@ -1,5 +1,6 @@
 import type { HowItWorksData } from "@/types/store-sections";
 import { cn } from "@/lib/utils";
+import { StoreIcon } from "@/components/editor/inspectors/fields/IconPickerField";
 
 type Props = { data: HowItWorksData };
 
@@ -17,7 +18,10 @@ export const HowItWorksSection = ({ data }: Props) => {
 };
 
 const HowItWorksCards = ({ data }: Props) => (
-  <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+  <section
+    className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto max-w-[1100px]">
       {data.title && (
         <h2 className="mb-8 text-center text-[26px] font-semibold tracking-[-0.02em] @3xl/store:mb-12 @3xl/store:text-[34px]">
@@ -41,7 +45,7 @@ const HowItWorksCards = ({ data }: Props) => (
                 color: "var(--store-bg)",
               }}
             >
-              {step.icon ?? i + 1}
+              {step.icon ? <StoreIcon name={step.icon} size={18} className="@3xl/store:!h-[20px] @3xl/store:!w-[20px]" /> : i + 1}
             </div>
             <h3 className="mb-2 text-[17px] font-semibold @3xl/store:text-[19px]">
               {step.title}
@@ -66,7 +70,10 @@ const HowItWorksCards = ({ data }: Props) => (
 );
 
 const HowItWorksTimeline = ({ data }: Props) => (
-  <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+  <section
+    className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto max-w-[800px]">
       {data.title && (
         <h2 className="mb-10 text-center text-[26px] font-semibold tracking-[-0.02em] @3xl/store:mb-14 @3xl/store:text-[34px]">
@@ -74,7 +81,10 @@ const HowItWorksTimeline = ({ data }: Props) => (
         </h2>
       )}
       <div className="relative">
-        <div className="absolute left-5 top-0 hidden h-full w-px bg-black/10 @2xl/store:block @3xl/store:left-6" />
+        <div
+          className="absolute left-5 top-0 hidden h-full w-px @2xl/store:block @3xl/store:left-6"
+          style={{ background: "color-mix(in srgb, var(--store-text) 10%, transparent)" }}
+        />
         <div className="space-y-8 @3xl/store:space-y-10">
           {data.steps.map((step, i) => (
             <div key={i} className="flex gap-5 @3xl/store:gap-8">
@@ -86,7 +96,7 @@ const HowItWorksTimeline = ({ data }: Props) => (
                     color: "var(--store-bg)",
                   }}
                 >
-                  {step.icon ?? i + 1}
+                  {step.icon ? <StoreIcon name={step.icon} size={16} className="@3xl/store:!h-[18px] @3xl/store:!w-[18px]" /> : i + 1}
                 </div>
               </div>
               <div className="flex-1 pb-2">
@@ -97,7 +107,10 @@ const HowItWorksTimeline = ({ data }: Props) => (
                   {step.description}
                 </p>
                 {step.imageUrl && (
-                  <div className="mt-4 max-w-[400px] overflow-hidden rounded-lg border border-black/5">
+                  <div
+                    className="mt-4 max-w-[400px] overflow-hidden rounded-lg"
+                    style={{ border: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+                  >
                     <img
                       src={step.imageUrl}
                       alt={step.title}
@@ -115,7 +128,10 @@ const HowItWorksTimeline = ({ data }: Props) => (
 );
 
 const HowItWorksNumbered = ({ data }: Props) => (
-  <section className="border-t border-black/5 px-5 py-14 @3xl/store:px-12 @3xl/store:py-20">
+  <section
+    className="px-5 py-14 @3xl/store:px-12 @3xl/store:py-20"
+    style={{ borderTop: "1px solid color-mix(in srgb, var(--store-text) 5%, transparent)" }}
+  >
     <div className="mx-auto max-w-[900px]">
       {data.title && (
         <h2 className="mb-10 text-center text-[26px] font-semibold tracking-[-0.02em] @3xl/store:mb-14 @3xl/store:text-[34px]">
