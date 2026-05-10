@@ -38,3 +38,13 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/pages/building-your-application/deploying) for more details.
+ 
+ 
+ fix the theme render.ts file its too big , read this docs page first get all the info about shopify themes and apis
+  https://shopify.dev/docs/storefronts/themes/best-practices , use mcp or anything
+  ,https://shopify.dev/docs/storefronts/themes/best-practices/editor/integrate-sections-and-blocks,
+  https://shopify.dev/docs/storefronts/themes/architecture ,
+  https://shopify.dev/docs/storefronts/themes/getting-started/customize , https://shopify.dev/docs/storefronts/themes , read
+  all of these first , like go in deep read all of these and learn about this , then check what mistakes are we doing , in
+  shopify export or rendering are we hardcoding or what ? cause i think we are not redering and exporting the right way ,learn
+  from docs tell me then we make a overhaul plan if required and fix after coding  

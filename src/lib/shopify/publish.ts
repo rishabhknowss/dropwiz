@@ -219,7 +219,7 @@ export async function publishStoreToShopify(
     descriptionHtml,
     vendor: "Dropwiz",
     productType: "Dropwiz generated",
-    ...(options.withTheme ? { templateSuffix: "dropwiz" } : {}),
+    templateSuffix: "",
   };
 
   let product: ProductNode;

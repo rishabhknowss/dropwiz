@@ -9,6 +9,7 @@ import type {
   HeroInlineFaq,
   HeroTrustCard,
   HeroSideFeature,
+  PaymentMethod,
 } from "@/types/store-sections";
 import { useCartOptional } from "../cart";
 import { cn } from "@/lib/utils";
@@ -140,7 +141,7 @@ const Badge = ({ label }: { label: string }) => (
     className="inline-flex items-center rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] @3xl/store:text-[11px]"
     style={{
       background: "var(--store-accent)",
-      color: "var(--store-primary)",
+      color: "#000",
     }}
   >
     {label}
@@ -708,8 +709,22 @@ const HeroImageGallery = ({ images }: { images: string[] }) => {
   );
 };
 
-const PaymentBadges = ({ show = true }: { show?: boolean }) => {
+const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = ["visa", "mastercard", "amex", "paypal", "applepay", "googlepay"];
+
+const PAYMENT_FILE_MAP: Record<PaymentMethod, string> = {
+  visa: "visa",
+  mastercard: "mastercard",
+  amex: "amex",
+  paypal: "paypal",
+  applepay: "applepay",
+  googlepay: "gpay",
+  discover: "visa",
+  stripe: "shopify",
+};
+
+const PaymentBadges = ({ show = true, methods }: { show?: boolean; methods?: PaymentMethod[] }) => {
   if (!show) return null;
+  const activePayments = methods ?? DEFAULT_PAYMENT_METHODS;
 
   return (
     <div className="flex items-center gap-3">
@@ -720,24 +735,14 @@ const PaymentBadges = ({ show = true }: { show?: boolean }) => {
           background: "var(--store-bg)",
         }}
       >
-        <svg className="h-4 w-auto" viewBox="0 0 38 24" fill="none">
-          <rect width="38" height="24" rx="3" fill="#1434CB"/>
-          <path d="M15.4 16.5l1.9-11h3l-1.9 11h-3z" fill="#fff"/>
-          <path d="M26.5 5.7c-.6-.2-1.5-.5-2.7-.5-3 0-5.1 1.5-5.1 3.7 0 1.6 1.5 2.5 2.6 3.1 1.2.6 1.6 1 1.6 1.5 0 .8-1 1.2-1.9 1.2-1.2 0-1.9-.2-2.9-.6l-.4-.2-.4 2.5c.7.3 2 .6 3.4.6 3.2 0 5.2-1.5 5.2-3.8 0-1.3-.8-2.3-2.6-3.1-1.1-.5-1.7-.9-1.7-1.4 0-.5.5-1 1.7-1 1 0 1.7.2 2.2.4l.3.1.5-2.5z" fill="#fff"/>
-          <path d="M30.6 5.5h-2.3c-.7 0-1.3.2-1.6 1l-4.5 10h3.2s.5-1.4.6-1.7h3.9c.1.4.4 1.7.4 1.7h2.8l-2.5-11zm-3.7 7.1c.3-.7 1.2-3.2 1.2-3.2l.4-1 .2 1s.6 2.7.7 3.2h-2.5z" fill="#fff"/>
-          <path d="M12.3 5.5l-3 7.5-.3-1.6c-.6-1.8-2.3-3.8-4.2-4.8l2.7 9.9h3.2l4.8-11h-3.2z" fill="#fff"/>
-          <path d="M6.3 5.5H1.1l-.1.3c3.8.9 6.4 3.2 7.4 5.9l-1.1-5.2c-.2-.7-.7-1-1-1z" fill="#F9A533"/>
-        </svg>
-        <svg className="h-4 w-auto" viewBox="0 0 38 24" fill="none">
-          <rect width="38" height="24" rx="3" fill="#fff"/>
-          <circle cx="15" cy="12" r="7" fill="#EB001B"/>
-          <circle cx="23" cy="12" r="7" fill="#F79E1B"/>
-          <path d="M19 7a7 7 0 000 10 7 7 0 000-10z" fill="#FF5F00"/>
-        </svg>
-        <svg className="h-4 w-auto" viewBox="0 0 38 24" fill="none">
-          <rect width="38" height="24" rx="3" fill="#000"/>
-          <path d="M12 8h4l1.5 4.5L19 8h4v8h-2.5v-5l-2 5h-2l-2-5v5H12V8z" fill="#fff"/>
-        </svg>
+        {activePayments.slice(0, 4).map((p) => (
+          <img
+            key={p}
+            src={`/payment/${PAYMENT_FILE_MAP[p]}.png`}
+            alt={p}
+            className="h-4 w-auto object-contain"
+          />
+        ))}
       </div>
       <div className="flex items-center gap-1 text-[11px]" style={{ color: "color-mix(in srgb, var(--store-text) 50%, transparent)" }}>
         <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

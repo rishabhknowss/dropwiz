@@ -22,15 +22,15 @@ export const ProductSection = ({ data }: Props) => {
 
 const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = ["visa", "mastercard", "amex", "paypal", "applepay", "googlepay"];
 
-const PAYMENT_METHOD_MAP: Record<string, string> = {
+const PAYMENT_FILE_MAP: Record<PaymentMethod, string> = {
   visa: "visa",
   mastercard: "mastercard",
   amex: "amex",
   paypal: "paypal",
   applepay: "applepay",
   googlepay: "gpay",
-  discover: "discover",
-  stripe: "stripe",
+  discover: "visa",
+  stripe: "shopify",
 };
 
 const PaymentBadges = ({
@@ -48,19 +48,16 @@ const PaymentBadges = ({
       {activePayments.map((p) => (
         <div
           key={p}
-          className="flex h-10 w-14 items-center justify-center rounded-md"
+          className="flex h-10 w-14 items-center justify-center rounded-md p-1"
           style={{
             border: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)",
-            background: "var(--store-bg)",
+            background: "#fff",
           }}
         >
           <img
-            src={`/payment/${PAYMENT_METHOD_MAP[p] ?? p}.png`}
+            src={`/payment/${PAYMENT_FILE_MAP[p]}.png`}
             alt={p}
-            className="h-5 w-auto"
-            onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }}
+            className="h-5 w-auto object-contain"
           />
         </div>
       ))}

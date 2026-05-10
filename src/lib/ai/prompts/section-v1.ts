@@ -19,7 +19,7 @@ const testimonialsSchema = z.object({
       role: z.string().max(50),
       rating: z.number().int().min(1).max(5),
     })
-  ).min(3).max(5),
+  ).min(4).max(6),
 });
 
 const valuePropsSchema = z.object({
@@ -370,11 +370,12 @@ function buildSectionPrompt(sectionType: string, product: ProductContext, target
   const targetInfo = describeTargeting(targeting);
 
   const sectionInstructions: Record<string, string> = {
-    testimonials: `Generate 3 realistic customer testimonials for this product. Each testimonial should:
+    testimonials: `Generate 6 realistic customer testimonials for this product. Each testimonial should:
 - Have a believable quote (not over-the-top, focus on specific results)
 - Include a realistic name (first name and last initial)
 - Include a role like "Verified Buyer" or specific context
 - Have a rating of 4-5 stars
+- Be unique and diverse (different perspectives, use cases, demographics)
 The title should be engaging like "What customers are saying" or similar.`,
 
     valueProps: `Generate 3-4 value propositions that explain why customers should buy this product. Each value prop should:

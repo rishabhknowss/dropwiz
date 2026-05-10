@@ -7,11 +7,13 @@ import { hashInput } from "./hash";
 
 const BASE = "https://api.wavespeed.ai/api/v3";
 
+export const SEEDREAM_COST_PER_IMAGE = 0.04;
+export const CREDITS_PER_IMAGE = 1;
+
 export const WAVESPEED_MODELS = {
   flux_schnell: "wavespeed-ai/flux-schnell",
   flux_dev: "wavespeed-ai/flux-dev",
   seedream: "bytedance/seedream-v4-edit",
-  nano_banana: "google/nano-banana",
 } as const;
 
 export type WavespeedModel = keyof typeof WAVESPEED_MODELS;
@@ -20,7 +22,6 @@ const MODEL_COST_USD: Record<WavespeedModel, number> = {
   flux_schnell: 0.003,
   flux_dev: 0.025,
   seedream: 0.04,
-  nano_banana: 0.08,
 };
 
 type SubmitResponse = {
@@ -120,7 +121,7 @@ const SEEDREAM_EDIT_BASE =
   "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4.5/edit";
 const SEEDREAM_T2I_BASE =
   "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4.5/text-to-image";
-const SEEDREAM_COST_USD = 0.04;
+const SEEDREAM_COST_USD = SEEDREAM_COST_PER_IMAGE;
 
 export type AdAspectRatio =
   | "1:1"
@@ -321,13 +322,40 @@ export type GenerateWithReferenceInput = {
   height?: number;
 };
 
-const VARIATION_DIRECTIONS = [
-  "moody cinematic side-lighting, deep shadows, low-key dramatic mood",
-  "bright airy daylight, soft natural light, pastel seamless backdrop",
-  "outdoor lifestyle in natural environment, contextual setting, golden hour",
-  "minimalist studio with single seamless solid backdrop, isolation product shot",
-  "luxury editorial composition, premium textured surfaces, magazine cover energy",
+const PRODUCT_IMAGE_STYLES = [
+  "premium studio hero shot, editorial lighting, clean white seamless background, centered composition, high-end product photography",
+  "moody cinematic side-lighting, deep shadows, low-key dramatic mood, dark charcoal backdrop, editorial luxury feel",
+  "bright airy daylight, soft diffused natural light, pastel mint gradient backdrop, fresh modern aesthetic",
+  "luxury editorial on premium marble surface, warm golden hour tones, magazine cover quality",
+  "minimalist floating product with soft gradient background, subtle drop shadow, Apple-style clean aesthetic",
+  "lifestyle in natural home environment, warm ambient lighting, contextual setting, aspirational lifestyle moment",
+  "product in active use scenario, authentic lifestyle moment, shallow depth of field, candid documentary style",
+  "premium interior setting with natural window light, styled vignette, editorial home magazine aesthetic",
+  "three-quarter angle detail shot highlighting texture and craftsmanship, macro clarity, studio lighting",
+  "close-up macro shot of key product feature, razor sharp focus, dramatic rim light, black background",
+  "flat lay composition with complementary minimal props, overhead editorial styling, clean negative space",
+  "dynamic angle product shot, bold perspective, strong shadows, contemporary commercial aesthetic",
+  "split composition with large clean space on left for text overlay, product right-aligned, corporate presentation style",
+  "hero banner layout with product center-right, ample headline space on left, infographic-ready composition",
 ];
+
+type ImageKind = "hero" | "lifestyle" | "product" | "feature";
+
+const determineKind = (index: number): ImageKind => {
+  if (index < 5) return "hero";
+  if (index < 8) return "lifestyle";
+  if (index < 12) return "product";
+  return "feature";
+};
+
+const VARIATION_DIRECTIONS = PRODUCT_IMAGE_STYLES.slice(0, 5);
+
+type DbAssetKind = "hero" | "lifestyle" | "product" | "logo" | "ad";
+
+const mapKindToDbKind = (kind: ImageKind): DbAssetKind => {
+  if (kind === "feature") return "product";
+  return kind;
+};
 
 async function generateOneVariant(
   input: GenerateWithReferenceInput,
@@ -476,7 +504,96 @@ export async function generateImageWithReference(
       : new Error("All variants failed");
   }
 
-  return { variants, costUsd: SEEDREAM_COST_USD * variants.length };
+  return { variants, costUsd: SEEDREAM_COST_PER_IMAGE * variants.length };
+}
+
+export type BatchImageInput = {
+  referenceImageUrl: string;
+  productTitle: string;
+  storeId: string;
+  userId: string | null;
+  targetCount?: number;
+};
+
+export type BatchImageResult = {
+  images: Array<{
+    assetId: string;
+    imageUrl: string;
+    r2Key: string;
+    kind: ImageKind;
+    style: string;
+  }>;
+  totalCostUsd: number;
+  creditsUsed: number;
+};
+
+async function generateBatchVariant(
+  input: {
+    referenceImageUrl: string;
+    prompt: string;
+    storeId: string;
+    userId: string | null;
+    kind: ImageKind;
+  },
+  style: string,
+): Promise<{ assetId: string; imageUrl: string; r2Key: string; kind: ImageKind; style: string }> {
+  const dbKind = mapKindToDbKind(input.kind);
+  const result = await generateOneVariant(
+    {
+      prompt: input.prompt,
+      referenceImageUrl: input.referenceImageUrl,
+      storeId: input.storeId,
+      kind: dbKind,
+      userId: input.userId,
+      width: 1024,
+      height: 1024,
+    },
+    style,
+  );
+  return { ...result, kind: input.kind, style };
+}
+
+export async function generateProductImageBatch(
+  input: BatchImageInput,
+): Promise<BatchImageResult> {
+  const count = input.targetCount ?? 12;
+  const shuffledStyles = [...PRODUCT_IMAGE_STYLES].sort(() => Math.random() - 0.5);
+  const selectedStyles = shuffledStyles.slice(0, count);
+
+  const results: BatchImageResult["images"] = [];
+  const batchSize = 3;
+
+  for (let i = 0; i < selectedStyles.length; i += batchSize) {
+    const batch = selectedStyles.slice(i, i + batchSize);
+    const batchResults = await Promise.allSettled(
+      batch.map((style, batchIdx) => {
+        const globalIdx = i + batchIdx;
+        const kind = determineKind(globalIdx);
+        return generateBatchVariant(
+          {
+            referenceImageUrl: input.referenceImageUrl,
+            prompt: `Premium product photography of this exact product (${input.productTitle}). ${style}`,
+            storeId: input.storeId,
+            userId: input.userId,
+            kind,
+          },
+          style,
+        );
+      }),
+    );
+
+    for (const result of batchResults) {
+      if (result.status === "fulfilled") {
+        results.push(result.value);
+      }
+    }
+  }
+
+  return {
+    images: results,
+    totalCostUsd: results.length * SEEDREAM_COST_PER_IMAGE,
+    creditsUsed: results.length * CREDITS_PER_IMAGE,
+  };
 }
 
 export async function generateImage(

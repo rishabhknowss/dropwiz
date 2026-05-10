@@ -17,6 +17,7 @@ import type {
   HowItWorksData,
   ReviewStatsData,
 } from "@/types/store-sections";
+import * as HugeIcons from "@hugeicons/core-free-icons";
 
 const log = (event: string, data: Record<string, unknown> = {}) => {
   const ts = new Date().toISOString();
@@ -186,33 +187,111 @@ const fmtPrice = (cents: number, currency: string): string => {
   return `${currency} ${v}`;
 };
 
+type IconPathData = [string, Record<string, string>][];
+
+const ICON_NAME_MAP: Record<string, string> = {
+  Truck01Icon: "TruckDeliveryIcon",
+  Lock01Icon: "LockIcon",
+  ShieldCheckIcon: "SecurityCheckIcon",
+  ShieldUserIcon: "UserShieldIcon",
+  CheckmarkCircle01Icon: "CheckmarkCircle02Icon",
+  CheckmarkSquare01Icon: "CheckmarkSquare02Icon",
+  CheckmarkBadge01Icon: "CheckmarkBadge02Icon",
+  Clock01Icon: "Clock02Icon",
+  Time01Icon: "Time02Icon",
+  Home01Icon: "Home02Icon",
+  Store01Icon: "Store02Icon",
+  Building01Icon: "Building02Icon",
+};
+
+const iconDataToSvg = (iconData: IconPathData, size = "1em"): string => {
+  const paths = iconData
+    .map(([tag, attrs]) => {
+      const attrStr = Object.entries(attrs)
+        .filter(([k]) => k !== "key")
+        .map(([k, v]) => `${k}="${v}"`)
+        .join(" ");
+      return `<${tag} ${attrStr}></${tag}>`;
+    })
+    .join("");
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" stroke="currentColor">${paths}</svg>`;
+};
+
+const getIconSvg = (iconName?: string, size = "1em"): string => {
+  if (!iconName) return "";
+  const mappedName = ICON_NAME_MAP[iconName] ?? iconName;
+  let iconData = (HugeIcons as Record<string, IconPathData>)[mappedName];
+  if (!iconData || !Array.isArray(iconData)) {
+    const baseName = iconName.replace(/\d+Icon$/, "Icon");
+    iconData = (HugeIcons as Record<string, IconPathData>)[baseName];
+  }
+  if (!iconData || !Array.isArray(iconData)) return "";
+  return iconDataToSvg(iconData, size);
+};
+
 const renderAnnouncement = (d: AnnouncementData): string => {
   if (!d.badges?.length) return "";
+  const variant = d.variant ?? "bar";
+
+  if (variant === "marquee") {
+    const items = d.badges
+      .map((b) => `<span class="dw-marquee-item"><span class="dw-marquee-icon">${getIconSvg(b.icon)}</span>${esc(b.text)}</span>`)
+      .join("");
+    return `<div class="dw-marquee"><div class="dw-marquee-track">${items}${items}${items}${items}</div></div>`;
+  }
+
+  if (variant === "pills") {
+    const items = d.badges
+      .map((b) => `<span class="dw-announcement-pill"><span class="dw-announcement-icon">${getIconSvg(b.icon)}</span>${esc(b.text)}</span>`)
+      .join("");
+    return `<div class="dw-announcement-pills">${items}</div>`;
+  }
+
   const items = d.badges
-    .map((b) => `<span class="dw-announcement-item">${b.icon ? `<span class="dw-announcement-icon">${b.icon}</span>` : ""}${esc(b.text)}</span>`)
+    .map((b) => `<span class="dw-announcement-item"><span class="dw-announcement-icon">${getIconSvg(b.icon)}</span>${esc(b.text)}</span>`)
     .join("");
   return `<div class="dw-announcement">${items}</div>`;
 };
 
-const PRODUCT_CTA_LINK = "{% if product %}#dw-product{% else %}{{ routes.all_products_collection_url }}{% endif %}";
+const PRODUCT_LINK = "{% if product %}{{ product.url }}{% else %}/collections/all{% endif %}";
+const PRODUCT_ANCHOR = "#dw-product";
 
 const renderHeader = (d: HeaderData): string => {
   const name = esc(d.storeName ?? "Store");
+  const showLogo = !!d.logoUrl;
+  const showName = d.showNameWithLogo !== false || !showLogo;
+
+  const logoContent = showLogo
+    ? `<img src="${d.logoUrl}" alt="${name}" class="dw-header-logo-img" />${showName && d.showNameWithLogo ? `<span class="dw-header-name">${name}</span>` : ""}`
+    : name;
+
   return `<header class="dw-header">
     <div class="dw-container dw-header-inner">
-      <a href="/" class="dw-header-logo">${name}</a>
+      <a href="/" class="dw-header-logo">${logoContent}</a>
       <nav class="dw-header-nav">
-        <a href="${PRODUCT_CTA_LINK}" class="dw-btn-primary dw-btn-sm">Shop Now</a>
+        <a href="{% if product %}${PRODUCT_ANCHOR}{% else %}${PRODUCT_LINK}{% endif %}" class="dw-btn-primary dw-btn-sm">Shop Now</a>
       </nav>
     </div>
   </header>`;
 };
 
+const formatStaticPrice = (cents: number, currency: string = "USD"): string => {
+  const amount = (cents / 100).toFixed(2);
+  const symbols: Record<string, string> = { USD: "$", EUR: "€", GBP: "£", INR: "₹", CAD: "CA$", AUD: "A$" };
+  return `${symbols[currency] ?? currency + " "}${amount}`;
+};
+
+const renderIcon = (iconName: string): string => {
+  if (!iconName) return "";
+  return getIconSvg(iconName);
+};
+
 const renderHeroProductHero = (d: HeroData): string => {
   const headline = esc(d.headline ?? "");
+  const subheadline = d.subheadline ? esc(d.subheadline) : "";
   const ctaMode = d.ctaMode ?? "cart";
   const cta = esc(d.primaryCta ?? (ctaMode === "navigate" ? "SHOP NOW" : "ADD TO CART"));
-  const ctaLink = d.ctaLink ?? PRODUCT_CTA_LINK;
+  const ctaLink = d.ctaLink ?? PRODUCT_LINK;
   const img = d.imageUrl ?? "";
   const showHeader = d.showHeader !== false;
   const sideFeatures = d.sideFeatures ?? [];
@@ -221,29 +300,40 @@ const renderHeroProductHero = (d: HeroData): string => {
   const quickFeatures = d.quickFeatures ?? [];
   const inlineFaqs = d.inlineFaqs ?? [];
   const trustCards = d.trustCards ?? [];
+  const currency = d.currency ?? "USD";
 
-  const sideFeaturesHtml = sideFeatures.slice(0, 4).map(f =>
-    `<div class="dw-ph-side-card"><span class="dw-ph-side-icon">${f.icon}</span><span class="dw-ph-side-label">${esc(f.label)}</span></div>`
-  ).join("");
+  const sideFeaturesHtml = sideFeatures.slice(0, 4).map(f => {
+    return `<div class="dw-ph-side-card">
+      <div class="dw-ph-side-icon-wrap"><span class="dw-ph-side-icon">${getIconSvg(f.icon)}</span></div>
+      <span class="dw-ph-side-label">${esc(f.label)}</span>
+      ${"description" in f && f.description ? `<span class="dw-ph-side-desc">${esc(f.description)}</span>` : ""}
+    </div>`;
+  }).join("");
 
   const additionalImagesHtml = additionalImages.slice(0, 3).map(url =>
-    `<div class="dw-ph-thumb"><img src="${url}" alt="" /></div>`
+    `<div class="dw-ph-thumb"><img src="${url}" alt="" loading="lazy" /></div>`
   ).join("");
 
   const benefitsHtml = benefits.map(b =>
-    `<div class="dw-ph-benefit"><span class="dw-ph-benefit-icon">${b.icon ?? "✓"}</span><span>${esc(b.text)}</span></div>`
+    `<div class="dw-ph-benefit"><span class="dw-ph-benefit-icon">${getIconSvg(b.icon)}</span><span>${esc(b.text)}</span></div>`
   ).join("");
 
   const quickFeaturesHtml = quickFeatures.slice(0, 4).map(f =>
     `<div class="dw-ph-quick"><span class="dw-ph-quick-check">✓</span><span>${esc(f.text)}</span></div>`
   ).join("");
 
-  const inlineFaqsHtml = inlineFaqs.map((faq, i) =>
+  const inlineFaqsHtml = inlineFaqs.map(faq =>
     `<details class="dw-ph-faq"><summary>${esc(faq.question)}</summary><div class="dw-ph-faq-answer">${esc(faq.answer)}</div></details>`
   ).join("");
 
   const trustCardsHtml = trustCards.map(c =>
-    `<div class="dw-ph-trust-card">${c.icon ? `<span class="dw-ph-trust-icon">${c.icon}</span>` : ""}<div><div class="dw-ph-trust-title">${esc(c.title)}</div><div class="dw-ph-trust-desc">${esc(c.description)}</div></div></div>`
+    `<div class="dw-ph-trust-card">
+      ${c.icon ? `<span class="dw-ph-trust-icon">${getIconSvg(c.icon)}</span>` : ""}
+      <div>
+        <div class="dw-ph-trust-title">${esc(c.title)}</div>
+        <div class="dw-ph-trust-desc">${esc(c.description)}</div>
+      </div>
+    </div>`
   ).join("");
 
   const ratingSource = d.ratingSource ?? "customers";
@@ -260,26 +350,36 @@ const renderHeroProductHero = (d: HeroData): string => {
     <span class="dw-ph-rating-text">${d.rating.toFixed(1)}/5 stars by ${d.reviewCount.toLocaleString()}+ ${esc(ratingLabel)}</span>
   </div>` : "";
 
+  const staticPrice = d.priceCents ? formatStaticPrice(d.priceCents, currency) : "";
+  const staticOriginalPrice = d.originalPriceCents ? formatStaticPrice(d.originalPriceCents, currency) : "";
+
   const priceHtml = d.priceCents ? `<div class="dw-ph-price">
-    <span class="dw-ph-price-current">{{ product.price | money }}</span>
-    ${d.originalPriceCents ? `<span class="dw-ph-price-old">{{ product.compare_at_price | money }}</span>` : ""}
+    <span class="dw-ph-price-current">{% if product %}{{ product.price | money }}{% else %}${staticPrice}{% endif %}</span>
+    ${d.originalPriceCents ? `<span class="dw-ph-price-old">{% if product %}{{ product.compare_at_price | money }}{% else %}${staticOriginalPrice}{% endif %}</span>` : ""}
     ${d.stockBadge ? `<span class="dw-ph-stock">${esc(d.stockBadge)}</span>` : ""}
   </div>` : "";
 
   const imageBadgeHtml = d.imageBadge?.text ? `<div class="dw-ph-img-badge">
-    ${d.imageBadge.icon ? `<span>${d.imageBadge.icon}</span>` : ""}
+    ${d.imageBadge.icon ? `<span>${getIconSvg(d.imageBadge.icon)}</span>` : ""}
     <span>${esc(d.imageBadge.text)}</span>
   </div>` : "";
 
   const bottomMessageHtml = d.bottomMessage?.text ? `<div class="dw-ph-bottom-msg">
-    ${d.bottomMessage.icon ? `<span>${d.bottomMessage.icon}</span>` : ""}
+    ${d.bottomMessage.icon ? `<span>${getIconSvg(d.bottomMessage.icon)}</span>` : ""}
     <span>${esc(d.bottomMessage.text)}</span>
   </div>` : "";
 
   const headerHtml = showHeader ? `<header class="dw-ph-header">
     <span class="dw-ph-brand">${esc(d.brandName ?? "Brand")}</span>
-    <a href="${PRODUCT_CTA_LINK}" class="dw-ph-header-btn">Shop Now</a>
+    <a href="{% if product %}${PRODUCT_ANCHOR}{% else %}${PRODUCT_LINK}{% endif %}" class="dw-ph-header-btn">Shop Now</a>
   </header>` : "";
+
+  const ctaHtml = ctaMode === "navigate"
+    ? `<a href="${ctaLink}" class="dw-ph-cta">${cta}</a>`
+    : `{% if product %}{%- form 'product', product, class: 'dw-ph-form' -%}
+      <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" />
+      <button type="submit" class="dw-ph-cta">${cta}</button>
+    {%- endform -%}{% else %}<a href="${PRODUCT_LINK}" class="dw-ph-cta">${cta}</a>{% endif %}`;
 
   return `<section class="dw-hero-product">
     ${headerHtml}
@@ -289,7 +389,7 @@ const renderHeroProductHero = (d: HeroData): string => {
           ${sideFeaturesHtml ? `<div class="dw-ph-side-cards">${sideFeaturesHtml}</div>` : ""}
           <div class="dw-ph-main-img">
             ${imageBadgeHtml}
-            ${img ? `<img src="${img}" alt="" />` : `<div class="dw-gradient"></div>`}
+            ${img ? `<img src="${img}" alt="${headline}" loading="eager" />` : `<div class="dw-gradient"></div>`}
           </div>
         </div>
         ${additionalImagesHtml ? `<div class="dw-ph-thumbs">${additionalImagesHtml}</div>` : ""}
@@ -298,12 +398,10 @@ const renderHeroProductHero = (d: HeroData): string => {
       <div class="dw-ph-right">
         ${ratingHtml}
         <h1 class="dw-ph-headline">${headline}</h1>
+        ${subheadline ? `<p class="dw-ph-subheadline">${subheadline}</p>` : ""}
         ${priceHtml}
         ${benefitsHtml ? `<div class="dw-ph-benefits">${benefitsHtml}</div>` : ""}
-        ${ctaMode === "navigate" ? `<a href="${ctaLink}" class="dw-ph-cta">${cta}</a>` : `{%- form 'product', product, class: 'dw-ph-form' -%}
-          <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" />
-          <button type="submit" class="dw-ph-cta">${cta}</button>
-        {%- endform -%}`}
+        ${ctaHtml}
         ${quickFeaturesHtml ? `<div class="dw-ph-quick-grid">${quickFeaturesHtml}</div>` : ""}
         ${inlineFaqsHtml ? `<div class="dw-ph-faqs">${inlineFaqsHtml}</div>` : ""}
         ${trustCardsHtml ? `<div class="dw-ph-trust-cards">${trustCardsHtml}</div>` : ""}
@@ -326,7 +424,7 @@ const renderHero = (d: HeroData): string => {
   const badge = d.urgencyBadge ? esc(d.urgencyBadge) : "";
   const social = d.socialProof ? esc(d.socialProof) : "";
   const img = d.imageUrl ?? "";
-  const ctaLink = PRODUCT_CTA_LINK;
+  const ctaLink = d.ctaLink ?? PRODUCT_LINK;
 
   const ratingHtml = d.rating ? `<div class="dw-rating">
     <span class="dw-stars">${"★".repeat(Math.floor(d.rating))}<span class="dw-stars-faded">${"★".repeat(5 - Math.floor(d.rating))}</span></span>
@@ -334,7 +432,7 @@ const renderHero = (d: HeroData): string => {
   </div>` : "";
 
   const featureBadgesHtml = d.featureBadges?.length ? `<div class="dw-feature-badges">
-    ${d.featureBadges.map(fb => `<span class="dw-feature-badge">${fb.icon ? `<span class="dw-feature-icon">${fb.icon}</span>` : "✓"} ${esc(fb.label)}</span>`).join("")}
+    ${d.featureBadges.map(fb => `<span class="dw-feature-badge">${fb.icon ? `<span class="dw-feature-icon">${getIconSvg(fb.icon)}</span>` : "✓"} ${esc(fb.label)}</span>`).join("")}
   </div>` : "";
 
   if (variant === "centered") {
@@ -437,21 +535,169 @@ const renderHero = (d: HeroData): string => {
   </section>`;
 };
 
+const renderProductRating = (rating?: number, reviewCount?: number): string => {
+  if (!rating || !reviewCount) return "";
+  const fullStars = Math.round(rating);
+  const stars = "★".repeat(fullStars);
+  const faded = "★".repeat(5 - fullStars);
+  return `<div class="dw-prod-rating">
+    <span class="dw-stars">${stars}<span class="dw-stars-faded">${faded}</span></span>
+    <span class="dw-rating-text">${rating.toFixed(1)}/5 (${reviewCount.toLocaleString()}+ reviews)</span>
+  </div>`;
+};
+
+const renderProductPrice = (d: ProductData): string => {
+  const hasOriginal = d.originalPriceCents && d.originalPriceCents > d.priceCents;
+  const staticPrice = formatStaticPrice(d.priceCents, d.currency);
+  const originalPrice = hasOriginal ? formatStaticPrice(d.originalPriceCents!, d.currency) : "";
+  return `<div class="dw-prod-price">
+    <span class="dw-prod-price-current">{% if product %}{{ product.price | money }}{% else %}${staticPrice}{% endif %}</span>
+    ${hasOriginal ? `<span class="dw-prod-price-original">{% if product %}{{ product.compare_at_price | money }}{% else %}${originalPrice}{% endif %}</span>` : ""}
+    ${d.badge ? `<span class="dw-prod-badge">${esc(d.badge)}</span>` : ""}
+  </div>`;
+};
+
+const renderFeatureBadges = (features?: Array<{ icon: string; label: string }>): string => {
+  if (!features?.length) return "";
+  return `<div class="dw-prod-features">${features.map(f => `<div class="dw-prod-feature">
+    ${f.icon ? `<span class="dw-prod-feature-icon">${renderIcon(f.icon)}</span>` : ""}
+    <span>${esc(f.label)}</span>
+  </div>`).join("")}</div>`;
+};
+
+const PAYMENT_FILE_MAP: Record<string, string> = {
+  visa: "visa.png",
+  mastercard: "mastercard.png",
+  amex: "amex.png",
+  paypal: "paypal.png",
+  applepay: "applepay.png",
+  googlepay: "gpay.png",
+  discover: "visa.png",
+  stripe: "shopify.png",
+};
+
+const renderPaymentBadges = (show?: boolean, methods?: string[]): string => {
+  if (show === false) return "";
+  const activePayments = methods ?? ["visa", "mastercard", "amex", "paypal", "applepay", "googlepay"];
+  return `<div class="dw-payment-badges">${activePayments.map(p => `<div class="dw-payment-badge"><img src="{{ '${PAYMENT_FILE_MAP[p] ?? "visa.png"}' | asset_url }}" alt="${p}" /></div>`).join("")}</div>`;
+};
+
+const renderProductImages = (mainImage: string, images?: string[]): string => {
+  const allImages = images?.length ? images : [mainImage];
+  const thumbs = allImages.slice(0, 6).map((img, i) => `<button class="dw-prod-thumb ${i === 0 ? "active" : ""}" data-image="${img}"><img src="${img}" alt="" /></button>`).join("");
+  return `<div class="dw-prod-gallery">
+    <div class="dw-prod-thumbs">${thumbs}</div>
+    <div class="dw-prod-main-img"><img src="${allImages[0]}" alt="" class="dw-prod-active-img" /></div>
+  </div>`;
+};
+
+const renderSideFeatures = (features?: Array<{ icon: string; label: string }>): string => {
+  if (!features?.length) return "";
+  return `<div class="dw-prod-side-features">${features.slice(0, 4).map(f => `<div class="dw-prod-side-card">
+    <span class="dw-prod-side-icon">${renderIcon(f.icon)}</span>
+    <span class="dw-prod-side-label">${esc(f.label)}</span>
+  </div>`).join("")}</div>`;
+};
+
+const renderProductForm = (ctaText: string, showPrice = true): string => {
+  const priceText = showPrice ? " — {{ product.price | money }}" : "";
+  return `{%- form 'product', product, class: 'dw-prod-form' -%}
+    <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" />
+    <button type="submit" class="dw-prod-cta">${ctaText}${priceText}</button>
+  {%- endform -%}`;
+};
+
 const renderProduct = (d: ProductData): string => {
-  return `<section class="dw-section dw-product" id="dw-product">
-    <div class="dw-container dw-grid-2 dw-items-center">
-      <div class="dw-product-img">
-        ${d.imageUrl ? `<img src="${d.imageUrl}" alt="${esc(d.title)}" />` : ""}
+  const variant = d.variant ?? "default";
+  const title = esc(d.title);
+  const subtitle = d.subtitle ? esc(d.subtitle) : "";
+  const description = d.description ? esc(d.description) : "";
+  const ratingHtml = renderProductRating(d.rating, d.reviewCount);
+  const priceHtml = renderProductPrice(d);
+  const featuresHtml = renderFeatureBadges(d.features);
+  const paymentHtml = renderPaymentBadges(d.showPaymentBadges, d.paymentMethods);
+  const imagesHtml = renderProductImages(d.imageUrl, d.images);
+  const formHtml = renderProductForm("Add to cart", variant !== "gallery");
+
+  if (variant === "compact") {
+    return `<section class="dw-prod dw-prod-compact" id="dw-product">
+      <div class="dw-prod-compact-inner">
+        ${ratingHtml}
+        <h2 class="dw-prod-title">${title}</h2>
+        ${priceHtml}
+        ${description ? `<p class="dw-prod-desc">${description}</p>` : ""}
+        ${formHtml}
+        ${paymentHtml}
       </div>
-      <div>
-        <h2 class="dw-h2">${esc(d.title)}</h2>
-        <div class="dw-price">{{ product.price | money }}</div>
-        {%- form 'product', product, class: 'dw-cart-form' -%}
-          <input type="hidden" name="id" value="{{ product.selected_or_first_available_variant.id }}" />
-          <button type="submit" class="dw-btn-primary dw-btn-block">
-            Add to cart — {{ product.price | money }}
-          </button>
-        {%- endform -%}
+    </section>`;
+  }
+
+  if (variant === "gallery") {
+    return `<section class="dw-prod dw-prod-gallery-variant" id="dw-product">
+      <div class="dw-prod-gallery-grid">
+        <div class="dw-prod-gallery-left">
+          <div class="dw-prod-main-img-wrap">
+            ${d.badge ? `<span class="dw-prod-img-badge">${esc(d.badge)}</span>` : ""}
+            <img src="${d.imageUrl}" alt="${title}" class="dw-prod-hero-img" />
+          </div>
+          ${d.images?.length ? `<div class="dw-prod-thumb-row">${d.images.slice(0, 4).map((img, i) => `<button class="dw-prod-thumb-btn ${i === 0 ? "active" : ""}"><img src="${img}" alt="" /></button>`).join("")}</div>` : ""}
+        </div>
+        <div class="dw-prod-gallery-right">
+          ${ratingHtml}
+          <h2 class="dw-prod-title dw-prod-title-lg">${title}</h2>
+          ${subtitle ? `<p class="dw-prod-subtitle">${subtitle}</p>` : ""}
+          ${priceHtml}
+          ${description ? `<p class="dw-prod-desc">${description}</p>` : ""}
+          ${featuresHtml}
+          ${renderProductForm("Add to cart", false)}
+          ${paymentHtml}
+        </div>
+      </div>
+    </section>`;
+  }
+
+  if (variant === "rich") {
+    const sideHtml = renderSideFeatures(d.sideFeatures);
+    const hasSide = Boolean(d.sideFeatures?.length);
+    const galleryImagesHtml = d.galleryImages?.length ? `<div class="dw-prod-rich-gallery">${d.galleryImages.map(img => `<div class="dw-prod-rich-gallery-img"><img src="${img}" alt="" /></div>`).join("")}</div>` : "";
+    return `<section class="dw-prod dw-prod-rich" id="dw-product">
+      <div class="dw-prod-rich-grid ${hasSide ? "dw-prod-rich-with-side" : ""}">
+        ${hasSide ? sideHtml : ""}
+        <div class="dw-prod-rich-center">
+          <div class="dw-prod-main-img-wrap">
+            ${d.badge ? `<span class="dw-prod-img-badge">${esc(d.badge)}</span>` : ""}
+            <img src="${d.imageUrl}" alt="${title}" class="dw-prod-hero-img" />
+          </div>
+          ${d.images?.length && d.images.length > 1 ? `<div class="dw-prod-thumb-row">${d.images.slice(0, 6).map((img, i) => `<button class="dw-prod-thumb-btn ${i === 0 ? "active" : ""}"><img src="${img}" alt="" /></button>`).join("")}</div>` : ""}
+          ${hasSide ? `<div class="dw-prod-side-mobile">${sideHtml}</div>` : ""}
+        </div>
+        <div class="dw-prod-rich-right">
+          ${ratingHtml}
+          <h2 class="dw-prod-title">${title}</h2>
+          ${subtitle ? `<p class="dw-prod-subtitle">${subtitle}</p>` : ""}
+          ${priceHtml}
+          ${description ? `<p class="dw-prod-desc">${description}</p>` : ""}
+          ${featuresHtml}
+          ${renderProductForm("Add to cart", false)}
+          ${paymentHtml}
+        </div>
+      </div>
+      ${galleryImagesHtml}
+    </section>`;
+  }
+
+  return `<section class="dw-prod dw-prod-default" id="dw-product">
+    <div class="dw-prod-grid">
+      ${imagesHtml}
+      <div class="dw-prod-info">
+        ${ratingHtml}
+        <h2 class="dw-prod-title">${title}</h2>
+        ${subtitle ? `<p class="dw-prod-subtitle">${subtitle}</p>` : ""}
+        ${priceHtml}
+        ${description ? `<p class="dw-prod-desc">${description}</p>` : ""}
+        ${featuresHtml}
+        ${formHtml}
+        ${paymentHtml}
       </div>
     </div>
   </section>`;
@@ -582,7 +828,7 @@ const renderValueProps = (d: ValuePropsData): string => {
   const items = d.props
     .map(
       (p) => `<div class="dw-prop">
-        <div class="dw-icon">${p.icon ?? "✦"}</div>
+        <div class="dw-icon">${getIconSvg(p.icon)}</div>
         <div class="dw-prop-title">${esc(p.title)}</div>
         <div class="dw-prop-desc">${esc(p.description)}</div>
       </div>`,
@@ -629,11 +875,38 @@ const renderGallery = (d: GalleryData): string => {
   </section>`;
 };
 
+const renderFooterPaymentBadges = (show?: boolean, methods?: string[]): string => {
+  if (show === false) return "";
+  const defaultMethods = ["visa", "mastercard", "amex", "paypal", "applepay", "googlepay"];
+  const activePayments = methods ?? defaultMethods;
+  if (activePayments.length === 0) return "";
+  return `<div class="dw-footer-payments">${activePayments.map(p => `<div class="dw-footer-payment"><img src="{{ '${PAYMENT_FILE_MAP[p] ?? "visa.png"}' | asset_url }}" alt="${p}" /></div>`).join("")}</div>`;
+};
+
 const renderFooter = (d: FooterData): string => {
+  const showPayments = d.showPayments !== false;
+  const showPoweredBy = d.showPoweredBy !== false;
+  const logoHtml = d.logoUrl
+    ? `<img src="${esc(d.logoUrl)}" alt="${esc(d.storeName)}" class="dw-footer-logo-img">`
+    : `<span class="dw-footer-name">${esc(d.storeName)}</span>`;
+  const taglineHtml = d.tagline ? `<span class="dw-footer-tagline">${esc(d.tagline)}</span>` : "";
+  const paymentHtml = renderFooterPaymentBadges(showPayments, d.paymentMethods);
+  const copyrightExtra = d.copyrightText ? ` &middot; ${esc(d.copyrightText)}` : "";
+  const poweredByHtml = showPoweredBy ? `<span>Built with <a href="https://dropwiz.ai" class="dw-footer-link">Dropwiz</a></span>` : "";
+
   return `<footer class="dw-footer">
     <div class="dw-container">
-      <span>&copy; ${new Date().getFullYear()} ${esc(d.storeName)}</span>
-      <span>Built with Dropwiz</span>
+      <div class="dw-footer-main">
+        <div class="dw-footer-brand">
+          ${logoHtml}
+          ${taglineHtml}
+        </div>
+        ${paymentHtml}
+      </div>
+      <div class="dw-footer-bottom">
+        <span>&copy; ${new Date().getFullYear()} ${esc(d.storeName)}${copyrightExtra}</span>
+        ${poweredByHtml}
+      </div>
     </div>
   </footer>`;
 };
@@ -676,7 +949,7 @@ const renderVideo = (d: VideoData): string => {
 const renderFeatureMarquee = (d: FeatureMarqueeData): string => {
   if (!d.items?.length) return "";
   const items = d.items
-    .map((item) => `<span class="dw-marquee-item"><span class="dw-marquee-icon">${item.icon ?? "✓"}</span>${esc(item.label)}</span>`)
+    .map((item) => `<span class="dw-marquee-item"><span class="dw-marquee-icon">${getIconSvg(item.icon)}</span>${esc(item.label)}</span>`)
     .join("");
   return `<div class="dw-marquee">
     <div class="dw-marquee-track">${items}${items}</div>
@@ -707,7 +980,7 @@ const renderHowItWorks = (d: HowItWorksData): string => {
         </div>`;
       }
       return `<div class="dw-how-step dw-how-card">
-        ${step.icon ? `<div class="dw-how-icon">${step.icon}</div>` : `<span class="dw-how-num">${i + 1}</span>`}
+        ${step.icon ? `<div class="dw-how-icon">${getIconSvg(step.icon)}</div>` : `<span class="dw-how-num">${i + 1}</span>`}
         <div class="dw-how-title">${esc(step.title)}</div>
         <div class="dw-how-desc">${esc(step.description)}</div>
       </div>`;
@@ -846,10 +1119,19 @@ ${getCardStyleCss()}
 .dw-announcement { display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap; padding: 12px 20px; background: var(--store-primary); color: var(--store-bg); font-size: 13px; font-weight: 500; }
 .dw-announcement-item { display: inline-flex; align-items: center; gap: 6px; }
 .dw-announcement-icon { font-size: 16px; }
+.dw-announcement-pills { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; padding: 12px 16px; }
+.dw-announcement-pill { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 9999px; font-size: 12px; font-weight: 500; background: color-mix(in oklab, var(--store-primary) 10%, transparent); color: var(--store-primary); transition: background 0.15s, transform 0.15s; }
+.dw-announcement-pill:hover { background: color-mix(in oklab, var(--store-primary) 18%, transparent); transform: scale(1.02); }
 
-.dw-header { padding: 16px 0; border-bottom: 1px solid rgba(0,0,0,0.05); }
+.dw-header { padding: 16px 0; border-bottom: 1px solid rgba(0,0,0,0.05); position: relative; z-index: 100; background: var(--store-bg); }
 .dw-header-inner { display: flex; align-items: center; justify-content: space-between; }
-.dw-header-logo { font-family: var(--store-font-display); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; }
+.dw-header-logo { display: flex; align-items: center; gap: 10px; font-family: var(--store-font-display); font-size: 20px; font-weight: 600; letter-spacing: -0.02em; text-decoration: none; color: inherit; }
+.dw-store .dw-header .dw-header-logo img,
+.dw-store .dw-header .dw-header-logo-img,
+.dw-store .dw-header-logo img,
+.dw-header-logo img,
+.dw-header-logo-img { height: 36px !important; width: auto !important; max-width: 160px !important; max-height: 36px !important; object-fit: contain !important; display: block !important; }
+.dw-header-name { font-size: 18px; font-weight: 600; }
 .dw-header-nav { display: flex; align-items: center; gap: 16px; }
 .dw-btn-sm { padding: 8px 16px; font-size: 13px; }
 
@@ -885,7 +1167,7 @@ ${getCardStyleCss()}
 .dw-store .dw-btn-pill { background: rgba(255,255,255,0.1) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.3) !important; padding: 8px 16px !important; font-size: 12px !important; backdrop-filter: blur(8px) !important; }
 .dw-store .dw-btn-primary:hover, .dw-store .dw-btn-outline:hover, .dw-store .dw-btn-outline-light:hover, .dw-store .dw-btn-pill:hover { opacity: 0.85 !important; }
 
-.dw-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 9999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; background: var(--store-accent); color: var(--store-primary); margin-bottom: 20px; }
+.dw-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 9999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; background: var(--store-accent); color: #000; margin-bottom: 20px; }
 .dw-badge-glass { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 9999px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.14em; background: rgba(255,255,255,0.15); color: #fff; backdrop-filter: blur(8px); margin-bottom: 18px; }
 .dw-social { font-size: 12px; opacity: 0.6; margin-top: 18px; }
 
@@ -924,8 +1206,10 @@ ${getCardStyleCss()}
 .dw-price { font-size: 26px; font-weight: 600; margin: 12px 0 4px; }
 
 .dw-bundle-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-.dw-bundle { position: relative; padding: 20px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--store-radius); display: flex; flex-direction: column; }
+.dw-bundle { position: relative; padding: 20px; border: 1px solid rgba(0,0,0,0.1); border-radius: var(--store-radius); display: flex; flex-direction: column; transition: transform 0.15s, box-shadow 0.15s; }
+.dw-bundle:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
 .dw-bundle-rec { box-shadow: 0 0 0 2px var(--store-primary); border-color: transparent; }
+.dw-bundle-rec:hover { box-shadow: 0 0 0 2px var(--store-primary), 0 8px 24px rgba(0,0,0,0.1); }
 .dw-bundle-badge { position: absolute; top: -12px; left: 16px; background: var(--store-primary); color: var(--store-bg); font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; padding: 4px 12px; border-radius: 9999px; }
 .dw-bundle-name { font-size: 17px; font-weight: 600; }
 .dw-bundle-desc { font-size: 13px; opacity: 0.65; margin-top: 4px; }
@@ -936,12 +1220,16 @@ ${getCardStyleCss()}
 .dw-bundle-showcase { display: grid; grid-template-columns: 1fr; gap: 20px; }
 
 .dw-faq-list { }
-.dw-faq-item { border-bottom: 1px solid rgba(0,0,0,0.05); padding: 18px 0; }
-.dw-faq-item summary { cursor: pointer; font-size: 15px; font-weight: 500; list-style: none; }
+.dw-faq-item { border-bottom: 1px solid rgba(0,0,0,0.05); padding: 18px 0; transition: background 0.15s; }
+.dw-faq-item summary { cursor: pointer; font-size: 15px; font-weight: 500; list-style: none; transition: color 0.15s; }
+.dw-faq-item summary:hover { color: var(--store-primary); }
 .dw-faq-item summary::-webkit-details-marker { display: none; }
+.dw-faq-item summary::after { content: '+'; float: right; font-size: 18px; opacity: 0.5; transition: transform 0.2s; }
+.dw-faq-item[open] summary::after { content: '−'; transform: rotate(180deg); }
 .dw-faq-answer { margin-top: 12px; font-size: 14px; line-height: 1.6; opacity: 0.75; }
 .dw-faq-cards { display: grid; grid-template-columns: 1fr; gap: 12px; }
-.dw-faq-cards .dw-faq-item { border: 1px solid rgba(0,0,0,0.1); border-radius: var(--store-radius); padding: 18px 20px; }
+.dw-faq-cards .dw-faq-item { border: 1px solid rgba(0,0,0,0.1); border-radius: var(--store-radius); padding: 18px 20px; transition: transform 0.15s, box-shadow 0.15s; }
+.dw-faq-cards .dw-faq-item:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
 .dw-grid-faq-twocol { display: grid; grid-template-columns: 1fr; gap: 28px; }
 
 .dw-trust { padding: 32px 0; border-top: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02); }
@@ -951,11 +1239,18 @@ ${getCardStyleCss()}
 .dw-prop-grid { display: grid; grid-template-columns: 1fr; gap: 28px; }
 .dw-prop { text-align: center; }
 .dw-icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--store-radius); background: color-mix(in oklab, var(--store-accent) 18%, transparent); color: var(--store-primary); font-size: 22px; margin-bottom: 14px; }
+.dw-icon svg { width: 24px; height: 24px; stroke: currentColor; }
+.dw-icon-placeholder { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: color-mix(in srgb, var(--store-primary) 12%, transparent); color: var(--store-primary); border-radius: 6px; font-size: 14px; }
+.dw-marquee-icon svg, .dw-announcement-icon svg { width: 16px; height: 16px; stroke: currentColor; }
+.dw-ph-side-icon svg, .dw-ph-benefit-icon svg, .dw-ph-trust-icon svg { width: 18px; height: 18px; stroke: currentColor; }
+.dw-feature-icon svg, .dw-prod-feature-icon svg, .dw-prod-side-icon svg { width: 16px; height: 16px; stroke: currentColor; }
+.dw-how-icon svg { width: 24px; height: 24px; stroke: currentColor; }
 .dw-prop-title { font-size: 17px; font-weight: 600; }
 .dw-prop-desc { font-size: 14px; line-height: 1.55; opacity: 0.7; margin-top: 6px; }
 
 .dw-testimonial-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-.dw-testimonial { padding: 24px; border: 1px solid rgba(0,0,0,0.08); border-radius: var(--store-radius); }
+.dw-testimonial { padding: 24px; border: 1px solid rgba(0,0,0,0.08); border-radius: var(--store-radius); transition: transform 0.15s, box-shadow 0.15s; }
+.dw-testimonial:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.08); }
 .dw-stars { letter-spacing: 2px; font-size: 14px; margin-bottom: 12px; color: var(--store-text); }
 .dw-stars-faded { opacity: 0.3; }
 .dw-quote { font-size: 15px; line-height: 1.55; }
@@ -973,8 +1268,53 @@ ${getCardStyleCss()}
 .dw-gallery-item img { width: 100%; height: 100%; object-fit: cover; }
 .dw-gallery-item figcaption { position: absolute; inset-inline: 0; bottom: 0; padding: 10px; font-size: 11px; font-weight: 500; color: #fff; background: linear-gradient(transparent, rgba(0,0,0,0.6)); }
 
-.dw-footer { border-top: 1px solid rgba(0,0,0,0.05); padding: 36px 0; font-size: 12px; opacity: 0.6; }
-.dw-footer .dw-container { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
+.dw-footer { border-top: 1px solid rgba(0,0,0,0.08); padding: 32px 0 28px; font-size: 12px; }
+.dw-footer-main { display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.dw-footer-brand { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.dw-footer-logo-img { height: 32px; max-width: 140px; width: auto; object-fit: contain; }
+.dw-footer-name { font-size: 15px; font-weight: 600; }
+.dw-footer-tagline { font-size: 12px; opacity: 0.6; }
+.dw-footer-payments { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
+.dw-footer-payment { display: flex; align-items: center; justify-content: center; width: 56px; height: 40px; border: 1px solid rgba(0,0,0,0.1); background: #fff; border-radius: 6px; padding: 6px; overflow: hidden; }
+.dw-footer-payment img { height: 20px; width: auto; object-fit: contain; }
+.dw-footer-bottom { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05); font-size: 11px; opacity: 0.5; }
+.dw-footer-link { text-decoration: underline; }
+@container store (min-width: 640px) {
+  .dw-footer-main { flex-direction: row; justify-content: space-between; align-items: flex-start; }
+  .dw-footer-brand { align-items: flex-start; }
+  .dw-footer-bottom { flex-direction: row; justify-content: space-between; }
+}
+
+.dw-video-section { padding: 56px 0; }
+.dw-video-wrap { position: relative; aspect-ratio: 16/9; border-radius: var(--store-radius); overflow: hidden; background: rgba(0,0,0,0.05); }
+.dw-video-iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+.dw-video-native { width: 100%; height: 100%; object-fit: cover; }
+.dw-video-caption { margin-top: 16px; text-align: center; font-size: 13px; opacity: 0.6; }
+
+.dw-marquee { overflow: hidden; padding: 14px 0; background: var(--store-primary); color: var(--store-bg); }
+.dw-marquee-track { display: flex; gap: 32px; animation: dw-marquee 25s linear infinite; white-space: nowrap; }
+.dw-marquee:hover .dw-marquee-track { animation-play-state: paused; }
+.dw-marquee-item { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; flex-shrink: 0; padding: 0 8px; }
+.dw-marquee-icon { font-size: 16px; }
+@keyframes dw-marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+
+.dw-how-grid { display: grid; gap: 20px; }
+.dw-how-cards { grid-template-columns: 1fr; }
+.dw-how-step { padding: 24px; border: 1px solid rgba(0,0,0,0.08); border-radius: var(--store-radius); }
+.dw-how-card { text-align: center; }
+.dw-how-icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--store-radius); background: color-mix(in oklab, var(--store-accent) 18%, transparent); color: var(--store-primary); font-size: 22px; margin-bottom: 14px; }
+.dw-how-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--store-primary); color: var(--store-bg); font-size: 14px; font-weight: 700; margin-bottom: 12px; flex-shrink: 0; }
+.dw-how-title { font-size: 16px; font-weight: 600; }
+.dw-how-desc { font-size: 14px; line-height: 1.55; opacity: 0.7; margin-top: 6px; }
+.dw-how-numbered { display: flex; align-items: flex-start; gap: 16px; }
+.dw-how-numbered .dw-how-num { margin-bottom: 0; margin-top: 2px; }
+.dw-how-timeline { display: flex; align-items: flex-start; gap: 16px; position: relative; padding-left: 24px; }
+.dw-how-dot { position: absolute; left: 0; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--store-primary); }
+.dw-how-timeline::before { content: ''; position: absolute; left: 5px; top: 22px; width: 2px; height: calc(100% + 8px); background: rgba(0,0,0,0.1); }
+.dw-how-timeline:last-child::before { display: none; }
+
+.dw-review-stats { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 20px; background: rgba(0,0,0,0.02); font-size: 14px; font-weight: 500; }
+.dw-review-stars { letter-spacing: 2px; color: #fbbf24; }
 
 .dw-hero-product { padding: 0; }
 .dw-ph-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; }
@@ -1035,9 +1375,78 @@ ${getCardStyleCss()}
 .dw-ph-trust-desc { font-size: 12px; line-height: 1.4; color: rgba(0,0,0,0.6); margin-top: 2px; }
 .dw-ph-bottom-msg { display: flex; align-items: center; gap: 8px; margin-top: 20px; font-size: 13px; font-weight: 500; }
 
+.dw-prod { border-top: 1px solid color-mix(in srgb, var(--store-text) 5%, transparent); padding: 48px 20px; }
+.dw-prod-grid { display: grid; grid-template-columns: 1fr; gap: 32px; max-width: 1200px; margin: 0 auto; }
+.dw-prod-info { }
+.dw-prod-rating { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.dw-prod-rating .dw-stars { letter-spacing: 2px; font-size: 14px; color: #fbbf24; }
+.dw-prod-rating .dw-stars-faded { opacity: 0.3; }
+.dw-prod-rating .dw-rating-text { font-size: 13px; color: color-mix(in srgb, var(--store-text) 60%, transparent); }
+.dw-prod-title { font-size: 26px; font-weight: 500; letter-spacing: -0.02em; line-height: 1.15; margin: 0; }
+.dw-prod-title-lg { font-size: 32px; }
+.dw-prod-subtitle { margin-top: 6px; font-size: 13px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.5; }
+.dw-prod-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 12px; margin-top: 16px; }
+.dw-prod-price-current { font-size: 28px; font-weight: 600; }
+.dw-prod-price-original { font-size: 16px; color: color-mix(in srgb, var(--store-text) 40%, transparent); text-decoration: line-through; }
+.dw-prod-badge { display: inline-flex; align-items: center; border-radius: 9999px; padding: 4px 10px; background: var(--store-primary); color: var(--store-bg); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.dw-prod-desc { margin-top: 16px; font-size: 14px; line-height: 1.6; opacity: 0.75; max-width: 480px; }
+.dw-prod-features { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+.dw-prod-feature { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border: 1px solid color-mix(in srgb, var(--store-text) 8%, transparent); background: color-mix(in srgb, var(--store-text) 2%, transparent); border-radius: 9999px; font-size: 12px; font-weight: 500; }
+.dw-prod-feature-icon { font-size: 14px; }
+.dw-prod-form { margin-top: 24px; }
+.dw-store .dw-prod-cta { width: 100% !important; padding: 14px 20px !important; background: var(--store-primary) !important; color: var(--store-bg) !important; border: none !important; border-radius: var(--store-button-radius) !important; font-size: 14px !important; font-weight: 600 !important; cursor: pointer !important; transition: opacity 0.15s !important; }
+.dw-store .dw-prod-cta:hover { opacity: 0.9 !important; }
+.dw-payment-badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
+.dw-payment-badge { display: flex; align-items: center; justify-content: center; width: 56px; height: 40px; border: 1px solid color-mix(in srgb, var(--store-text) 8%, transparent); background: #fff; border-radius: 6px; padding: 6px; }
+.dw-payment-badge svg { width: 100%; height: 100%; }
+.dw-payment-badge img { height: 20px; width: auto; }
+.dw-prod-gallery { display: flex; flex-direction: column; gap: 12px; }
+.dw-prod-thumbs { display: flex; gap: 8px; order: 2; overflow-x: auto; padding-bottom: 4px; }
+.dw-prod-thumb { width: 56px; height: 56px; flex-shrink: 0; border-radius: calc(var(--store-radius) * 0.5); overflow: hidden; opacity: 0.6; cursor: pointer; transition: opacity 0.15s; border: 2px solid transparent; }
+.dw-prod-thumb.active { opacity: 1; border-color: var(--store-primary); }
+.dw-prod-thumb:hover { opacity: 1; }
+.dw-prod-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.dw-prod-main-img { order: 1; flex: 1; aspect-ratio: 1/1; border-radius: var(--store-radius); overflow: hidden; background: color-mix(in srgb, var(--store-text) 3%, transparent); }
+.dw-prod-main-img img { width: 100%; height: 100%; object-fit: cover; }
+.dw-prod-compact { text-align: center; }
+.dw-prod-compact-inner { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+.dw-prod-compact .dw-prod-desc { max-width: 520px; }
+.dw-prod-compact .dw-prod-form { width: auto; }
+.dw-store .dw-prod-compact .dw-prod-cta { width: auto !important; padding: 14px 32px !important; }
+.dw-prod-compact .dw-payment-badges { justify-content: center; }
+.dw-prod-gallery-variant { }
+.dw-prod-gallery-grid { display: grid; grid-template-columns: 1fr; gap: 32px; max-width: 1200px; margin: 0 auto; }
+.dw-prod-gallery-left { }
+.dw-prod-gallery-right { display: flex; flex-direction: column; justify-content: center; }
+.dw-prod-main-img-wrap { position: relative; aspect-ratio: 1/1; border-radius: var(--store-radius); overflow: hidden; }
+.dw-prod-hero-img { width: 100%; height: 100%; object-fit: cover; }
+.dw-prod-img-badge { position: absolute; left: 12px; top: 12px; display: inline-flex; align-items: center; border-radius: 9999px; padding: 6px 12px; background: var(--store-primary); color: var(--store-bg); font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.dw-prod-thumb-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.dw-prod-thumb-btn { aspect-ratio: 1/1; border-radius: calc(var(--store-radius) * 0.6); overflow: hidden; opacity: 0.6; cursor: pointer; transition: opacity 0.15s; border: 2px solid transparent; }
+.dw-prod-thumb-btn.active { opacity: 1; border-color: var(--store-primary); }
+.dw-prod-thumb-btn:hover { opacity: 1; }
+.dw-prod-thumb-btn img { width: 100%; height: 100%; object-fit: cover; }
+.dw-prod-rich { }
+.dw-prod-rich-grid { display: grid; grid-template-columns: 1fr; gap: 32px; max-width: 1300px; margin: 0 auto; }
+.dw-prod-rich-with-side { }
+.dw-prod-side-features { display: none; flex-direction: column; gap: 12px; }
+.dw-prod-side-card { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 12px; background: var(--store-bg); border: 1px solid color-mix(in srgb, var(--store-text) 8%, transparent); border-radius: var(--store-radius); box-shadow: 0 4px 12px rgba(0,0,0,0.08); text-align: center; transition: all 0.2s; }
+.dw-prod-side-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+.dw-prod-side-icon { font-size: 24px; color: var(--store-primary); }
+.dw-prod-side-label { font-size: 12px; font-weight: 600; line-height: 1.3; }
+.dw-prod-rich-center { }
+.dw-prod-side-mobile { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 16px; }
+.dw-prod-side-mobile .dw-prod-side-features { display: contents; }
+.dw-prod-rich-right { }
+.dw-prod-rich-gallery { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 40px; }
+.dw-prod-rich-gallery-img { aspect-ratio: 1/1; border-radius: var(--store-radius); overflow: hidden; transition: transform 0.2s; }
+.dw-prod-rich-gallery-img:hover { transform: scale(1.02); }
+.dw-prod-rich-gallery-img img { width: 100%; height: 100%; object-fit: cover; }
+
 @container store (min-width: 768px) {
   .dw-section { padding: 80px 0; }
   .dw-container, .dw-container-narrow { padding: 0 48px; }
+  .dw-header-logo img, .dw-header-logo-img { height: 40px !important; max-height: 40px !important; max-width: 200px !important; }
   .dw-grid-2 { grid-template-columns: 1fr 1fr; gap: 40px; }
   .dw-h1 { font-size: 56px; line-height: 1.02; letter-spacing: -0.035em; }
   .dw-h2 { font-size: 36px; }
@@ -1063,12 +1472,33 @@ ${getCardStyleCss()}
   .dw-ph-thumbs { grid-template-columns: repeat(3, 1fr); }
   .dw-ph-trust-cards { grid-template-columns: repeat(2, 1fr); }
   .dw-ph-header { padding: 20px 48px; }
+  .dw-how-cards { grid-template-columns: repeat(3, 1fr); }
+  .dw-video-section { padding: 80px 0; }
+  .dw-prod { padding: 64px 48px; }
+  .dw-prod-grid { grid-template-columns: 1.1fr 1fr; gap: 48px; }
+  .dw-prod-gallery { flex-direction: row; gap: 16px; }
+  .dw-prod-thumbs { flex-direction: column; order: 1; width: 72px; overflow-y: auto; overflow-x: hidden; padding-bottom: 0; }
+  .dw-prod-thumb { width: 72px; height: 72px; }
+  .dw-prod-main-img { order: 2; }
+  .dw-prod-title { font-size: 32px; }
+  .dw-prod-price-current { font-size: 34px; }
+  .dw-prod-gallery-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .dw-prod-title-lg { font-size: 36px; }
+  .dw-prod-rich-grid { gap: 24px; }
+  .dw-prod-rich-with-side { grid-template-columns: 120px 1fr 1fr; }
+  .dw-prod-rich-grid:not(.dw-prod-rich-with-side) { grid-template-columns: 1fr 1fr; }
+  .dw-prod-side-features { display: flex; }
+  .dw-prod-side-mobile { display: none; }
+  .dw-prod-rich-gallery { grid-template-columns: repeat(4, 1fr); gap: 16px; }
 }
 @container store (min-width: 1024px) {
   .dw-bundle-grid { grid-template-columns: repeat(4, 1fr); }
   .dw-gallery-grid { grid-template-columns: repeat(4, 1fr); }
   .dw-h1 { font-size: 72px; }
   .dw-ph-headline { font-size: 36px; }
+  .dw-how-cards { grid-template-columns: repeat(4, 1fr); }
+  .dw-prod-title { font-size: 36px; }
+  .dw-prod-title-lg { font-size: 42px; }
 }
 `.trim();
 }

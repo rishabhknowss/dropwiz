@@ -4,6 +4,7 @@ import { db } from "@/db";
 import {
   products,
   stores,
+  users,
   type StoreSection,
   type StorePage,
   type ThemeTokens,
@@ -11,7 +12,7 @@ import {
 import { scrapeProduct, analyzeProduct, type ScrapedProduct } from "@/lib/scraper";
 import { getShopifyProduct } from "@/lib/shopify/import";
 import { accounts } from "@/db/schema";
-import { and } from "drizzle-orm";
+import { and, sql } from "drizzle-orm";
 import { createHash } from "crypto";
 import {
   uploadFromUrl,
@@ -25,9 +26,18 @@ import {
   generateHooks,
   generateProductFromAI,
 } from "@/lib/ai/prompts";
-import { generateImage, generateImageWithReference } from "@/lib/ai/wavespeed";
+import {
+  generateImage,
+  generateImageWithReference,
+  generateProductImageBatch,
+  type BatchImageResult,
+  CREDITS_PER_IMAGE,
+} from "@/lib/ai/wavespeed";
 import type { HeroOutput, BundleOutput, FaqOutput } from "@/lib/ai/prompts";
 import { generateSecureToken } from "@/lib/auth/tokens";
+
+const FREE_TIERS = ["free", "starter"] as const;
+const DEFAULT_IMAGE_COUNT = 12;
 
 function slugifyTitle(title: string): string {
   const base = title
@@ -190,6 +200,62 @@ export async function runStoreGeneration(
       .where(eq(stores.id, storeId))
       .limit(1);
 
+    const originalImages = scraped.originalImages as string[];
+    const referenceImageUrl = originalImages[0];
+    let generatedImages: BatchImageResult["images"] = [];
+
+    if (referenceImageUrl && storeRow.userId) {
+      try {
+        const [user] = await db
+          .select({ tier: users.tier, imageCredits: users.imageCredits })
+          .from(users)
+          .where(eq(users.id, storeRow.userId))
+          .limit(1);
+
+        const isFreeTier = FREE_TIERS.includes(user?.tier as (typeof FREE_TIERS)[number]);
+        let creditsNeeded = DEFAULT_IMAGE_COUNT;
+
+        if (isFreeTier) {
+          creditsNeeded = Math.min(user?.imageCredits ?? 0, DEFAULT_IMAGE_COUNT);
+          if (creditsNeeded < 5) creditsNeeded = Math.min(user?.imageCredits ?? 0, 5);
+        }
+
+        if (creditsNeeded > 0) {
+          const imageResult = await generateProductImageBatch({
+            referenceImageUrl,
+            productTitle: scraped.title ?? "Product",
+            storeId,
+            userId: storeRow.userId,
+            targetCount: creditsNeeded,
+          });
+
+          generatedImages = imageResult.images;
+
+          if (isFreeTier && generatedImages.length > 0) {
+            await db
+              .update(users)
+              .set({ imageCredits: sql`${users.imageCredits} - ${imageResult.creditsUsed}` })
+              .where(eq(users.id, storeRow.userId));
+          }
+        }
+      } catch (err) {
+        console.error("[store-gen] batch image generation failed:", err);
+      }
+    } else if (referenceImageUrl) {
+      try {
+        const imageResult = await generateProductImageBatch({
+          referenceImageUrl,
+          productTitle: scraped.title ?? "Product",
+          storeId,
+          userId: null,
+          targetCount: DEFAULT_IMAGE_COUNT,
+        });
+        generatedImages = imageResult.images;
+      } catch (err) {
+        console.error("[store-gen] batch image generation failed:", err);
+      }
+    }
+
     const productContext = {
       title: scraped.title ?? "Product",
       description: scraped.description ?? "",
@@ -215,81 +281,24 @@ export async function runStoreGeneration(
       generateFaq(genCtx),
     ]);
 
-    let heroImageUrl: string | undefined;
-    const originalImages = scraped.originalImages as string[];
-    const referenceImageUrl = originalImages[0];
-
-    try {
-      if (referenceImageUrl) {
-        const heroPrompt = buildHeroImagePromptWithReference(
-          scraped.title ?? "product",
-          targeting.persona,
-        );
-        const heroResult = await generateImageWithReference({
-          prompt: heroPrompt,
-          referenceImageUrl,
-          width: 1024,
-          height: 1024,
-          storeId,
-          userId: storeRow.userId ?? null,
-          kind: "hero",
-          count: 1,
-        }).catch((err) => {
-          console.error("[store-gen] image-to-image failed, falling back:", err);
-          return null;
-        });
-        heroImageUrl = heroResult?.variants[0]?.imageUrl;
-
-        if (heroImageUrl) {
-          generateImageWithReference({
-            prompt: buildLifestylePromptWithReference(scraped.title ?? "product", targeting.persona),
-            referenceImageUrl,
-            width: 1024,
-            height: 1024,
-            storeId,
-            userId: storeRow.userId ?? null,
-            kind: "lifestyle",
-            count: 1,
-          }).catch((err) => console.error("[store-gen] lifestyle image-to-image failed:", err));
-        }
-      }
-
-      if (!heroImageUrl) {
-        const heroPrompts = buildHeroImagePrompts(
-          scraped.title ?? "product",
-          targeting.persona,
-        );
-        const heroResults = await Promise.all(
-          heroPrompts.slice(0, 1).map((prompt) =>
-            generateImage({
-              model: "flux_schnell",
-              prompt,
-              width: 1024,
-              height: 1024,
-              numImages: 1,
-              storeId,
-              userId: storeRow.userId ?? null,
-              kind: "hero",
-            }).catch(() => null),
-          ),
-        );
-        heroImageUrl = heroResults.find((r) => r?.assets[0]?.publicUrl)?.assets[0]
-          ?.publicUrl;
-      }
-    } catch {
-      heroImageUrl = referenceImageUrl;
-    }
-
     generateHooks(genCtx).catch((err) => console.error("[store-gen] hooks failed:", err));
+
+    const heroImages = generatedImages.filter((i) => i.kind === "hero").map((i) => i.imageUrl);
+    const lifestyleImages = generatedImages.filter((i) => i.kind === "lifestyle").map((i) => i.imageUrl);
+    const productGenImages = generatedImages.filter((i) => i.kind === "product").map((i) => i.imageUrl);
+    const featureImages = generatedImages.filter((i) => i.kind === "feature").map((i) => i.imageUrl);
+
+    const heroImageUrl = heroImages[0] ?? referenceImageUrl;
+    const lifestyleImageUrl = lifestyleImages[0] ?? referenceImageUrl;
 
     const { pages, sections } = buildPages({
       hero,
       bundles,
       faq,
       heroImageUrl,
-      productImageUrl:
-        (scraped.originalImages as string[])[0] ?? heroImageUrl ?? "",
-      productImages: scraped.originalImages as string[],
+      lifestyleImageUrl,
+      productImageUrl: referenceImageUrl ?? heroImageUrl ?? "",
+      productImages: originalImages,
       productTitle: scraped.title ?? "Product",
       productDescription: scraped.description ?? undefined,
       priceCents: scraped.priceCents ?? 4900,
@@ -297,6 +306,12 @@ export async function runStoreGeneration(
         ? Math.round((scraped.priceCents ?? 4900) * 1.4)
         : undefined,
       currency: scraped.currency ?? "USD",
+      generatedImages: {
+        hero: heroImages,
+        lifestyle: lifestyleImages,
+        product: productGenImages,
+        feature: featureImages,
+      },
     });
 
     await db
@@ -692,6 +707,7 @@ type BuildPagesInput = {
   bundles: BundleOutput;
   faq: FaqOutput;
   heroImageUrl?: string;
+  lifestyleImageUrl?: string;
   productImageUrl: string;
   productImages?: string[];
   productTitle: string;
@@ -699,6 +715,12 @@ type BuildPagesInput = {
   priceCents: number;
   originalPriceCents?: number;
   currency: string;
+  generatedImages?: {
+    hero: string[];
+    lifestyle: string[];
+    product: string[];
+    feature: string[];
+  };
 };
 
 const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: StoreSection[] } => {
@@ -706,6 +728,18 @@ const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: Sto
   const productImages = input.productImages?.length
     ? input.productImages
     : [input.productImageUrl];
+
+  const heroGalleryImages = [
+    ...(input.generatedImages?.hero ?? []),
+    ...productImages,
+  ].slice(0, 10);
+
+  const productGalleryImages = [
+    ...(input.generatedImages?.product ?? []),
+    ...productImages,
+  ].slice(0, 8);
+
+  const lifestyleGalleryImages = input.generatedImages?.lifestyle ?? [];
 
   const bundlesWithBogo = input.bundles.bundles.map((b, i) => ({
     ...b,
@@ -735,6 +769,7 @@ const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: Sto
     urgencyBadge: input.hero.urgencyBadge,
     socialProof: input.hero.socialProof,
     imageUrl: input.heroImageUrl ?? input.productImageUrl,
+    galleryImages: heroGalleryImages,
     rating: 4.8,
     reviewCount: 2500,
     currency: input.currency,
@@ -763,12 +798,44 @@ const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: Sto
     }),
   };
 
+  const featureMarqueeData = {
+    items: [
+      { icon: "Truck01Icon", label: "Free Shipping" },
+      { icon: "ShieldCheckIcon", label: "2-Year Warranty" },
+      { icon: "TimeQuarter01Icon", label: "Fast Delivery" },
+      { icon: "RefundIcon", label: "Easy Returns" },
+      { icon: "CheckmarkBadge01Icon", label: "Quality Guaranteed" },
+      { icon: "HeartCheckIcon", label: "Loved by 10,000+" },
+    ],
+    speed: "normal",
+  };
+
+  const lifestyleData = {
+    headline: "Experience the Difference",
+    body: `${input.productTitle} fits seamlessly into your daily routine. Designed for those who demand quality without compromise.`,
+    imageUrl: input.lifestyleImageUrl ?? input.productImageUrl,
+    imagePosition: "right" as const,
+    galleryImages: lifestyleGalleryImages,
+  };
+
+  const valuePropsData = {
+    title: "Why Choose Us",
+    props: [
+      { title: "Premium Quality", description: "Crafted with the finest materials", icon: "StarIcon" },
+      { title: "Fast Shipping", description: "Free delivery in 3-5 days", icon: "Truck01Icon" },
+      { title: "Easy Returns", description: "30-day money back guarantee", icon: "RefundIcon" },
+      { title: "24/7 Support", description: "Always here to help", icon: "CustomerServiceIcon" },
+    ],
+    variant: "grid",
+  };
+
   const productData = {
     title: input.productTitle,
     subtitle: "The smart choice for modern living",
     description: input.productDescription ?? `Experience the difference with ${input.productTitle}. Designed for those who demand the best, this premium product delivers exceptional results every time.`,
     imageUrl: input.productImageUrl,
     images: productImages,
+    galleryImages: productGalleryImages,
     priceCents: input.priceCents,
     originalPriceCents: originalPrice,
     currency: input.currency,
@@ -789,6 +856,16 @@ const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: Sto
     originalPriceCents: originalPrice,
     currency: input.currency,
     productImage: input.productImageUrl,
+  };
+
+  const howItWorksData = {
+    title: "How It Works",
+    steps: [
+      { title: "Order Online", description: "Select your bundle and checkout securely", icon: "ShoppingCart01Icon" },
+      { title: "Fast Delivery", description: "Your order arrives in 3-5 business days", icon: "Truck01Icon" },
+      { title: "Enjoy Results", description: "Experience the difference from day one", icon: "SparklesIcon" },
+    ],
+    variant: "numbered",
   };
 
   const trustData = {
@@ -839,6 +916,24 @@ const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: Sto
         role: "Verified Buyer",
         rating: 5,
       },
+      {
+        quote: "Best purchase I've made this year. Highly recommend!",
+        name: "James W.",
+        role: "Verified Buyer",
+        rating: 5,
+      },
+      {
+        quote: "Finally found something that actually delivers on its promises.",
+        name: "Lisa M.",
+        role: "Verified Buyer",
+        rating: 5,
+      },
+      {
+        quote: "The customer service is just as amazing as the product itself.",
+        name: "David R.",
+        role: "Verified Buyer",
+        rating: 5,
+      },
     ],
     variant: "grid",
   };
@@ -857,9 +952,12 @@ const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: Sto
       { id: nanoid(8), type: "announcement", order: 0, data: announcementData },
       { id: nanoid(8), type: "header", order: 1, data: headerData },
       { id: nanoid(8), type: "hero", order: 2, data: heroData },
-      { id: nanoid(8), type: "testimonials", order: 3, data: testimonialsData },
-      { id: nanoid(8), type: "faq", order: 4, data: faqData },
-      { id: nanoid(8), type: "footer", order: 5, data: footerData },
+      { id: nanoid(8), type: "featureMarquee", order: 3, data: featureMarqueeData },
+      { id: nanoid(8), type: "lifestyle", order: 4, data: lifestyleData },
+      { id: nanoid(8), type: "valueProps", order: 5, data: valuePropsData },
+      { id: nanoid(8), type: "testimonials", order: 6, data: testimonialsData },
+      { id: nanoid(8), type: "faq", order: 7, data: faqData },
+      { id: nanoid(8), type: "footer", order: 8, data: footerData },
     ],
   };
 
@@ -873,10 +971,13 @@ const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: Sto
     sections: [
       { id: nanoid(8), type: "header", order: 0, data: headerData },
       { id: nanoid(8), type: "product", order: 1, data: productData },
-      { id: nanoid(8), type: "bundles", order: 2, data: bundlesData },
-      { id: nanoid(8), type: "trust", order: 3, data: trustData },
-      { id: nanoid(8), type: "faq", order: 4, data: faqData },
-      { id: nanoid(8), type: "footer", order: 5, data: footerData },
+      { id: nanoid(8), type: "featureMarquee", order: 2, data: featureMarqueeData },
+      { id: nanoid(8), type: "bundles", order: 3, data: bundlesData },
+      { id: nanoid(8), type: "howItWorks", order: 4, data: howItWorksData },
+      { id: nanoid(8), type: "trust", order: 5, data: trustData },
+      { id: nanoid(8), type: "testimonials", order: 6, data: testimonialsData },
+      { id: nanoid(8), type: "faq", order: 7, data: faqData },
+      { id: nanoid(8), type: "footer", order: 8, data: footerData },
     ],
   };
 

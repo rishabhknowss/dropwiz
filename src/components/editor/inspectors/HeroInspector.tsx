@@ -14,7 +14,9 @@ import type {
   HeroInlineFaq,
   HeroTrustCard,
   HeroSideFeature,
+  PaymentMethod,
 } from "@/types/store-sections";
+import { Label } from "@/components/ui/label";
 import { ImagePickerField, NumberField, TextField, CheckboxField, VariantPicker } from "./fields";
 
 type Commit = (data: Record<string, unknown>) => void;
@@ -42,6 +44,19 @@ const CTA_MODES: Array<{ id: HeroCtaMode; label: string; desc: string }> = [
   { id: "cart", label: "Add to Cart", desc: "Adds product to cart" },
   { id: "navigate", label: "Navigate", desc: "Link to product page" },
 ];
+
+const ALL_PAYMENT_METHODS: { id: PaymentMethod; label: string }[] = [
+  { id: "visa", label: "Visa" },
+  { id: "mastercard", label: "Mastercard" },
+  { id: "amex", label: "Amex" },
+  { id: "paypal", label: "PayPal" },
+  { id: "applepay", label: "Apple Pay" },
+  { id: "googlepay", label: "Google Pay" },
+  { id: "discover", label: "Discover" },
+  { id: "stripe", label: "Stripe" },
+];
+
+const DEFAULT_PAYMENT_METHODS: PaymentMethod[] = ["visa", "mastercard", "amex", "paypal", "applepay", "googlepay"];
 
 export const HeroInspector = ({
   section,
@@ -613,6 +628,58 @@ export const HeroInspector = ({
             defaultChecked={data.showPaymentBadges !== false}
             onCommit={(v) => onCommit({ showPaymentBadges: v })}
           />
+
+          {data.showPaymentBadges !== false && (
+            <div className="space-y-1.5">
+              <Label className="text-[11px] text-[color:var(--dw-text-dim)]">
+                Payment Methods
+              </Label>
+              <div className="grid grid-cols-2 gap-1.5">
+                {ALL_PAYMENT_METHODS.map((method) => {
+                  const selectedMethods = data.paymentMethods ?? DEFAULT_PAYMENT_METHODS;
+                  return (
+                    <button
+                      key={method.id}
+                      onClick={() => {
+                        const current = selectedMethods;
+                        const updated = current.includes(method.id)
+                          ? current.filter((m) => m !== method.id)
+                          : [...current, method.id];
+                        onCommit({ paymentMethods: updated });
+                      }}
+                      className={`flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-[11px] transition ${
+                        selectedMethods.includes(method.id)
+                          ? "border-[color:var(--dw-accent)] bg-[color:var(--dw-accent)]/10 text-[color:var(--dw-text)]"
+                          : "border-[color:var(--dw-border)] text-[color:var(--dw-text-muted)] hover:border-[color:var(--dw-accent)]/40"
+                      }`}
+                    >
+                      <span
+                        className={`h-3 w-3 rounded-sm border ${
+                          selectedMethods.includes(method.id)
+                            ? "border-[color:var(--dw-accent)] bg-[color:var(--dw-accent)]"
+                            : "border-[color:var(--dw-border)]"
+                        }`}
+                      >
+                        {selectedMethods.includes(method.id) && (
+                          <svg viewBox="0 0 12 12" className="h-full w-full text-white">
+                            <path
+                              d="M3 6l2 2 4-4"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                        )}
+                      </span>
+                      {method.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             <div className="text-[11px] text-[color:var(--dw-text-dim)]">

@@ -75,6 +75,27 @@ const buildSectionLiquid = (storeId: string, body: string, pageType: string): st
 <div class="dw-store" data-dropwiz-store="${storeId}" data-page-type="${pageType}">
 ${body}
 </div>
+<script>
+(function() {
+  document.querySelectorAll('.dw-prod-thumb, .dw-prod-thumb-btn, .dw-ph-thumb').forEach(function(thumb) {
+    thumb.addEventListener('click', function() {
+      var container = this.closest('.dw-prod, .dw-hero-product');
+      if (!container) return;
+      var img = this.querySelector('img');
+      if (!img) return;
+      var src = img.src || this.dataset.image;
+      var mainImg = container.querySelector('.dw-prod-active-img, .dw-prod-hero-img, .dw-ph-main-img img');
+      if (mainImg && src) {
+        mainImg.src = src;
+      }
+      container.querySelectorAll('.dw-prod-thumb, .dw-prod-thumb-btn, .dw-ph-thumb').forEach(function(t) {
+        t.classList.remove('active');
+      });
+      this.classList.add('active');
+    });
+  });
+})();
+</script>
 {% schema %}
 {
   "name": "Dropwiz ${typeName}",
@@ -263,7 +284,7 @@ export const buildThemeFiles = (
       template: productTemplate,
     });
     files.push({
-      key: "templates/product.dropwiz.json",
+      key: "templates/product.json",
       value: productTemplate,
     });
   } else if (publishMode === "all" && store.sections.length > 0 && !productPage) {
@@ -285,7 +306,7 @@ export const buildThemeFiles = (
       value: buildSectionLiquid(store.id, body, "store"),
     });
     files.push({
-      key: "templates/product.dropwiz.json",
+      key: "templates/product.json",
       value: buildTemplate("dropwiz", "dropwiz-store"),
     });
   } else {

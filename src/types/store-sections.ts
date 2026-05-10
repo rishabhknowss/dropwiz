@@ -208,7 +208,12 @@ export type PaymentMethod =
 
 export type FooterData = {
   storeName: string;
+  logoUrl?: string;
+  tagline?: string;
+  showPayments?: boolean;
   paymentMethods?: PaymentMethod[];
+  showPoweredBy?: boolean;
+  copyrightText?: string;
 };
 
 export type VideoData = { videoUrl: string; caption?: string };
@@ -224,6 +229,7 @@ export type LifestyleData = {
   body: string;
   imageUrl: string;
   imagePosition?: "left" | "right";
+  galleryImages?: string[];
 };
 
 export type GalleryImage = { url: string; caption?: string };

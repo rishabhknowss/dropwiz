@@ -213,7 +213,7 @@ const SectionForm = ({ section: initialSection, store, pageId, onClose }: Props)
           <FaqInspector section={section} onCommit={commit} />
         )}
         {section.type === "footer" && (
-          <FooterInspector section={section} onCommit={commit} />
+          <FooterInspector section={section} storeId={store.id} onCommit={commit} />
         )}
         {section.type === "lifestyle" && (
           <LifestyleInspector
