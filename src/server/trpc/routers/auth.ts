@@ -127,8 +127,11 @@ export const authRouter = router({
           name: input.name,
           verificationToken,
           verificationTokenExpiresAt: getExpiryFromNow(24 * HOUR_MS),
+          imageCredits: 10,
         })
         .returning();
+
+      console.log(`[auth] New user created: ${created.id}, email: ${emailLower}, credits: 10`);
 
       await sendVerificationEmail(emailLower, verificationToken).catch(() => {});
 

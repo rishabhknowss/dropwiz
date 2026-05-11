@@ -1,31 +1,11 @@
 import { motion } from "motion/react";
 
 const BRAND_LOGOS = [
-  {
-    alt: "Amazon",
-    light: "/landing/amazon-dark.svg",
-    dark: "/landing/amazon-light.svg",
-  },
-  {
-    alt: "AliExpress",
-    light: "/landing/aliexpress-dark.svg",
-    dark: "/landing/aliexpress-light.svg",
-  },
-  {
-    alt: "Shopify",
-    light: "/landing/shopify-dark.svg",
-    dark: "/landing/shopify-light.svg",
-  },
-  {
-    alt: "eBay",
-    light: "/landing/ebay-dark.svg",
-    dark: "/landing/ebay-light.svg",
-  },
-  {
-    alt: "TikTok",
-    light: "/landing/tiktok-dark.svg",
-    dark: "/landing/tiktok-light.svg",
-  },
+  { alt: "Amazon", src: "/landing/Amazon-logo-white.svg.png" },
+  { alt: "AliExpress", src: "/landing/aliexpress-light.svg" },
+  { alt: "Shopify", src: "/landing/shopify-light.svg" },
+  { alt: "eBay", src: "/landing/ebay-light.svg" },
+  { alt: "TikTok", src: "/landing/tiktok-light.svg" },
 ];
 
 export const StatsBar = () => {
@@ -50,14 +30,9 @@ export const StatsBar = () => {
             {[...BRAND_LOGOS, ...BRAND_LOGOS, ...BRAND_LOGOS].map((logo, i) => (
               <div key={i} className="flex h-12 w-36 shrink-0 items-center justify-center">
                 <img
-                  src={logo.light}
+                  src={logo.src}
                   alt={logo.alt}
-                  className="block h-10 w-auto max-w-[120px] object-contain dark:hidden"
-                />
-                <img
-                  src={logo.dark}
-                  alt={logo.alt}
-                  className="hidden h-10 w-auto max-w-[120px] object-contain dark:block"
+                  className="h-10 w-auto max-w-[120px] object-contain"
                 />
               </div>
             ))}

@@ -269,8 +269,8 @@ export const FakeBuildModal = ({ mode, url, aiPrompt, source, onClose }: FakeBui
                     animate={{ opacity: 1, scale: 1 }}
                     className="mb-4 flex justify-center"
                   >
-                    <div className="relative flex size-24 items-center justify-center overflow-hidden rounded-[12px] border border-[color:var(--dw-border)] bg-gradient-to-br from-purple-500/20 to-purple-600/10">
-                      <HugeiconsIcon icon={MagicWand01Icon} size={36} className="text-purple-400" />
+                    <div className="relative flex size-24 items-center justify-center overflow-hidden rounded-[12px] border border-[color:var(--dw-border)] bg-[var(--dw-accent)]/10">
+                      <HugeiconsIcon icon={MagicWand01Icon} size={36} className="text-[var(--dw-accent)]" />
                     </div>
                   </motion.div>
                 ) : productImage && (
@@ -385,8 +385,8 @@ export const FakeBuildModal = ({ mode, url, aiPrompt, source, onClose }: FakeBui
               >
                 <div className="mb-5 flex items-start gap-4">
                   {mode === "ai" ? (
-                    <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border border-[color:var(--dw-border)] bg-gradient-to-br from-purple-500/20 to-purple-600/10">
-                      <HugeiconsIcon icon={MagicWand01Icon} size={32} className="text-purple-400" />
+                    <div className="relative flex size-20 shrink-0 items-center justify-center overflow-hidden rounded-[12px] border border-[color:var(--dw-border)] bg-[var(--dw-accent)]/10">
+                      <HugeiconsIcon icon={MagicWand01Icon} size={32} className="text-[var(--dw-accent)]" />
                     </div>
                   ) : productImage && (
                     <div className="relative size-20 shrink-0 overflow-hidden rounded-[12px] border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)]">

@@ -11,7 +11,6 @@ import {
 } from "@hugeicons/core-free-icons";
 import { StoreRenderer } from "@/components/store/StoreRenderer";
 import { SectionInspector } from "@/components/editor/inspectors";
-import { OnboardingTour } from "@/components/editor/OnboardingTour";
 import { EditorHeader } from "@/components/editor/shell/EditorHeader";
 import {
   EditorSidebar,
@@ -50,7 +49,8 @@ const EditStore = () => {
   const [mobileInspectorOpen, setMobileInspectorOpen] = useState(false);
 
   const pages = pagesQuery.data ?? [];
-  const activePageId = pageIdFromUrl ?? pages[0]?.id ?? null;
+  const productPage = pages.find((p) => p.type === "product");
+  const activePageId = pageIdFromUrl ?? productPage?.id ?? pages[0]?.id ?? null;
   const activePage = pages.find((p) => p.id === activePageId) ?? pages[0];
   const activeSections = activePage?.sections ?? store.data?.sections ?? [];
 
@@ -206,7 +206,6 @@ const EditStore = () => {
           />
         )}
       </div>
-      <OnboardingTour onNavigate={(t) => setActiveTab(t)} />
     </div>
   );
 };

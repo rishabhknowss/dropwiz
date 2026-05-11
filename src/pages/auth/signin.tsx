@@ -17,7 +17,13 @@ import { api } from "@/utils/api";
 import { getErrorMessage } from "@/lib/trpc-errors";
 import { signInSchema } from "@/lib/auth/schemas";
 import { getPendingBuild } from "@/components/dw/FakeBuildModal";
+import { ONBOARDING_STORAGE_KEY } from "@/components/onboarding/types";
 import type { z } from "zod";
+
+const hasOnboardingData = () => {
+  if (typeof window === "undefined") return false;
+  return !!localStorage.getItem(ONBOARDING_STORAGE_KEY);
+};
 
 type SignInForm = z.infer<typeof signInSchema>;
 
@@ -31,15 +37,22 @@ const SignIn = () => {
   });
 
   const getRedirectUrl = () => {
+    const redirect = router.query.redirect;
+    if (redirect === "/build/claim" && hasOnboardingData()) {
+      return "/build/claim";
+    }
     const pending = getPendingBuild();
-    if (router.query.redirect === "build" && pending) {
+    if (redirect === "build" && pending) {
       return `/build/new?pending=true`;
     }
-    if (router.query.redirect === "connect-shopify") {
+    if (redirect === "connect-shopify") {
       return `/app/stores?action=connect-shopify`;
     }
-    if (router.query.redirect === "ai-build") {
+    if (redirect === "ai-build") {
       return `/build/new?mode=ai`;
+    }
+    if (hasOnboardingData()) {
+      return "/build/claim";
     }
     return "/app";
   };
@@ -56,13 +69,17 @@ const SignIn = () => {
   };
 
   const handleGoogleAuth = () => {
-    const pending = getPendingBuild();
-    if (pending) {
-      document.cookie = "dropwiz_google_redirect=build; path=/; max-age=600; SameSite=Lax";
-    } else if (router.query.redirect === "connect-shopify") {
-      document.cookie = "dropwiz_google_redirect=connect-shopify; path=/; max-age=600; SameSite=Lax";
-    } else if (router.query.redirect === "ai-build") {
-      document.cookie = "dropwiz_google_redirect=ai-build; path=/; max-age=600; SameSite=Lax";
+    if (hasOnboardingData()) {
+      document.cookie = "dropwiz_google_redirect=claim; path=/; max-age=600; SameSite=Lax";
+    } else {
+      const pending = getPendingBuild();
+      if (pending) {
+        document.cookie = "dropwiz_google_redirect=build; path=/; max-age=600; SameSite=Lax";
+      } else if (router.query.redirect === "connect-shopify") {
+        document.cookie = "dropwiz_google_redirect=connect-shopify; path=/; max-age=600; SameSite=Lax";
+      } else if (router.query.redirect === "ai-build") {
+        document.cookie = "dropwiz_google_redirect=ai-build; path=/; max-age=600; SameSite=Lax";
+      }
     }
     window.location.href = "/api/auth/signin/google";
   };
@@ -166,7 +183,7 @@ const SignIn = () => {
 
         <Button
           type="submit"
-          className="h-12 w-full gap-2 bg-[var(--dw-accent)] text-[15px] font-semibold text-white shadow-lg shadow-[var(--dw-accent)]/25 transition-all hover:bg-[var(--dw-accent-hover)] hover:shadow-[var(--dw-accent)]/30"
+          className="h-12 w-full gap-2 bg-[var(--dw-accent)] text-[15px] font-semibold text-[#0A0A0A] shadow-lg shadow-[var(--dw-accent)]/25 transition-all hover:brightness-110 hover:shadow-[var(--dw-accent)]/30"
           disabled={signIn.isPending}
         >
           {signIn.isPending ? "Signing in..." : "Sign in"}

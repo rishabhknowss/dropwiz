@@ -26,7 +26,7 @@ const valuePropsSchema = z.object({
   title: z.string().min(1).max(100),
   props: z.array(
     z.object({
-      icon: z.string().min(1).max(10),
+      icon: z.string().min(1).max(30),
       title: z.string().min(1).max(50),
       description: z.string().min(10).max(300),
     })
@@ -54,7 +54,7 @@ const howItWorksSchema = z.object({
     z.object({
       title: z.string().min(1).max(80),
       description: z.string().min(10).max(250),
-      icon: z.string().max(10).optional(),
+      icon: z.string().max(30).optional(),
     })
   ).min(3).max(4),
 });
@@ -62,7 +62,7 @@ const howItWorksSchema = z.object({
 const trustSchema = z.object({
   badges: z.array(
     z.object({
-      icon: z.string().min(1).max(10),
+      icon: z.string().min(1).max(30),
       title: z.string().min(1).max(80),
       description: z.string().min(10).max(250),
     })
@@ -72,7 +72,7 @@ const trustSchema = z.object({
 const announcementSchema = z.object({
   badges: z.array(
     z.object({
-      icon: z.string().min(1).max(10),
+      icon: z.string().min(1).max(30),
       text: z.string().min(5).max(60),
     })
   ).min(2).max(4),
@@ -81,7 +81,7 @@ const announcementSchema = z.object({
 const featureCardsSchema = z.object({
   features: z.array(
     z.object({
-      icon: z.string().min(1).max(10),
+      icon: z.string().min(1).max(30),
       label: z.string().min(2).max(30),
     })
   ).min(2).max(4),
@@ -94,7 +94,7 @@ const productSectionSchema = z.object({
   badge: z.string().max(30).nullable(),
   features: z.array(
     z.object({
-      icon: z.string().min(1).max(10),
+      icon: z.string().min(1).max(30),
       label: z.string().min(2).max(30),
     })
   ).min(3).max(5),

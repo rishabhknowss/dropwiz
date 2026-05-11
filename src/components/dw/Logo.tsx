@@ -17,7 +17,7 @@ export const DWLogo = ({
   textClassName
 }: LogoProps) => {
   const logoSrc = variant === "light" ? "/logowithbg.png" : "/logo.png";
-  const textColor = variant === "light" ? "text-white" : "text-[var(--dw-text)]";
+  const textColor = variant === "light" ? "text-[#0A0A0A]" : "text-[var(--dw-text)]";
 
   return (
     <div className={cn("inline-flex items-center gap-2.5", className)}>
@@ -70,7 +70,7 @@ export const DWLogoText = ({
   className?: string;
   variant?: "default" | "light";
 }) => {
-  const textColor = variant === "light" ? "text-white" : "text-[var(--dw-text)]";
+  const textColor = variant === "light" ? "text-[#0A0A0A]" : "text-[var(--dw-text)]";
 
   return (
     <span

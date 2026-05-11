@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { motion } from "motion/react";
-import { DWLogo } from "@/components/dw/Logo";
 
 const FOOTER_LINKS = {
   product: [
@@ -70,8 +69,8 @@ export const LandingFooter = () => {
           className="grid gap-12 lg:grid-cols-6"
         >
           <div className="lg:col-span-2">
-            <Link href="/" className="flex items-center">
-              <DWLogo size={40} />
+            <Link href="/" className="text-[22px] font-bold tracking-tight text-[var(--dw-text)]">
+              drop<span className="text-[var(--dw-accent)]">wiz</span>
             </Link>
             <p className="mt-4 max-w-xs text-[15px] leading-relaxed text-[var(--dw-text-muted)]">
               Build, optimize, and publish product pages in real-time — all in one powerful platform.

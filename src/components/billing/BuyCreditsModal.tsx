@@ -99,7 +99,7 @@ const Body = ({ onClose }: Props) => {
 
           <Button
             onClick={handlePurchase}
-            className="mt-2 h-11 w-full gap-2 text-[13px] font-medium"
+            className="mt-2 h-11 w-full gap-2 bg-[var(--dw-accent)] text-[13px] font-semibold text-[#0A0A0A] hover:bg-[var(--dw-accent-hover)]"
             disabled={createCheckout.isPending}
           >
             {createCheckout.isPending
@@ -139,7 +139,7 @@ const PackCard = ({
     >
       {pack.popular && (
         <div className="absolute -top-2 left-4">
-          <span className="rounded-full bg-[color:var(--dw-accent)] px-2 py-0.5 text-[9px] font-bold uppercase text-white">
+          <span className="rounded-full bg-[color:var(--dw-accent)] px-2 py-0.5 text-[9px] font-bold uppercase text-[#0A0A0A]">
             Best Value
           </span>
         </div>
@@ -153,7 +153,7 @@ const PackCard = ({
               : "border-[color:var(--dw-border)]",
           )}
         >
-          {selected && <HugeiconsIcon icon={Tick02Icon} size={10} className="text-white" />}
+          {selected && <HugeiconsIcon icon={Tick02Icon} size={10} className="text-[#0A0A0A]" />}
         </div>
         <div>
           <div className="flex items-baseline gap-2">

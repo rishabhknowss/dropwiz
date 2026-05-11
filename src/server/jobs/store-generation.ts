@@ -54,7 +54,7 @@ import type {
 import { generateSecureToken } from "@/lib/auth/tokens";
 import { THEME_PRESETS } from "@/lib/theme-presets";
 
-const FREE_TIERS = ["free", "starter"] as const;
+const PRO_MONTHLY_CREDITS = 50;
 const DEFAULT_IMAGE_COUNT = 12;
 
 function slugifyTitle(title: string): string {
@@ -276,16 +276,12 @@ export async function runStoreGeneration(
           .where(eq(users.id, storeRow.userId))
           .limit(1);
 
-        const isFreeTier = FREE_TIERS.includes(user?.tier as (typeof FREE_TIERS)[number]);
-        let creditsNeeded = DEFAULT_IMAGE_COUNT;
+        const availableCredits = user?.imageCredits ?? 0;
+        let creditsNeeded = Math.min(availableCredits, DEFAULT_IMAGE_COUNT);
+        if (creditsNeeded < 5) creditsNeeded = Math.min(availableCredits, 5);
 
-        console.log(`[store-gen] User tier: ${user?.tier ?? 'unknown'}, credits: ${user?.imageCredits ?? 0}`);
-
-        if (isFreeTier) {
-          creditsNeeded = Math.min(user?.imageCredits ?? 0, DEFAULT_IMAGE_COUNT);
-          if (creditsNeeded < 5) creditsNeeded = Math.min(user?.imageCredits ?? 0, 5);
-        }
-
+        console.log(`[credits] User ${storeRow.userId}: checking credits - available: ${availableCredits}, tier: ${user?.tier ?? 'unknown'}`);
+        console.log(`[store-gen] User tier: ${user?.tier ?? 'unknown'}, credits: ${availableCredits}`);
         console.log(`[store-gen] Credits needed for image generation: ${creditsNeeded}`);
 
         if (creditsNeeded > 0) {
@@ -322,14 +318,17 @@ export async function runStoreGeneration(
           console.log(`[store-gen] AI image generation complete in ${Date.now() - imageGenStart}ms`);
           console.log(`[store-gen] Generated ${generatedImages.length} images: hero=${generatedImages.filter(i => i.kind === 'hero').length}, lifestyle=${generatedImages.filter(i => i.kind === 'lifestyle').length}, product=${generatedImages.filter(i => i.kind === 'product').length}, feature=${generatedImages.filter(i => i.kind === 'feature').length}`);
 
-          if (isFreeTier && generatedImages.length > 0) {
+          if (generatedImages.length > 0) {
+            const remainingCredits = availableCredits - imageResult.creditsUsed;
             await db
               .update(users)
-              .set({ imageCredits: sql`${users.imageCredits} - ${imageResult.creditsUsed}` })
+              .set({ imageCredits: sql`GREATEST(${users.imageCredits} - ${imageResult.creditsUsed}, 0)` })
               .where(eq(users.id, storeRow.userId));
+            console.log(`[credits] User ${storeRow.userId}: deducted ${imageResult.creditsUsed} credits (${availableCredits} -> ${Math.max(0, remainingCredits)})`);
             console.log(`[store-gen] Deducted ${imageResult.creditsUsed} credits from user`);
           }
         } else {
+          console.log(`[credits] User ${storeRow.userId}: skipped image generation (0 credits available)`);
           console.log(`[store-gen] SKIPPING AI image generation - no credits available`);
         }
       } catch (err) {
@@ -920,7 +919,7 @@ const buildPages = (input: BuildPagesInput): { pages: StorePage[]; sections: Sto
   };
 
   const heroData = {
-    variant: "product-hero" as const,
+    variant: "centered" as const,
     headline: input.hero.headline,
     subheadline: input.hero.subheadline,
     primaryCta: "SHOP NOW",

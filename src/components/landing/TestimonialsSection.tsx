@@ -13,26 +13,26 @@ const StarRating = () => (
 const TESTIMONIALS = [
   {
     name: "Sarah Chen",
-    role: "E-commerce Entrepreneur",
-    quote: "In my 5 years of dropshipping, I've never seen anything make building stores as easy as Dropwiz. If you're not using it, you're wasting time.",
+    role: "Full-time Dropshipper",
+    quote: "In 5 years of dropshipping, nothing has made launching stores this easy. I tested 12 products last month and found 3 winners. Dropwiz is a game changer.",
     avatar: "/testimonials/sarah.jpg",
   },
   {
     name: "Marcus Webb",
-    role: "Shopify Store Owner",
-    quote: "With Dropwiz, everything just clicks. I built 6 stores in a weekend. It's saved me countless hours and my conversion rates are up 40%.",
+    role: "7-Figure Store Owner",
+    quote: "Built 6 stores in one weekend. My conversion rates jumped 40% compared to my old manually-built pages. The AI copy actually converts.",
     avatar: "/testimonials/marcus.jpg",
   },
   {
     name: "Jessica Park",
-    role: "Agency Owner",
-    quote: "Dropwiz is extremely efficient when it comes to building product pages. It's saved me so much time, money, and unnecessary headache!",
+    role: "Dropshipping Agency",
+    quote: "We build stores for clients. Dropwiz cut our delivery time from 2 weeks to 2 days. Our clients are thrilled and we're more profitable.",
     avatar: "/testimonials/jessica.jpg",
   },
   {
     name: "David Miller",
     role: "6-Figure Seller",
-    quote: "I used to waste hours on product pages manually. Dropwiz lets me focus on what matters - marketing and growing my business.",
+    quote: "I used to spend hours building product pages. Now I import from AliExpress and launch in minutes. More time for ads, more money in my pocket.",
     avatar: "/testimonials/david.jpg",
   },
 ];
@@ -85,22 +85,22 @@ export const TestimonialsSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="mt-10 rounded-2xl bg-gradient-to-br from-[var(--dw-accent)] to-[#8771FF] p-6 text-center sm:mt-16 sm:rounded-3xl sm:p-8 lg:p-12"
+          className="mt-10 rounded-2xl bg-[var(--dw-accent)] p-6 text-center sm:mt-16 sm:rounded-3xl sm:p-8 lg:p-12"
         >
           <div className="mx-auto max-w-2xl">
-            <div className="mb-4 inline-block rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-medium text-white sm:mb-6 sm:px-4 sm:py-2 sm:text-[13px]">
+            <div className="mb-4 inline-block rounded-full bg-[#0A0A0A]/10 px-3 py-1.5 text-[12px] font-medium text-[#0A0A0A] sm:mb-6 sm:px-4 sm:py-2 sm:text-[13px]">
               From the founder
             </div>
-            <blockquote className="mb-6 text-[16px] font-medium leading-relaxed text-white sm:mb-8 sm:text-[20px] lg:text-[24px]">
-              &ldquo;We built Dropwiz to help entrepreneurs launch stores faster. Seeing thousands of successful stores built on our platform is incredibly rewarding.&rdquo;
+            <blockquote className="mb-6 text-[16px] font-medium leading-relaxed text-[#0A0A0A] sm:mb-8 sm:text-[20px] lg:text-[24px]">
+              &ldquo;We built Dropwiz because launching a dropshipping store shouldn't take weeks. Our users are launching stores in minutes and scaling to 6 figures. That's what drives us.&rdquo;
             </blockquote>
             <div className="flex items-center justify-center gap-3 sm:gap-4">
-              <div className="flex size-10 items-center justify-center rounded-full border-2 border-white/20 bg-white/10 text-[16px] font-bold text-white sm:size-14 sm:text-[20px]">
+              <div className="flex size-10 items-center justify-center rounded-full border-2 border-[#0A0A0A]/20 bg-[#0A0A0A]/10 text-[16px] font-bold text-[#0A0A0A] sm:size-14 sm:text-[20px]">
                 D
               </div>
               <div className="text-left">
-                <p className="text-[14px] font-semibold text-white sm:text-base">Dropwiz Team</p>
-                <p className="text-[12px] text-white/60 sm:text-[14px]">Building the future of e-commerce</p>
+                <p className="text-[14px] font-semibold text-[#0A0A0A] sm:text-base">Dropwiz Team</p>
+                <p className="text-[12px] text-[#0A0A0A]/60 sm:text-[14px]">Powering 2,500+ dropshipping stores</p>
               </div>
             </div>
           </div>

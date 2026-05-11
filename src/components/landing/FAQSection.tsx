@@ -5,32 +5,32 @@ const FAQS = [
   {
     question: "What is Dropwiz?",
     answer:
-      "Dropwiz is an AI-powered platform that helps you create high-converting Shopify stores in minutes. Simply import a product URL, and our AI generates professional product pages with optimized copy, images, and trust elements.",
+      "Dropwiz is the fastest way to launch a dropshipping store. Paste any product URL from AliExpress, Amazon, or any supplier — our AI builds a complete, high-converting Shopify product page with professional copy and design.",
   },
   {
-    question: "Can I cancel anytime?",
+    question: "Which suppliers does Dropwiz support?",
     answer:
-      "Yes, you can cancel your subscription at any time. There are no long-term contracts or cancellation fees. Your account will remain active until the end of your billing period.",
+      "Dropwiz works with any product URL. Import from AliExpress, Amazon, CJ Dropshipping, Temu, 1688, Alibaba, or any e-commerce site. Our AI extracts product data, images, and variants automatically.",
   },
   {
-    question: "Does Dropwiz work with Shopify?",
+    question: "How does product import work?",
     answer:
-      "Yes! Dropwiz integrates directly with Shopify. You can connect your store and publish your generated product pages with a single click.",
+      "Simply paste a product URL. Our AI scrapes the product title, description, images, variants, and pricing. Then it generates persuasive sales copy, trust badges, FAQs, and a conversion-optimized layout — all in under 60 seconds.",
   },
   {
-    question: "How does the AI store generation work?",
+    question: "Can I publish directly to Shopify?",
     answer:
-      "Simply paste a product URL from Amazon, AliExpress, or any e-commerce site. Our AI scrapes the product data, analyzes successful stores, and generates a complete product page with headlines, descriptions, FAQs, and trust badges.",
+      "Yes! Connect your Shopify store with one click. Dropwiz pushes your product pages directly to your store, complete with products, images, and optimized content. No copy-pasting required.",
   },
   {
-    question: "Does Dropwiz come with a trial?",
+    question: "Is there a free plan?",
     answer:
-      "Yes! You can try Dropwiz with our free plan and get access to core features. Upgrade anytime to unlock more capabilities.",
+      "Yes! Start free and build unlimited store designs. The free plan includes 57+ premium sections and AI-powered layouts. Upgrade to PRO when you're ready to publish to Shopify and unlock AI copywriting.",
   },
   {
-    question: "Can I manage multiple stores?",
+    question: "Can I run multiple dropshipping stores?",
     answer:
-      "Absolutely. Depending on your plan, you can create and manage multiple stores. Our Pro and Business plans offer unlimited store creation.",
+      "Absolutely. Create and manage unlimited stores from one dashboard. Test multiple niches, scale your winners, and manage everything in one place.",
   },
 ];
 

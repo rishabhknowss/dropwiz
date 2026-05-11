@@ -23,7 +23,13 @@ import { signUpSchema, passwordChecks } from "@/lib/auth/schemas";
 import { getErrorMessage } from "@/lib/trpc-errors";
 import { cn } from "@/lib/utils";
 import { getPendingBuild } from "@/components/dw/FakeBuildModal";
+import { ONBOARDING_STORAGE_KEY } from "@/components/onboarding/types";
 import type { z } from "zod";
+
+const hasOnboardingData = () => {
+  if (typeof window === "undefined") return false;
+  return !!localStorage.getItem(ONBOARDING_STORAGE_KEY);
+};
 
 type SignUpForm = z.infer<typeof signUpSchema>;
 
@@ -55,9 +61,13 @@ const SignUp = () => {
   const passwordValid = passwordStatus.every((c) => c.passed);
 
   const handleGoogleAuth = () => {
-    const pending = getPendingBuild();
-    if (pending) {
-      document.cookie = "dropwiz_google_redirect=build; path=/; max-age=600; SameSite=Lax";
+    if (hasOnboardingData()) {
+      document.cookie = "dropwiz_google_redirect=claim; path=/; max-age=600; SameSite=Lax";
+    } else {
+      const pending = getPendingBuild();
+      if (pending) {
+        document.cookie = "dropwiz_google_redirect=build; path=/; max-age=600; SameSite=Lax";
+      }
     }
     window.location.href = "/api/auth/signin/google";
   };
@@ -115,15 +125,15 @@ const SignUp = () => {
           </div>
           <ol className="space-y-3">
             <li className="flex items-start gap-3">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[11px] font-bold text-white">1</span>
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[11px] font-bold text-[#0A0A0A]">1</span>
               <span className="pt-0.5">Open the email we just sent to <strong className="text-[var(--dw-text)]">{email}</strong></span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[11px] font-bold text-white">2</span>
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[11px] font-bold text-[#0A0A0A]">2</span>
               <span className="pt-0.5">Click the verification link (expires in 24h)</span>
             </li>
             <li className="flex items-start gap-3">
-              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[11px] font-bold text-white">3</span>
+              <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[11px] font-bold text-[#0A0A0A]">3</span>
               <span className="pt-0.5">Sign in and build your first store</span>
             </li>
           </ol>
@@ -278,7 +288,7 @@ const SignUp = () => {
 
         <Button
           type="submit"
-          className="h-12 w-full gap-2 bg-[var(--dw-accent)] text-[15px] font-semibold text-white shadow-lg shadow-[var(--dw-accent)]/30 transition-all hover:bg-[var(--dw-accent-hover)] hover:shadow-[var(--dw-accent)]/40"
+          className="h-12 w-full gap-2 bg-[var(--dw-accent)] text-[15px] font-semibold text-[#0A0A0A] shadow-lg shadow-[var(--dw-accent)]/30 transition-all hover:brightness-110 hover:shadow-[var(--dw-accent)]/40"
           disabled={signUp.isPending || !passwordValid}
         >
           {signUp.isPending ? "Creating account..." : "Create account"}

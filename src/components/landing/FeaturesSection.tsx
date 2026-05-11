@@ -41,8 +41,8 @@ const AIWritingVisual = () => (
   <div className="flex h-52 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--dw-accent)]/10 to-[var(--dw-accent)]/5 dark:from-[var(--dw-accent)]/20 dark:to-[var(--dw-accent)]/10">
     <div className="w-full max-w-[200px] space-y-3 px-4">
       <div className="flex items-center gap-2">
-        <div className="size-8 rounded-lg bg-gradient-to-br from-[var(--dw-accent)] to-[#8771FF] p-1.5">
-          <svg className="size-full text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="size-8 rounded-lg bg-[var(--dw-accent)] p-1.5">
+          <svg className="size-full text-[#0A0A0A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
           </svg>
         </div>
@@ -93,18 +93,18 @@ const ShopifySyncVisual = () => (
 
 const FEATURES = [
   {
-    title: "AI-powered product pages",
-    description: "Paste any product URL and get a complete, high-converting product page in seconds.",
+    title: "Import from any supplier",
+    description: "Paste any product URL from AliExpress, Amazon, or CJ Dropshipping. Our AI extracts everything automatically.",
     Visual: ImportFeatureVisual,
   },
   {
-    title: "Smart copy generation",
-    description: "Our AI writes compelling product descriptions, headlines, and FAQs that sell.",
+    title: "AI writes winning copy",
+    description: "Generate high-converting product descriptions, headlines, and FAQs optimized for dropshipping success.",
     Visual: AIWritingVisual,
   },
   {
-    title: "One-click Shopify sync",
-    description: "Publish directly to your Shopify store with a single click. No manual work.",
+    title: "One-click Shopify publish",
+    description: "Push your product pages directly to Shopify. Start selling immediately with no manual work.",
     Visual: ShopifySyncVisual,
   },
 ];
@@ -123,11 +123,10 @@ export const FeaturesSection = () => {
           <h2 className="text-[36px] font-bold tracking-tight text-[var(--dw-text)] lg:text-[48px]">
             Everything you need to
             <br />
-            build winning stores
+            dominate dropshipping
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-[17px] leading-relaxed text-[var(--dw-text-muted)]">
-            From product import to published store — Dropwiz handles it all with
-            AI-powered automation.
+            From supplier product to live Shopify store — Dropwiz handles your entire dropshipping workflow with AI automation.
           </p>
         </motion.div>
 
@@ -162,18 +161,18 @@ export const FeaturesSection = () => {
           transition={{ duration: 0.6, delay: 0.3 }}
           className="mt-20 grid gap-6 lg:grid-cols-2 lg:gap-8"
         >
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[var(--dw-accent)] to-[#8771FF] p-8 text-white lg:p-10">
-            <div className="absolute -right-20 -top-20 size-60 rounded-full bg-white/10 blur-3xl" />
+          <div className="relative overflow-hidden rounded-3xl bg-[var(--dw-accent)] p-8 lg:p-10">
+            <div className="absolute -right-20 -top-20 size-60 rounded-full bg-[#0A0A0A]/5 blur-3xl" />
             <div className="relative">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2">
-                <svg className="size-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-[#0A0A0A]/10 px-4 py-2">
+                <svg className="size-5 text-[#0A0A0A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
-                <span className="text-[13px] font-medium">Multi-store</span>
+                <span className="text-[13px] font-medium text-[#0A0A0A]">Multi-store</span>
               </div>
-              <h3 className="mb-4 text-[26px] font-bold lg:text-[32px]">Manage multiple stores</h3>
-              <p className="max-w-md text-[16px] leading-relaxed text-white/70">
-                Create and manage unlimited Shopify stores from one dashboard. Perfect for agencies and power sellers.
+              <h3 className="mb-4 text-[26px] font-bold text-[#0A0A0A] lg:text-[32px]">Scale with multiple stores</h3>
+              <p className="max-w-md text-[16px] leading-relaxed text-[#0A0A0A]/70">
+                Run unlimited dropshipping stores from one dashboard. Test multiple niches and scale your winners fast.
               </p>
             </div>
           </div>
@@ -187,9 +186,9 @@ export const FeaturesSection = () => {
                 </svg>
                 <span className="text-[13px] font-medium text-[var(--dw-text)]">Optimized</span>
               </div>
-              <h3 className="mb-4 text-[26px] font-bold text-[var(--dw-text)] lg:text-[32px]">Built-in conversion optimization</h3>
+              <h3 className="mb-4 text-[26px] font-bold text-[var(--dw-text)] lg:text-[32px]">Conversion-optimized pages</h3>
               <p className="max-w-md text-[16px] leading-relaxed text-[var(--dw-text-muted)]">
-                Every page is optimized for conversions with trust badges, urgency timers, and proven layouts that drive sales.
+                Every product page includes trust badges, scarcity elements, and proven layouts that turn visitors into buyers.
               </p>
             </div>
           </div>

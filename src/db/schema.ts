@@ -97,7 +97,7 @@ export const users = pgTable(
     tier: subscriptionTierEnum("tier").notNull().default("free"),
     billingSource: billingSourceEnum("billing_source"),
     stripeCustomerId: varchar("stripe_customer_id", { length: 64 }),
-    imageCredits: integer("image_credits").notNull().default(5),
+    imageCredits: integer("image_credits").notNull().default(10),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
       .defaultNow(),

@@ -4,18 +4,19 @@ import { useRouter } from "next/router";
 import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  MagicWand01Icon,
-  ArrowRight01Icon,
-  RocketIcon,
   SparklesIcon,
-  Target02Icon,
-  Add01Icon,
+  Loading03Icon,
+  Delete01Icon,
+  Cancel01Icon,
+  AlertCircleIcon,
+  Edit02Icon,
+  Globe02Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 import { DashboardLayout } from "@/components/dashboard";
 import { OnboardingModal } from "@/components/dw/OnboardingModal";
 import { ShopifyConnectModal } from "@/components/shopify/ShopifyConnectModal";
+import { CardSkeleton } from "@/components/ui/loaders";
 import { api } from "@/utils/api";
 import { cn } from "@/lib/utils";
 import type { RouterOutputs } from "@/utils/api";
@@ -36,11 +37,14 @@ const StoresIndex = () => {
     enabled: !!me.data,
     refetchOnWindowFocus: false,
   });
+  const utils = api.useUtils();
+  const deleteStore = api.stores.deleteStore.useMutation();
 
   const shouldShowConnect = router.query.action === "connect-shopify";
   const subscriptionSuccess = router.query.subscription === "success";
   const [showShopifyConnect, setShowShopifyConnect] = useState(false);
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<StoreCardData | null>(null);
   const successToastShown = useRef(false);
 
   const showOnboarding = useMemo(() => {
@@ -77,26 +81,51 @@ const StoresIndex = () => {
     setOnboardingDismissed(true);
   };
 
+  const handleDelete = () => {
+    if (!deleteTarget) return;
+    const id = toast.loading("Deleting store...");
+    deleteStore.mutate(
+      { storeId: deleteTarget.id },
+      {
+        onSuccess: () => {
+          toast.success("Store deleted", { id });
+          utils.stores.listMine.invalidate();
+          setDeleteTarget(null);
+        },
+        onError: (err) => {
+          toast.error(err.message, { id });
+        },
+      }
+    );
+  };
+
   if (!me.data) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[var(--dw-bg)]">
-        <div className="text-[13px] text-[var(--dw-text-muted)]">Loading...</div>
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--dw-bg)]">
+        <div className="relative mb-4">
+          <div className="absolute inset-0 rounded-full bg-[var(--dw-accent)] opacity-20 blur-xl" />
+          <div className="relative h-10 w-10 rounded-full border-2 border-[var(--dw-border)] border-t-[var(--dw-accent)] dw-spin" />
+        </div>
+        <div className="text-[13px] font-medium text-[var(--dw-text-muted)]">Loading your dashboard</div>
       </div>
     );
   }
-
-  const published = stores.data?.filter((s) => s.status === "published") ?? [];
-  const drafts = stores.data?.filter((s) => s.status === "ready") ?? [];
-  const generating = stores.data?.filter(
-    (s) => s.status === "generating" || s.status === "scraping"
-  ) ?? [];
 
   const hasStores = (stores.data?.length ?? 0) > 0;
 
   return (
     <DashboardLayout
-      title={`Welcome, ${me.data.name ?? me.data.email.split("@")[0]}`}
-      subtitle={me.data.emailVerified ? "Verified account" : "Pending verification"}
+      title={`Welcome back, ${me.data.name ?? me.data.email.split("@")[0]}`}
+      subtitle={me.data.emailVerified ? "Pro account" : "Free tier"}
+      action={
+        <Link
+          href="/build/new"
+          className="inline-flex h-9 items-center gap-2 rounded-xl bg-[var(--dw-accent)] px-4 text-[12px] font-semibold text-[#0A0A0A] transition-all hover:bg-[var(--dw-accent-hover)]"
+        >
+          <HugeiconsIcon icon={SparklesIcon} size={14} />
+          New Store
+        </Link>
+      }
     >
       {showOnboarding && (
         <OnboardingModal
@@ -107,38 +136,39 @@ const StoresIndex = () => {
       {showShopifyConnect && (
         <ShopifyConnectModal onClose={() => setShowShopifyConnect(false)} />
       )}
-
-      {hasStores && (
-        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          <StatCard label="Published" value={published.length} icon={RocketIcon} color="success" />
-          <StatCard label="Drafts" value={drafts.length} icon={Target02Icon} color="accent" />
-          <StatCard label="Generating" value={generating.length} icon={SparklesIcon} color="warning" />
-          <StatCard label="Total" value={stores.data?.length ?? 0} icon={MagicWand01Icon} color="default" />
-        </div>
+      {deleteTarget && (
+        <DeleteModal
+          store={deleteTarget}
+          onClose={() => setDeleteTarget(null)}
+          onConfirm={handleDelete}
+          isDeleting={deleteStore.isPending}
+        />
       )}
 
       {stores.isLoading ? (
-        <div className="flex items-center gap-2 text-[13px] text-[var(--dw-text-muted)]">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--dw-border)] border-t-[var(--dw-accent)]" />
-          Loading stores...
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {[...Array(8)].map((_, i) => (
+            <CardSkeleton key={i} />
+          ))}
         </div>
       ) : hasStores ? (
-        <>
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[14px] font-semibold text-[var(--dw-text)]">Your Stores</h2>
-            <Button asChild size="sm" className="h-8 gap-1.5 rounded-lg bg-[var(--dw-accent)] text-[12px] font-medium hover:bg-[var(--dw-accent-hover)]">
-              <Link href="/build/new">
-                <HugeiconsIcon icon={Add01Icon} size={14} />
-                New Store
-              </Link>
-            </Button>
+        <div className="animate-fade-up">
+          <div className="mb-6 flex items-center justify-between">
+            <p className="text-[13px] text-[var(--dw-text-muted)]">
+              {stores.data?.length} store{stores.data?.length !== 1 ? "s" : ""} created
+            </p>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            {stores.data?.map((s) => (
-              <StoreCard key={s.id} store={s} />
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {stores.data?.map((s, i) => (
+              <StoreCard
+                key={s.id}
+                store={s}
+                index={i}
+                onDelete={() => setDeleteTarget(s)}
+              />
             ))}
           </div>
-        </>
+        </div>
       ) : (
         <EmptyState />
       )}
@@ -146,134 +176,258 @@ const StoresIndex = () => {
   );
 };
 
-const StoreCard = ({ store }: { store: StoreCardData }) => {
+const StoreCard = ({
+  store,
+  index = 0,
+  onDelete,
+}: {
+  store: StoreCardData;
+  index?: number;
+  onDelete: () => void;
+}) => {
   const inProgress = store.status === "generating" || store.status === "scraping";
-  const hasThumb = !!store.thumbnailUrl && !inProgress;
+  const isFailed = store.status === "failed";
+  const hasThumb = !!store.thumbnailUrl && !inProgress && !isFailed;
 
   return (
-    <Link href={`/app/stores/${store.id}/edit`}>
-      <div className="group overflow-hidden rounded-xl border border-[var(--dw-border)] bg-[var(--dw-surface)] transition-all duration-200 hover:border-[var(--dw-border-strong)] hover:shadow-lg">
-        <div
-          className="relative aspect-[16/10] w-full overflow-hidden bg-[var(--dw-bg-tertiary)]"
-          style={{
-            background: hasThumb ? undefined : `linear-gradient(135deg, ${store.themePreview.bg} 0%, ${store.themePreview.primary} 100%)`,
-          }}
-        >
-          {hasThumb && store.thumbnailUrl && (
-            <Image
-              src={store.thumbnailUrl}
-              alt=""
-              fill
-              unoptimized
-              className="object-cover transition-transform duration-300 group-hover:scale-105"
-            />
-          )}
-          {inProgress && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-              <div className="flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
-                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                <span className="text-[11px] font-medium text-white">Generating...</span>
-              </div>
-            </div>
-          )}
-          {store.status === "failed" && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-              <div className="rounded-full bg-[var(--dw-error)] px-4 py-1.5 text-[11px] font-medium text-white">
-                Failed
-              </div>
-            </div>
-          )}
-          <div className="absolute right-3 top-3">
-            <StatusBadge status={store.status} />
-          </div>
-        </div>
-        <div className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div className="min-w-0 flex-1">
-              <h3 className="truncate text-[13px] font-semibold text-[var(--dw-text)]">
-                {store.name ?? "Untitled store"}
-              </h3>
-              <p className="mt-0.5 text-[11px] text-[var(--dw-text-muted)]">
-                {new Date(store.createdAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </p>
-            </div>
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--dw-bg-tertiary)] text-[var(--dw-text-muted)] transition-all group-hover:bg-[var(--dw-accent)] group-hover:text-white">
-              <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+    <div
+      className="animate-slide-up group relative overflow-hidden rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface)] transition-all duration-200 hover:border-[var(--dw-accent)]/30"
+      style={{ animationDelay: `${index * 30}ms`, animationFillMode: "both" }}
+    >
+      <div
+        className="relative aspect-[4/3] w-full overflow-hidden"
+        style={{
+          background: hasThumb
+            ? "var(--dw-bg-tertiary)"
+            : isFailed
+            ? "linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 100%)"
+            : `linear-gradient(135deg, ${store.themePreview.bg} 0%, ${store.themePreview.primary}40 100%)`,
+        }}
+      >
+        {hasThumb && store.thumbnailUrl && (
+          <Image
+            src={store.thumbnailUrl}
+            alt=""
+            fill
+            unoptimized
+            className="object-cover"
+          />
+        )}
+        {inProgress && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+            <div className="flex items-center gap-1.5 rounded-md bg-white/10 px-2.5 py-1.5">
+              <HugeiconsIcon icon={Loading03Icon} size={11} className="text-[var(--dw-accent)] dw-spin" />
+              <span className="text-[10px] font-medium text-white">Building...</span>
             </div>
           </div>
+        )}
+        {isFailed && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
+            <HugeiconsIcon icon={AlertCircleIcon} size={16} className="text-[var(--dw-error)]" />
+            <span className="mt-1 text-[9px] font-medium text-[var(--dw-error)]">Failed</span>
+          </div>
+        )}
+        <div className="absolute right-1.5 top-1.5">
+          <StatusBadge status={store.status} />
         </div>
       </div>
-    </Link>
+
+      <div className="p-2.5">
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-[12px] font-semibold text-[var(--dw-text)]">
+              {store.name ?? "Untitled store"}
+            </h3>
+            <p className="mt-0.5 flex items-center gap-1 text-[9px] text-[var(--dw-text-subtle)]">
+              {new Date(store.createdAt).toLocaleDateString("en-US", {
+                month: "short",
+                day: "numeric",
+              })}
+              {store.publishedShopifyUrl && (
+                <span className="inline-flex items-center gap-0.5 text-[var(--dw-success)]">
+                  <HugeiconsIcon icon={Globe02Icon} size={8} />
+                  Live
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              onDelete();
+            }}
+            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[var(--dw-text-subtle)] transition-all hover:bg-[var(--dw-error)]/10 hover:text-[var(--dw-error)]"
+          >
+            <HugeiconsIcon icon={Delete01Icon} size={11} />
+          </button>
+        </div>
+
+        <Link
+          href={`/app/stores/${store.id}/edit`}
+          className="flex w-full items-center justify-center gap-1 rounded-md bg-[var(--dw-surface2)] px-2.5 py-1.5 text-[10px] font-medium text-[var(--dw-text)] transition-all hover:bg-[var(--dw-accent)] hover:text-[#0A0A0A]"
+        >
+          <HugeiconsIcon icon={Edit02Icon} size={11} />
+          Edit Store
+        </Link>
+      </div>
+    </div>
   );
 };
 
+const DeleteModal = ({
+  store,
+  onClose,
+  onConfirm,
+  isDeleting,
+}: {
+  store: StoreCardData;
+  onClose: () => void;
+  onConfirm: () => void;
+  isDeleting: boolean;
+}) => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
+    <div className="animate-scale-in relative w-full max-w-md overflow-hidden rounded-2xl border border-[var(--dw-border)] bg-[var(--dw-surface)] shadow-2xl">
+      <button
+        onClick={onClose}
+        className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-[var(--dw-text-muted)] transition-colors hover:bg-[var(--dw-surface2)] hover:text-[var(--dw-text)]"
+      >
+        <HugeiconsIcon icon={Cancel01Icon} size={16} />
+      </button>
+
+      <div className="p-6">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--dw-error)]/10">
+          <HugeiconsIcon icon={Delete01Icon} size={24} className="text-[var(--dw-error)]" />
+        </div>
+
+        <h3 className="text-[18px] font-bold text-[var(--dw-text)]">Delete store?</h3>
+        <p className="mt-2 text-[14px] leading-relaxed text-[var(--dw-text-muted)]">
+          This will permanently delete{" "}
+          <span className="font-semibold text-[var(--dw-text)]">{store.name ?? "this store"}</span> and all its
+          associated data. This action cannot be undone.
+        </p>
+
+        <div className="mt-6 flex gap-3">
+          <button
+            onClick={onClose}
+            disabled={isDeleting}
+            className="flex-1 rounded-xl border border-[var(--dw-border)] bg-[var(--dw-surface2)] px-4 py-3 text-[13px] font-semibold text-[var(--dw-text)] transition-all hover:bg-[var(--dw-surface-hover)] disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isDeleting}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[var(--dw-error)] px-4 py-3 text-[13px] font-semibold text-white transition-all hover:brightness-110 disabled:opacity-50"
+          >
+            {isDeleting ? (
+              <>
+                <HugeiconsIcon icon={Loading03Icon} size={14} className="dw-spin" />
+                Deleting...
+              </>
+            ) : (
+              <>
+                <HugeiconsIcon icon={Delete01Icon} size={14} />
+                Delete Store
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const StatusBadge = ({ status }: { status: string }) => {
-  const config: Record<string, { bg: string; dot: string; label: string }> = {
-    published: { bg: "bg-[var(--dw-success-bg)]", dot: "bg-[var(--dw-success)]", label: "Live" },
-    ready: { bg: "bg-[var(--dw-accent-subtle)]", dot: "bg-[var(--dw-accent)]", label: "Draft" },
-    failed: { bg: "bg-[var(--dw-error-bg)]", dot: "bg-[var(--dw-error)]", label: "Failed" },
-    generating: { bg: "bg-[var(--dw-warning-bg)]", dot: "bg-[var(--dw-warning)]", label: "Building" },
-    scraping: { bg: "bg-[var(--dw-warning-bg)]", dot: "bg-[var(--dw-warning)]", label: "Importing" },
+  const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
+    published: {
+      bg: "bg-[var(--dw-success)]/10",
+      text: "text-[var(--dw-success)]",
+      dot: "bg-[var(--dw-success)]",
+      label: "Live",
+    },
+    ready: {
+      bg: "bg-[var(--dw-accent)]/10",
+      text: "text-[var(--dw-accent)]",
+      dot: "bg-[var(--dw-accent)]",
+      label: "Draft",
+    },
+    failed: {
+      bg: "bg-[var(--dw-error)]/10",
+      text: "text-[var(--dw-error)]",
+      dot: "bg-[var(--dw-error)]",
+      label: "Failed",
+    },
+    generating: {
+      bg: "bg-[var(--dw-warning)]/10",
+      text: "text-[var(--dw-warning)]",
+      dot: "bg-[var(--dw-warning)]",
+      label: "Building",
+    },
+    scraping: {
+      bg: "bg-[var(--dw-warning)]/10",
+      text: "text-[var(--dw-warning)]",
+      dot: "bg-[var(--dw-warning)]",
+      label: "Importing",
+    },
   };
 
-  const c = config[status] ?? { bg: "bg-[var(--dw-bg-tertiary)]", dot: "bg-[var(--dw-text-subtle)]", label: status };
+  const c = config[status] ?? {
+    bg: "bg-[var(--dw-surface2)]",
+    text: "text-[var(--dw-text-muted)]",
+    dot: "bg-[var(--dw-text-subtle)]",
+    label: status,
+  };
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium text-[var(--dw-text)]", c.bg)}>
-      <span className={cn("h-1.5 w-1.5 rounded-full", c.dot)} />
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-md px-2 py-1 text-[9px] font-semibold uppercase tracking-wide backdrop-blur-sm",
+        c.bg,
+        c.text
+      )}
+    >
+      <span
+        className={cn(
+          "h-1 w-1 rounded-full",
+          c.dot,
+          status === "generating" || status === "scraping" ? "animate-pulse" : ""
+        )}
+      />
       {c.label}
     </span>
   );
 };
 
-const StatCard = ({
-  label,
-  value,
-  icon,
-  color,
-}: {
-  label: string;
-  value: number;
-  icon: typeof RocketIcon;
-  color: "success" | "warning" | "accent" | "default";
-}) => {
-  const iconColors = {
-    success: "text-[var(--dw-success)]",
-    warning: "text-[var(--dw-warning)]",
-    accent: "text-[var(--dw-accent)]",
-    default: "text-[var(--dw-text-muted)]",
-  };
-
-  return (
-    <div className="rounded-xl border border-[var(--dw-border)] bg-[var(--dw-surface)] p-4">
-      <div className="flex items-center justify-between">
-        <span className="text-[11px] font-medium text-[var(--dw-text-muted)]">{label}</span>
-        <HugeiconsIcon icon={icon} size={18} className={iconColors[color]} />
-      </div>
-      <p className="mt-2 text-[26px] font-bold tabular-nums tracking-tight text-[var(--dw-text)]">{value}</p>
-    </div>
-  );
-};
-
 const EmptyState = () => (
-  <div className="flex flex-col items-center rounded-xl border border-dashed border-[var(--dw-border)] bg-[var(--dw-surface)] px-6 py-16 text-center">
-    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--dw-accent-subtle)]">
-      <HugeiconsIcon icon={MagicWand01Icon} size={26} className="text-[var(--dw-accent)]" />
-    </div>
-    <h3 className="text-[16px] font-semibold text-[var(--dw-text)]">Build your first store</h3>
-    <p className="mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-[var(--dw-text-muted)]">
-      Paste a product URL and Dropwiz generates a high-converting store in about 60 seconds.
-    </p>
-    <Button asChild className="mt-6 h-10 gap-2 rounded-lg bg-[var(--dw-accent)] px-5 text-[13px] font-semibold hover:bg-[var(--dw-accent-hover)]">
-      <Link href="/build/new">
-        <HugeiconsIcon icon={Add01Icon} size={16} />
+  <div className="animate-fade-up relative overflow-hidden rounded-2xl border border-dashed border-[var(--dw-border)] bg-[var(--dw-surface)] px-8 py-20 text-center">
+    <div className="dw-grid-pattern absolute inset-0 opacity-30" />
+    <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-[var(--dw-accent)] opacity-10 blur-3xl" />
+    <div className="absolute -bottom-20 -right-20 h-40 w-40 rounded-full bg-[var(--dw-secondary)] opacity-10 blur-3xl" />
+
+    <div className="relative z-10">
+      <div className="relative mx-auto mb-6 inline-flex">
+        <div className="absolute inset-0 rounded-2xl bg-[var(--dw-accent)] opacity-20 blur-xl" />
+        <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--dw-accent)] to-[var(--dw-accent-hover)]">
+          <HugeiconsIcon icon={SparklesIcon} size={28} className="text-[#0A0A0A]" />
+        </div>
+      </div>
+      <h3 className="text-[20px] font-bold tracking-tight text-[var(--dw-text)]">Create your first store</h3>
+      <p className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed text-[var(--dw-text-muted)]">
+        Paste any product URL and watch AI generate a high-converting store with custom copy, imagery, and optimized
+        layouts.
+      </p>
+      <Link
+        href="/build/new"
+        className="mt-8 inline-flex h-12 items-center gap-2.5 rounded-xl bg-gradient-to-r from-[var(--dw-accent)] to-[var(--dw-accent-hover)] px-6 text-[14px] font-semibold text-[#0A0A0A] shadow-lg shadow-[var(--dw-accent)]/20 transition-all hover:shadow-[var(--dw-accent)]/30 hover:brightness-110"
+      >
+        <HugeiconsIcon icon={SparklesIcon} size={16} />
         Create Store
       </Link>
-    </Button>
+      <p className="mt-4 text-[11px] font-medium uppercase tracking-wide text-[var(--dw-text-subtle)]">
+        60 seconds · No credit card required
+      </p>
+    </div>
   </div>
 );
 

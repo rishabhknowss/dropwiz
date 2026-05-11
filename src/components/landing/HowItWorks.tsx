@@ -3,21 +3,21 @@ import { motion } from "motion/react";
 const STEPS = [
   {
     number: "01",
-    title: "Import products",
+    title: "Find winning products",
     description:
-      "Paste any product URL from Amazon, AliExpress, or Shopify. Our AI extracts all product data, images, and pricing automatically.",
+      "Paste any product URL from AliExpress, Amazon, CJ Dropshipping, or any supplier. Our AI scrapes all product data, images, and variants instantly.",
   },
   {
     number: "02",
-    title: "AI generates your store",
+    title: "AI builds your store",
     description:
-      "Get a fully-built product page based on proven high-converting designs. Includes AI-written copy, trust badges, FAQs, and more.",
+      "Get a complete product page with persuasive copy, trust badges, FAQs, and scarcity elements — all designed to maximize conversions.",
   },
   {
     number: "03",
-    title: "Publish & sell",
+    title: "Launch & profit",
     description:
-      "One-click publish to your Shopify store. Start accepting orders immediately with optimized product pages that convert.",
+      "One-click publish to Shopify. Your dropshipping store goes live instantly, ready to take orders and make sales.",
   },
 ];
 
@@ -33,9 +33,9 @@ export const HowItWorks = () => {
           className="mb-16 text-center lg:mb-20"
         >
           <h2 className="text-[36px] font-bold tracking-tight text-[var(--dw-text)] lg:text-[48px]">
-            From URL to store
+            Launch your store
             <br />
-            in 3 steps
+            in 3 simple steps
           </h2>
         </motion.div>
 

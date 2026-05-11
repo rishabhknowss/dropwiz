@@ -27,7 +27,7 @@ const TIER_INFO: Record<string, { label: string; color: string; bgColor: string;
     label: "Dropwiz PRO",
     color: "var(--dw-accent)",
     bgColor: "var(--dw-accent-subtle)",
-    description: "Unlimited AI, publish to Shopify, priority support",
+    description: "50 AI credits/month, publish to Shopify, priority support",
   },
 };
 
@@ -181,7 +181,7 @@ const SettingsPage = () => {
                 {!createCheckout.isPending && <HugeiconsIcon icon={ArrowRight01Icon} size={14} />}
               </Button>
               <p className="mt-2 text-[10px] text-[var(--dw-text-subtle)]">
-                Unlock unlimited AI credits and publishing
+                Get 50 AI credits/month and Shopify publishing
               </p>
             </div>
           )}
@@ -198,39 +198,35 @@ const SettingsPage = () => {
               </p>
               <div className="flex items-baseline gap-2">
                 <span className="text-[24px] font-bold tracking-tight text-[var(--dw-text)]">
-                  {isPro ? "∞" : me.data.imageCredits}
+                  {me.data.imageCredits ?? 0}
                 </span>
-                <span className="text-[12px] text-[var(--dw-text-muted)]">
-                  {isPro ? "unlimited" : "remaining"}
-                </span>
+                <span className="text-[12px] text-[var(--dw-text-muted)]">remaining</span>
               </div>
             </div>
           </div>
 
-          {!isPro && (
-            <div className="mt-4 rounded-md bg-[var(--dw-bg-secondary)] p-3">
-              <div className="flex items-center justify-between gap-4">
-                <div>
-                  <p className="text-[12px] font-medium text-[var(--dw-text)]">Need more credits?</p>
-                  <p className="text-[11px] text-[var(--dw-text-muted)]">
-                    Each AI-generated image uses 1 credit
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="border-[var(--dw-border)]"
-                  onClick={() => setShowBuyCredits(true)}
-                >
-                  Buy Credits
-                </Button>
+          <div className="mt-4 rounded-md bg-[var(--dw-bg-secondary)] p-3">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[12px] font-medium text-[var(--dw-text)]">Need more credits?</p>
+                <p className="text-[11px] text-[var(--dw-text-muted)]">
+                  Each AI-generated image uses 1 credit
+                </p>
               </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="border-[var(--dw-border)]"
+                onClick={() => setShowBuyCredits(true)}
+              >
+                Buy Credits
+              </Button>
             </div>
-          )}
+          </div>
 
           {isPro && (
             <p className="mt-3 text-[11px] text-[var(--dw-text-muted)]">
-              PRO members have unlimited image generation credits.
+              PRO members receive 50 credits per month with their subscription.
             </p>
           )}
         </section>

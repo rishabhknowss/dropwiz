@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { ArrowLeft01Icon } from "@hugeicons/core-free-icons";
 import { Button } from "@/components/ui/button";
-import { DWLogo } from "@/components/dw/Logo";
 import { DWChip } from "@/components/dw/Chip";
 import { PublishButton } from "../publish/PublishButton";
 import { PageSelector } from "../PageSelector";
@@ -31,9 +30,9 @@ export const EditorHeader = ({
     >
       <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
     </Link>
-    <div className="hidden md:block">
-      <DWLogo size={28} />
-    </div>
+    <Link href="/" className="hidden text-[18px] font-bold tracking-tight text-[var(--dw-text)] md:block">
+      drop<span className="text-[var(--dw-accent)]">wiz</span>
+    </Link>
     <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[12px] text-[color:var(--dw-text-dim)] md:flex-none md:gap-2 md:text-[13px]">
       <span className="hidden opacity-50 md:inline">/</span>
       <span className="max-w-[100px] truncate text-[color:var(--dw-text)] md:max-w-[180px]">

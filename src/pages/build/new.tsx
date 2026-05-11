@@ -39,7 +39,7 @@ const SOURCES: SourceConfig[] = [
     title: "Import from supplier",
     blurb: "AliExpress, Amazon, Etsy, TikTok Shop — paste any product link.",
     icon: PackageDeliveredIcon,
-    tone: "#5235EF",
+    tone: "#00FFCC",
     placeholder: "https://www.amazon.com/dp/B0...",
     hint: "Supplier or marketplace URL",
   },
@@ -48,7 +48,7 @@ const SOURCES: SourceConfig[] = [
     title: "Import from competitor",
     blurb: "Paste any Shopify store URL — we'll learn from their listing.",
     icon: Store01Icon,
-    tone: "#8771FF",
+    tone: "#FFB347",
     placeholder: "https://competitor.com/products/...",
     hint: "Competitor product or store URL",
   },
@@ -66,7 +66,7 @@ const SOURCES: SourceConfig[] = [
     title: "Create with AI",
     blurb: "Describe your product idea and let AI generate everything.",
     icon: MagicWand01Icon,
-    tone: "#5235EF",
+    tone: "#FF6B9D",
     placeholder: "",
     hint: "Describe your product",
   },
@@ -249,107 +249,126 @@ const BuildNew = () => {
 
   const content = (
     <>
-      <div className="mb-3 inline-flex items-center gap-2 text-[11px] font-medium uppercase tracking-wider text-[var(--dw-text-muted)]">
-        <span className="size-1.5 rounded-full bg-[var(--dw-accent)]" />
-        New store
+      <div className="mb-4 inline-flex items-center gap-2.5 rounded-full bg-[var(--dw-accent)]/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--dw-accent)]">
+        <span className="size-1.5 rounded-full bg-[var(--dw-accent)] animate-pulse" />
+        Create Store
       </div>
-      <h1 className="text-[32px] font-bold leading-[1.1] text-[var(--dw-text)] md:text-[40px]">
-        How do you want to start
-        <span className="text-[var(--dw-accent)]">?</span>
+      <h1 className="dw-display text-[36px] text-[var(--dw-text)] md:text-[48px] lg:text-[56px]">
+        How do you want to
+        <br />
+        <span className="dw-gradient-text">get started?</span>
       </h1>
-      <p className="mt-3 max-w-[560px] text-[15px] leading-relaxed text-[var(--dw-text-muted)]">
-        Choose where your product comes from — we&apos;ll scrape it, write the
-        copy, generate the imagery, and ship a full store.
+      <p className="mt-4 max-w-[520px] text-[15px] leading-relaxed text-[var(--dw-text-muted)]">
+        Choose your product source. We&apos;ll handle the scraping, AI copywriting,
+        image generation, and build you a complete store.
       </p>
 
-      <div className="mt-8 grid grid-cols-1 gap-4 md:mt-10 md:grid-cols-2 lg:grid-cols-4">
-        {SOURCES.map((s) => (
+      <div className="mt-10 grid grid-cols-1 gap-4 md:mt-12 md:grid-cols-2 lg:grid-cols-4">
+        {SOURCES.map((s, i) => (
           <SourceCard
             key={s.id}
             source={s}
             selected={source === s.id}
             onSelect={() => handleSelectSource(s.id)}
+            index={i}
           />
         ))}
       </div>
 
       {active && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
           <form
             onSubmit={handleSubmit}
-            className="relative w-full max-w-[500px] rounded-2xl border border-[var(--dw-border)] bg-[var(--dw-surface)] p-6 shadow-2xl"
+            className="animate-scale-in relative w-full max-w-[520px] overflow-hidden rounded-2xl border border-[var(--dw-border)] bg-[var(--dw-surface)] shadow-2xl"
           >
-            <button
-              type="button"
-              onClick={() => setSource(null)}
-              className="absolute right-4 top-4 flex size-8 items-center justify-center rounded-full text-[var(--dw-text-subtle)] transition hover:bg-[var(--dw-bg-tertiary)] hover:text-[var(--dw-text)]"
-            >
-              <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
+            <div className="dw-grid-pattern absolute inset-0 opacity-30" />
+            <div className="relative p-6">
+              <button
+                type="button"
+                onClick={() => setSource(null)}
+                className="absolute right-4 top-4 flex size-9 items-center justify-center rounded-xl text-[var(--dw-text-subtle)] transition-all hover:bg-[var(--dw-surface2)] hover:text-[var(--dw-text)]"
+              >
+                <svg className="size-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
 
-            <div className="mb-1 text-[18px] font-bold text-[var(--dw-text)]">{active.title}</div>
-            <div className="mb-5 text-[14px] text-[var(--dw-text-muted)]">{active.blurb}</div>
+              <div className="mb-1 text-[20px] font-bold tracking-tight text-[var(--dw-text)]">{active.title}</div>
+              <div className="mb-6 text-[14px] text-[var(--dw-text-muted)]">{active.blurb}</div>
 
-            <div className="text-[11px] font-medium uppercase tracking-wider text-[var(--dw-text-muted)]">
-              {active.hint}
-            </div>
-            {source === "ai" ? (
-              <textarea
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                placeholder="e.g., A premium wireless noise-cancelling headphone for remote workers, with 40-hour battery life and comfortable memory foam ear cushions..."
-                rows={4}
-                autoFocus
-                className="mt-2 w-full rounded-xl border border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] p-4 text-[14px] text-[var(--dw-text)] placeholder:text-[var(--dw-text-subtle)] focus:border-[var(--dw-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--dw-accent)]/20"
-              />
-            ) : (
-              <div className="relative mt-2">
-                <HugeiconsIcon
-                  icon={LinkSquare01Icon}
-                  size={16}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)]"
-                />
-                <Input
-                  type="url"
-                  required
+              <div className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--dw-text-subtle)]">
+                {active.hint}
+              </div>
+              {source === "ai" ? (
+                <textarea
+                  value={aiPrompt}
+                  onChange={(e) => setAiPrompt(e.target.value)}
+                  placeholder="e.g., A premium wireless noise-cancelling headphone for remote workers, with 40-hour battery life and comfortable memory foam ear cushions..."
+                  rows={4}
                   autoFocus
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  placeholder={active.placeholder}
-                  className="h-12 rounded-xl border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] pl-11 text-[14px] focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20"
+                  className="mt-2 w-full rounded-xl border border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] p-4 text-[14px] text-[var(--dw-text)] placeholder:text-[var(--dw-text-subtle)] transition-all focus:border-[var(--dw-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--dw-accent)]/20"
+                />
+              ) : (
+                <div className="relative mt-2">
+                  <HugeiconsIcon
+                    icon={LinkSquare01Icon}
+                    size={16}
+                    className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)]"
+                  />
+                  <Input
+                    type="url"
+                    required
+                    autoFocus
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder={active.placeholder}
+                    className="h-13 rounded-xl border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] pl-11 text-[14px] transition-all focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20"
+                  />
+                </div>
+              )}
+
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                <LocaleField
+                  label="Language"
+                  value={language}
+                  onChange={setLanguage}
+                  options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}
+                />
+                <LocaleField
+                  label="Currency"
+                  value={currency}
+                  onChange={setCurrency}
+                  options={CURRENCIES.map((c) => ({ value: c, label: c }))}
                 />
               </div>
-            )}
 
-            <div className="mt-5 grid grid-cols-2 gap-4">
-              <LocaleField
-                label="Language"
-                value={language}
-                onChange={setLanguage}
-                options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}
-              />
-              <LocaleField
-                label="Currency"
-                value={currency}
-                onChange={setCurrency}
-                options={CURRENCIES.map((c) => ({ value: c, label: c }))}
-              />
+              <Button
+                type="submit"
+                className="mt-6 h-13 w-full gap-2.5 rounded-xl bg-gradient-to-r from-[var(--dw-accent)] to-[var(--dw-accent-hover)] text-[14px] font-semibold text-[#0A0A0A] shadow-lg shadow-[var(--dw-accent)]/20 transition-all hover:shadow-[var(--dw-accent)]/30 hover:brightness-110"
+                disabled={create.isPending}
+              >
+                {create.isPending ? (
+                  <>
+                    <div className="h-4 w-4 rounded-full border-2 border-[#0A0A0A]/30 border-t-[#0A0A0A] dw-spin" />
+                    Building...
+                  </>
+                ) : source === "ai" ? (
+                  <>
+                    <HugeiconsIcon icon={MagicWand01Icon} size={16} />
+                    Create with AI
+                  </>
+                ) : (
+                  <>
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+                    Generate Store
+                  </>
+                )}
+              </Button>
+
+              <p className="mt-4 text-center text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--dw-text-subtle)]">
+                {source === "ai" ? "AI generates product details + imagery" : "60 seconds · No credit card required"}
+              </p>
             </div>
-
-            <Button
-              type="submit"
-              className="mt-6 h-12 w-full gap-2 bg-gradient-to-r from-[var(--dw-accent)] to-[#8771FF] text-[14px] font-semibold text-white shadow-lg shadow-[var(--dw-accent)]/30 transition hover:opacity-90"
-              disabled={create.isPending}
-            >
-              {create.isPending ? "Generating..." : source === "ai" ? "Create with AI" : "Generate my store"}
-              <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
-            </Button>
-
-            <p className="mt-4 text-center text-[11px] font-medium uppercase tracking-wider text-[var(--dw-text-subtle)]">
-              {source === "ai" ? "AI generates product details + imagery" : "60s median · No card · No signup required"}
-            </p>
           </form>
         </div>
       )}
@@ -381,24 +400,30 @@ const SourceCard = ({
   source,
   selected,
   onSelect,
+  index = 0,
 }: {
   source: SourceConfig;
   selected: boolean;
   onSelect: () => void;
+  index?: number;
 }) => (
   <button
     type="button"
     onClick={onSelect}
-    className={`group relative flex flex-col items-start gap-4 overflow-hidden rounded-2xl border p-5 text-left transition-all ${
+    className={`animate-slide-up group relative flex flex-col items-start gap-5 overflow-hidden rounded-2xl border p-6 text-left transition-all duration-300 ${
       selected
-        ? "border-[var(--dw-accent)] bg-[var(--dw-surface)] shadow-lg shadow-[var(--dw-accent)]/10"
-        : "border-[var(--dw-border)] bg-[var(--dw-surface)] hover:border-[var(--dw-accent)]/30 hover:shadow-lg"
+        ? "border-[var(--dw-accent)]/50 bg-[var(--dw-surface)] shadow-xl shadow-[var(--dw-accent)]/10"
+        : "border-[var(--dw-border)] bg-[var(--dw-surface)] hover:border-[var(--dw-accent)]/30 hover:shadow-xl hover:shadow-black/20"
     }`}
+    style={{ animationDelay: `${index * 75}ms`, animationFillMode: "both" }}
   >
+    {selected && (
+      <div className="absolute inset-0 bg-gradient-to-br from-[var(--dw-accent)]/5 to-transparent" />
+    )}
     <div
-      className="flex size-14 items-center justify-center rounded-xl transition-transform group-hover:scale-105"
+      className="relative flex size-14 items-center justify-center rounded-xl transition-all duration-300 group-hover:scale-105"
       style={{
-        background: `linear-gradient(135deg, ${source.tone}20 0%, ${source.tone}08 100%)`,
+        background: `linear-gradient(135deg, ${source.tone}18 0%, ${source.tone}08 100%)`,
       }}
     >
       {source.image ? (
@@ -407,22 +432,22 @@ const SourceCard = ({
         <HugeiconsIcon icon={source.icon} size={26} style={{ color: source.tone }} />
       ) : null}
     </div>
-    <div className="space-y-1.5">
-      <div className="text-[16px] font-semibold text-[var(--dw-text)]">{source.title}</div>
+    <div className="relative space-y-2">
+      <div className="text-[16px] font-bold tracking-tight text-[var(--dw-text)]">{source.title}</div>
       <div className="text-[13px] leading-relaxed text-[var(--dw-text-muted)]">
         {source.blurb}
       </div>
     </div>
     <div
-      className={`mt-auto inline-flex items-center gap-1.5 pt-2 text-[11px] font-medium uppercase tracking-wider transition ${
+      className={`relative mt-auto inline-flex items-center gap-2 pt-1 text-[10px] font-semibold uppercase tracking-[0.1em] transition-all ${
         selected ? "text-[var(--dw-accent)]" : "text-[var(--dw-text-subtle)] group-hover:text-[var(--dw-accent)]"
       }`}
     >
-      {selected ? "Selected" : "Choose"}
+      {selected ? "Selected" : "Choose this"}
       <HugeiconsIcon
         icon={ArrowRight01Icon}
-        size={11}
-        className={`transition-transform ${selected ? "translate-x-0.5" : "group-hover:translate-x-0.5"}`}
+        size={12}
+        className={`transition-transform duration-300 ${selected ? "translate-x-0.5" : "group-hover:translate-x-1"}`}
       />
     </div>
   </button>
@@ -440,13 +465,13 @@ const LocaleField = ({
   options: Array<{ value: string; label: string }>;
 }) => (
   <div className="space-y-2">
-    <span className="text-[12px] font-medium text-[var(--dw-text-muted)]">
+    <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--dw-text-subtle)]">
       {label}
     </span>
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="h-12 w-full rounded-xl border border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] px-4 text-[14px] text-[var(--dw-text)] focus:border-[var(--dw-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--dw-accent)]/20"
+      className="h-12 w-full cursor-pointer rounded-xl border border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] px-4 text-[14px] text-[var(--dw-text)] transition-all focus:border-[var(--dw-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--dw-accent)]/20"
     >
       {options.map((o) => (
         <option key={o.value} value={o.value}>

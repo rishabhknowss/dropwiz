@@ -13,20 +13,20 @@ import {
   ChartLineData02Icon,
   ArrowDown01Icon,
   CheckmarkCircle01Icon,
+  SparklesIcon,
 } from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { api } from "@/utils/api";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/trpc-errors";
 import { useShop } from "@/lib/shop-context";
-import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { DWLogo } from "@/components/dw/Logo";
+import { Spinner } from "@/components/ui/loaders";
 import type { RouterOutputs } from "@/utils/api";
 
 type NavItem = {
@@ -54,13 +54,24 @@ const NavLink = ({ item, onClick, isActive }: NavLinkProps) => (
     href={item.href}
     onClick={onClick}
     className={cn(
-      "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
+      "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200",
       isActive
         ? "bg-[var(--dw-accent-subtle)] text-[var(--dw-accent)]"
-        : "text-[var(--dw-text-muted)] hover:bg-[var(--dw-bg-tertiary)] hover:text-[var(--dw-text)]"
+        : "text-[var(--dw-text-muted)] hover:bg-[var(--dw-surface-hover)] hover:text-[var(--dw-text)]"
     )}
   >
-    <HugeiconsIcon icon={item.icon} size={18} strokeWidth={1.5} />
+    {isActive && (
+      <div className="absolute left-0 top-1/2 h-5 w-[3px] -translate-y-1/2 rounded-r-full bg-[var(--dw-accent)]" />
+    )}
+    <HugeiconsIcon
+      icon={item.icon}
+      size={18}
+      strokeWidth={1.5}
+      className={cn(
+        "transition-colors",
+        isActive ? "text-[var(--dw-accent)]" : "text-[var(--dw-text-subtle)] group-hover:text-[var(--dw-text-muted)]"
+      )}
+    />
     {item.label}
   </Link>
 );
@@ -76,14 +87,15 @@ const StoreSelector = ({ shops, selectedShop, onSelectShop }: StoreSelectorProps
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex w-full items-center gap-2.5 rounded-lg bg-[var(--dw-bg-tertiary)] px-3 py-2 text-left transition-colors hover:bg-[var(--dw-border)]">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-[var(--dw-accent)] text-white">
-          <HugeiconsIcon icon={ShoppingBag01Icon} size={14} />
+      <DropdownMenuTrigger className="flex w-full items-center gap-3 rounded-xl bg-[var(--dw-surface2)] px-3 py-2.5 text-left transition-all hover:bg-[var(--dw-surface-hover)]">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-[var(--dw-accent)] to-[var(--dw-accent-hover)]">
+          <HugeiconsIcon icon={ShoppingBag01Icon} size={14} className="text-[#0A0A0A]" />
         </div>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[12px] font-semibold text-[var(--dw-text)]">
             {selectedShop?.replace(".myshopify.com", "") ?? "Select store"}
           </p>
+          <p className="text-[10px] text-[var(--dw-text-subtle)]">Connected store</p>
         </div>
         <HugeiconsIcon icon={ArrowDown01Icon} size={14} className="shrink-0 text-[var(--dw-text-subtle)]" />
       </DropdownMenuTrigger>
@@ -127,15 +139,15 @@ const SidebarContent = ({
   isSigningOut,
 }: SidebarContentProps) => (
   <div className="flex h-full flex-col">
-    <div className="flex h-14 items-center border-b border-[var(--dw-border)] px-4">
-      <Link href="/app/stores">
-        <DWLogo size={28} />
+    <div className="flex h-16 items-center px-5">
+      <Link href="/app/stores" className="text-[17px] font-bold tracking-tight text-[var(--dw-text)]">
+        drop<span className="text-[var(--dw-accent)]">wiz</span>
       </Link>
     </div>
 
-    <div className="flex-1 overflow-y-auto p-3">
+    <div className="flex-1 overflow-y-auto px-3 py-2">
       {shops.length > 0 && (
-        <div className="mb-3">
+        <div className="mb-4">
           <StoreSelector shops={shops} selectedShop={selectedShop} onSelectShop={onSelectShop} />
         </div>
       )}
@@ -143,13 +155,18 @@ const SidebarContent = ({
       <Link
         href="/build/new"
         onClick={onNavClick}
-        className="mb-4 flex items-center justify-center gap-2 rounded-lg bg-[var(--dw-accent)] px-4 py-2.5 text-[13px] font-semibold text-white transition-colors hover:bg-[var(--dw-accent-hover)]"
+        className="group mb-5 flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[var(--dw-accent)] to-[var(--dw-accent-hover)] px-4 py-3 text-[13px] font-semibold text-[#0A0A0A] shadow-lg shadow-[var(--dw-accent)]/20 transition-all hover:shadow-[var(--dw-accent)]/30 hover:brightness-110"
       >
-        <HugeiconsIcon icon={Add01Icon} size={16} />
-        New Store
+        <HugeiconsIcon icon={SparklesIcon} size={16} className="transition-transform group-hover:scale-110" />
+        Create Store
       </Link>
 
-      <nav className="space-y-0.5">
+      <div className="mb-2 px-3">
+        <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--dw-text-subtle)]">
+          Navigation
+        </span>
+      </div>
+      <nav className="space-y-1">
         {NAV_ITEMS.map((item) => (
           <NavLink key={item.label} item={item} onClick={onNavClick} isActive={isActive(item.href)} />
         ))}
@@ -161,19 +178,19 @@ const SidebarContent = ({
         href="/app/settings"
         onClick={onNavClick}
         className={cn(
-          "flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium transition-colors",
+          "flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium transition-all duration-200",
           isActive("/app/settings")
             ? "bg-[var(--dw-accent-subtle)] text-[var(--dw-accent)]"
-            : "text-[var(--dw-text-muted)] hover:bg-[var(--dw-bg-tertiary)] hover:text-[var(--dw-text)]"
+            : "text-[var(--dw-text-muted)] hover:bg-[var(--dw-surface-hover)] hover:text-[var(--dw-text)]"
         )}
       >
-        <HugeiconsIcon icon={Settings01Icon} size={18} strokeWidth={1.5} />
+        <HugeiconsIcon icon={Settings01Icon} size={18} strokeWidth={1.5} className="text-[var(--dw-text-subtle)]" />
         Settings
       </Link>
       <button
         onClick={onSignOut}
         disabled={isSigningOut}
-        className="mt-0.5 flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-[13px] font-medium text-[var(--dw-text-muted)] transition-colors hover:bg-[var(--dw-error-bg)] hover:text-[var(--dw-error)]"
+        className="mt-1 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-[13px] font-medium text-[var(--dw-text-muted)] transition-all hover:bg-[var(--dw-error-bg)] hover:text-[var(--dw-error)]"
       >
         <HugeiconsIcon icon={Logout01Icon} size={18} strokeWidth={1.5} />
         {isSigningOut ? "Signing out..." : "Sign out"}
@@ -239,58 +256,78 @@ export const DashboardLayout = ({
   };
 
   return (
-    <div className="flex min-h-screen bg-[var(--dw-bg-secondary)]">
-      <aside className="fixed inset-y-0 left-0 z-50 hidden w-[220px] border-r border-[var(--dw-border)] bg-[var(--dw-surface)] lg:block">
+    <div className="flex min-h-screen bg-[var(--dw-bg)]">
+      <aside className="fixed inset-y-0 left-0 z-50 hidden w-[240px] border-r border-[var(--dw-border)] bg-[var(--dw-bg-secondary)] lg:block">
         <SidebarContent {...sidebarProps} />
       </aside>
 
-      <div className="flex flex-1 flex-col lg:pl-[220px]">
-        <header className="sticky top-0 z-40 flex h-14 items-center justify-between border-b border-[var(--dw-border)] bg-[var(--dw-surface)] px-4 lg:px-6">
-          <div className="flex items-center gap-3">
+      <div className="flex flex-1 flex-col lg:pl-[240px]">
+        <header className="sticky top-0 z-40 flex h-16 items-center justify-between border-b border-[var(--dw-border)] bg-[var(--dw-bg)]/80 px-4 backdrop-blur-xl lg:px-6">
+          <div className="flex items-center gap-4">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="flex h-9 w-9 items-center justify-center rounded-lg text-[var(--dw-text-muted)] transition-colors hover:bg-[var(--dw-bg-tertiary)] lg:hidden"
+              className="flex h-10 w-10 items-center justify-center rounded-xl text-[var(--dw-text-muted)] transition-all hover:bg-[var(--dw-surface)] lg:hidden"
             >
               <HugeiconsIcon icon={Menu01Icon} size={20} />
             </button>
             {title && (
               <div>
-                <h1 className="text-[15px] font-semibold text-[var(--dw-text)]">{title}</h1>
+                <h1 className="text-[16px] font-semibold tracking-tight text-[var(--dw-text)]">{title}</h1>
                 {subtitle && <p className="text-[12px] text-[var(--dw-text-muted)]">{subtitle}</p>}
               </div>
             )}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             {me.data && (
-              <div className="hidden items-center gap-1.5 rounded-lg bg-[var(--dw-bg-tertiary)] px-3 py-1.5 md:flex">
-                <span className="text-[13px] font-semibold text-[var(--dw-text)]">
+              <div className="hidden items-center gap-2 rounded-xl bg-[var(--dw-surface)] px-3.5 py-2 md:flex">
+                <div className="flex h-5 w-5 items-center justify-center rounded-md bg-[var(--dw-secondary-subtle)]">
+                  <HugeiconsIcon icon={SparklesIcon} size={12} className="text-[var(--dw-secondary)]" />
+                </div>
+                <span className="dw-mono text-[13px] font-semibold text-[var(--dw-text)]">
                   {me.data.imageCredits ?? 0}
                 </span>
-                <span className="text-[12px] text-[var(--dw-text-muted)]">credits</span>
+                <span className="text-[11px] text-[var(--dw-text-subtle)]">credits</span>
               </div>
             )}
-            <ThemeToggle />
             {action}
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--dw-accent)] text-[12px] font-semibold text-white">
-              {me.data?.email?.[0]?.toUpperCase() ?? "?"}
-            </div>
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-[var(--dw-accent)] to-[var(--dw-accent-hover)] text-[12px] font-bold text-[#0A0A0A] transition-all hover:opacity-90">
+                {me.data?.email?.[0]?.toUpperCase() ?? "?"}
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-[180px]">
+                <DropdownMenuItem asChild>
+                  <Link href="/app/settings" className="flex items-center gap-2 text-[13px]">
+                    <HugeiconsIcon icon={Settings01Icon} size={14} />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  disabled={signOut.isPending}
+                  className="flex items-center gap-2 text-[13px] text-[var(--dw-error)] focus:text-[var(--dw-error)]"
+                >
+                  <HugeiconsIcon icon={Logout01Icon} size={14} />
+                  {signOut.isPending ? "Signing out..." : "Sign out"}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
-        <main className="flex-1 p-4 lg:p-6">{children}</main>
+        <main className="flex-1 p-4 lg:p-8">{children}</main>
       </div>
 
       {sidebarOpen && (
         <div className="fixed inset-0 z-[100] flex lg:hidden">
           <div
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setSidebarOpen(false)}
           />
-          <aside className="relative w-[260px] bg-[var(--dw-surface)] shadow-xl">
+          <aside className="relative w-[280px] bg-[var(--dw-bg-secondary)] shadow-2xl">
             <button
               onClick={() => setSidebarOpen(false)}
-              className="absolute right-3 top-3 flex h-8 w-8 items-center justify-center rounded-lg text-[var(--dw-text-muted)] hover:bg-[var(--dw-bg-tertiary)]"
+              className="absolute right-3 top-4 flex h-9 w-9 items-center justify-center rounded-xl text-[var(--dw-text-muted)] transition-all hover:bg-[var(--dw-surface)]"
             >
               <HugeiconsIcon icon={Cancel01Icon} size={18} />
             </button>

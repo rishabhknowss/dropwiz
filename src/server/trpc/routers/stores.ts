@@ -389,6 +389,23 @@ export const storesRouter = router({
     });
   }),
 
+  deleteStore: protectedProcedure
+    .input(z.object({ storeId: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const rows = await db
+        .select({ id: stores.id })
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      if (!rows[0]) throw new TRPCError({ code: "NOT_FOUND" });
+
+      await db.delete(assets).where(eq(assets.storeId, input.storeId));
+
+      await db.delete(stores).where(eq(stores.id, input.storeId));
+
+      return { success: true };
+    }),
+
   getMine: protectedProcedure
     .input(z.object({ storeId: z.string().uuid() }))
     .query(async ({ ctx, input }) => {

@@ -114,9 +114,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             image: profile.picture,
             locale: profile.locale?.slice(0, 10) ?? "en",
             emailVerified: new Date(),
+            imageCredits: 10,
           })
           .returning({ id: users.id });
         userId = created.id;
+        console.log(`[auth] New Google user created: ${created.id}, email: ${emailLower}, credits: 10`);
       }
 
       await db
@@ -176,6 +178,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       res.setHeader("Set-Cookie", clearCookie);
     }
 
+    if (pendingRedirect === "claim") {
+      return res.redirect(302, "/build/claim");
+    }
     if (pendingRedirect === "build") {
       return res.redirect(302, "/build/new?pending=true");
     }
