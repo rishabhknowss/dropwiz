@@ -335,43 +335,8 @@ export async function runStoreGeneration(
         console.error("[store-gen] batch image generation failed:", err);
         console.log(`[store-gen] Continuing with original images as fallback`);
       }
-    } else if (referenceImageUrl && hasValidR2Reference) {
-      try {
-        console.log(`[store-gen] Step 4a: Generating image prompts with Claude...`);
-        const promptGenStart = Date.now();
-        let customPrompts: { label: string; prompt: string; style: "hero" | "lifestyle" | "studio" | "editorial" | "closeup" }[] | undefined;
-
-        try {
-          const promptResult = await generateImagePrompts({
-            product: productContextForPrompts,
-            targeting: targetingForPrompts,
-            count: DEFAULT_IMAGE_COUNT,
-            storeId,
-            userId: null,
-          });
-          customPrompts = promptResult.prompts;
-          console.log(`[store-gen] Generated ${customPrompts.length} image prompts in ${Date.now() - promptGenStart}ms`);
-        } catch (promptErr) {
-          console.error("[store-gen] Prompt generation failed, using fallback:", promptErr);
-        }
-
-        console.log(`[store-gen] Step 4b: Starting AI image batch generation (no user, using defaults)...`);
-        const imageGenStart = Date.now();
-        const imageResult = await generateProductImageBatch({
-          referenceImageUrl,
-          productTitle: scraped.title ?? "Product",
-          storeId,
-          userId: null,
-          targetCount: DEFAULT_IMAGE_COUNT,
-          customPrompts,
-        });
-        generatedImages = imageResult.images;
-        console.log(`[store-gen] AI image generation complete in ${Date.now() - imageGenStart}ms`);
-        console.log(`[store-gen] Generated ${generatedImages.length} images`);
-      } catch (err) {
-        console.error("[store-gen] batch image generation failed:", err);
-        console.log(`[store-gen] Continuing with original images as fallback`);
-      }
+    } else if (referenceImageUrl && hasValidR2Reference && !storeRow.userId) {
+      console.log(`[store-gen] SKIPPING AI image generation - anonymous user (login required for AI images)`);
     } else if (!hasValidR2Reference) {
       console.log(`[store-gen] SKIPPING AI image generation - no R2-hosted reference image available (source images could not be rehosted)`);
     } else {

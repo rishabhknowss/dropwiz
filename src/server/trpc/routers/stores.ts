@@ -6,7 +6,6 @@ import { db } from "@/db";
 import { stores, products, assets, users, accounts, type StoreSection, type StorePage } from "@/db/schema";
 import { getShopPaymentSettings } from "@/lib/shopify/import";
 
-const FREE_TIERS = ["free", "starter"] as const;
 import { createPageFromTemplate, PAGE_TEMPLATES } from "@/lib/page-templates";
 import {
   createPendingStore,
@@ -897,11 +896,10 @@ export const storesRouter = router({
       if (!user) throw new TRPCError({ code: "NOT_FOUND" });
 
       const count = input.count ?? 1;
-      const isFreeTier = FREE_TIERS.includes(user.tier as (typeof FREE_TIERS)[number]);
-      if (isFreeTier && user.imageCredits < count) {
+      if (user.imageCredits < count) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: `Not enough image credits. Need ${count}, have ${user.imageCredits}. Upgrade to Pro for unlimited.`,
+          message: `Not enough image credits. Need ${count}, have ${user.imageCredits}. Purchase more credits to continue.`,
         });
       }
 
@@ -942,19 +940,17 @@ export const storesRouter = router({
           throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
         }
 
-        if (isFreeTier) {
-          await db
-            .update(users)
-            .set({ imageCredits: sql`${users.imageCredits} - ${count}` })
-            .where(eq(users.id, ctx.user.id));
-        }
+        await db
+          .update(users)
+          .set({ imageCredits: sql`GREATEST(${users.imageCredits} - ${count}, 0)` })
+          .where(eq(users.id, ctx.user.id));
 
         return {
           assetId: first.assetId,
           imageUrl: first.imageUrl,
           r2Key: first.r2Key,
           variants: result.variants,
-          creditsRemaining: isFreeTier ? user.imageCredits - count : null,
+          creditsRemaining: user.imageCredits - count,
         };
       }
 
@@ -974,12 +970,10 @@ export const storesRouter = router({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
       }
 
-      if (isFreeTier) {
-        await db
-          .update(users)
-          .set({ imageCredits: sql`${users.imageCredits} - ${count}` })
-          .where(eq(users.id, ctx.user.id));
-      }
+      await db
+        .update(users)
+        .set({ imageCredits: sql`GREATEST(${users.imageCredits} - ${count}, 0)` })
+        .where(eq(users.id, ctx.user.id));
 
       return {
         assetId: asset.id,
@@ -992,7 +986,7 @@ export const storesRouter = router({
             imageUrl: a.publicUrl as string,
             r2Key: a.r2Key,
           })),
-        creditsRemaining: isFreeTier ? user.imageCredits - count : null,
+        creditsRemaining: user.imageCredits - count,
       };
     }),
 
@@ -1084,11 +1078,10 @@ export const storesRouter = router({
       const user = userRows[0];
       if (!user) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const isFreeTier = FREE_TIERS.includes(user.tier as (typeof FREE_TIERS)[number]);
-      if (isFreeTier && user.imageCredits < count) {
+      if (user.imageCredits < count) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: `Not enough credits. Need ${count}, have ${user.imageCredits}.`,
+          message: `Not enough credits. Need ${count}, have ${user.imageCredits}. Purchase more credits to continue.`,
         });
       }
 
@@ -1122,12 +1115,10 @@ export const storesRouter = router({
       const newImageUrl = result.assets[0]?.publicUrl;
       if (!newImageUrl) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
 
-      if (isFreeTier) {
-        await db
-          .update(users)
-          .set({ imageCredits: sql`${users.imageCredits} - ${count}` })
-          .where(eq(users.id, ctx.user.id));
-      }
+      await db
+        .update(users)
+        .set({ imageCredits: sql`GREATEST(${users.imageCredits} - ${count}, 0)` })
+        .where(eq(users.id, ctx.user.id));
 
       const next = [...store.sections];
       next[heroIdx] = {
@@ -1149,7 +1140,7 @@ export const storesRouter = router({
             imageUrl: a.publicUrl as string,
             r2Key: a.r2Key,
           })),
-        creditsRemaining: isFreeTier ? user.imageCredits - count : null,
+        creditsRemaining: user.imageCredits - count,
       };
     }),
 

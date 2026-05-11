@@ -54,6 +54,8 @@ const handleCreditsPurchase = async (
   });
 };
 
+const PRO_MONTHLY_CREDITS = 100;
+
 const handleCheckoutCompleted = async (event: Stripe.Event): Promise<void> => {
   const session = event.data.object as Stripe.Checkout.Session;
   const userId = session.client_reference_id;
@@ -82,6 +84,7 @@ const handleCheckoutCompleted = async (event: Stripe.Event): Promise<void> => {
       stripeCustomerId: customerId,
       tier: "pro",
       billingSource: "stripe",
+      imageCredits: sql`${users.imageCredits} + ${PRO_MONTHLY_CREDITS}`,
       updatedAt: new Date(),
     })
     .where(eq(users.id, userId));
@@ -177,6 +180,40 @@ const handleSubscriptionDeleted = async (event: Stripe.Event): Promise<void> => 
   }
 };
 
+const handleInvoicePaid = async (event: Stripe.Event): Promise<void> => {
+  const invoice = event.data.object as Stripe.Invoice;
+  const subscriptionId = (invoice as unknown as { subscription?: string }).subscription;
+  const billingReason = (invoice as unknown as { billing_reason?: string }).billing_reason;
+
+  if (!subscriptionId) return;
+  if (billingReason === "subscription_create") return;
+
+  const [sub] = await db
+    .select({ userId: subscriptions.userId })
+    .from(subscriptions)
+    .where(eq(subscriptions.stripeSubscriptionId, subscriptionId))
+    .limit(1);
+
+  if (sub) {
+    await db
+      .update(users)
+      .set({
+        imageCredits: sql`${users.imageCredits} + ${PRO_MONTHLY_CREDITS}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, sub.userId));
+
+    await db.insert(authEvents).values({
+      userId: sub.userId,
+      kind: "stripe.credits_renewed",
+      ip: "webhook",
+      userAgent: "stripe-webhook",
+      success: 1,
+      metadata: JSON.stringify({ subscriptionId, credits: PRO_MONTHLY_CREDITS }),
+    });
+  }
+};
+
 const handlePaymentFailed = async (event: Stripe.Event): Promise<void> => {
   const invoice = event.data.object as Stripe.Invoice;
   const subscriptionId = (invoice as unknown as { subscription?: string }).subscription;
@@ -216,6 +253,7 @@ const handlers: Record<string, (event: Stripe.Event) => Promise<void>> = {
   "checkout.session.completed": handleCheckoutCompleted,
   "customer.subscription.updated": handleSubscriptionUpdated,
   "customer.subscription.deleted": handleSubscriptionDeleted,
+  "invoice.paid": handleInvoicePaid,
   "invoice.payment_failed": handlePaymentFailed,
 };
 

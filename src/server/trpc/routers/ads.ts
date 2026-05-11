@@ -9,7 +9,6 @@ import { composeAdPrompt } from "@/lib/ai/ad-prompt";
 import { resolveProductImageUrl } from "@/lib/ai/product-image";
 import { protectedProcedure, router } from "../trpc";
 
-const FREE_TIERS = ["free", "starter"] as const;
 const CREDITS_PER_IMAGE = 1;
 
 export const adsRouter = router({
@@ -100,10 +99,8 @@ export const adsRouter = router({
       .limit(1);
     const user = userRows[0];
     if (!user) throw new TRPCError({ code: "NOT_FOUND" });
-    const isFreeTier = FREE_TIERS.includes(user.tier as (typeof FREE_TIERS)[number]);
     return {
       credits: user.imageCredits,
-      unlimited: !isFreeTier,
       tier: user.tier,
     };
   }),
@@ -133,11 +130,10 @@ export const adsRouter = router({
       const user = userRows[0];
       if (!user) throw new TRPCError({ code: "NOT_FOUND" });
 
-      const isFreeTier = FREE_TIERS.includes(user.tier as (typeof FREE_TIERS)[number]);
-      if (isFreeTier && user.imageCredits < CREDITS_PER_IMAGE) {
+      if (user.imageCredits < CREDITS_PER_IMAGE) {
         throw new TRPCError({
           code: "PRECONDITION_FAILED",
-          message: "Not enough image credits. Upgrade to Pro for unlimited generations.",
+          message: "Not enough image credits. Purchase more credits to continue.",
         });
       }
 
@@ -187,12 +183,10 @@ export const adsRouter = router({
         userId: ctx.user.id,
       });
 
-      if (isFreeTier) {
-        await db
-          .update(users)
-          .set({ imageCredits: sql`${users.imageCredits} - ${CREDITS_PER_IMAGE}` })
-          .where(eq(users.id, ctx.user.id));
-      }
+      await db
+        .update(users)
+        .set({ imageCredits: sql`GREATEST(${users.imageCredits} - ${CREDITS_PER_IMAGE}, 0)` })
+        .where(eq(users.id, ctx.user.id));
 
       return {
         assetId: result.assetId,
@@ -200,7 +194,7 @@ export const adsRouter = router({
         prompt,
         aspectRatio,
         costUsd: result.costUsd,
-        creditsRemaining: isFreeTier ? user.imageCredits - CREDITS_PER_IMAGE : null,
+        creditsRemaining: user.imageCredits - CREDITS_PER_IMAGE,
       };
     }),
 

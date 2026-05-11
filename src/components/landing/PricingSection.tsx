@@ -24,6 +24,7 @@ const PLANS = [
     price: "$79",
     features: [
       "Everything in Free, plus:",
+      "100 AI credits/month",
       "AI copywriting engine",
       "AI product images",
       "One-click Shopify publish",
