@@ -242,37 +242,9 @@ export const STORE_TEMPLATES: StoreTemplate[] = [
         sans: "Manrope",
         mono: "JetBrains Mono",
       },
-      radius: 999,
+      radius: 4,
       buttons: { shape: "pill", size: "md" },
     },
     layout: DEFAULT_LAYOUT,
-  },
-  {
-    id: "dm-modern",
-    name: "Modern Tech",
-    vibe: "Tech DTC · fintech-like",
-    preview: {
-      bg: "#f5f5f5",
-      primary: "#2c5ce5",
-      accent: "#2c5ce5",
-      text: "#0a0a0a",
-    },
-    tokens: {
-      preset: "dm-modern",
-      colors: {
-        background: "#f5f5f5",
-        primary: "#2c5ce5",
-        accent: "#2c5ce5",
-        text: "#0a0a0a",
-      },
-      typography: {
-        display: "DM Sans",
-        sans: "DM Sans",
-        mono: "DM Mono",
-      },
-      radius: 16,
-      buttons: { shape: "rounded", size: "md" },
-    },
-    layout: CONVERSION_LAYOUT,
   },
 ];

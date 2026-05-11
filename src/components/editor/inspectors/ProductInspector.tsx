@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { StoreSection } from "@/db/schema";
 import type { ProductData, ProductVariant, ProductSideFeature } from "@/types/store-sections";
 import { ImagePickerField, NumberField, TextField, VariantPicker, CheckboxField, IconPickerField } from "./fields";
+import { PaymentStatus } from "./PaymentStatus";
 import { api } from "@/utils/api";
 import { toast } from "sonner";
 
@@ -120,13 +121,20 @@ export const ProductInspector = ({
         kind="product"
         currentUrl={data.imageUrl}
         promptSeed={`Clean product shot of ${data.title ?? "the item"}, isolated on seamless background, studio lighting`}
-        onPick={(url) => onCommit({ imageUrl: url })}
+        onPick={(url) => {
+          const currentImages = (data.images as string[] | undefined) ?? [];
+          const filtered = currentImages.filter((img) => img !== url);
+          onCommit({ imageUrl: url, images: [url, ...filtered] });
+        }}
       />
       <CheckboxField
         label="Show payment badges"
         defaultChecked={data.showPaymentBadges !== false}
         onCommit={(v) => onCommit({ showPaymentBadges: v })}
       />
+      {data.showPaymentBadges !== false && (
+        <PaymentStatus storeId={storeId} />
+      )}
 
       {isRichVariant && (
         <>

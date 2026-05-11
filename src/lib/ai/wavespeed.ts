@@ -13,7 +13,7 @@ export const CREDITS_PER_IMAGE = 1;
 export const WAVESPEED_MODELS = {
   flux_schnell: "wavespeed-ai/flux-schnell",
   flux_dev: "wavespeed-ai/flux-dev",
-  seedream: "bytedance/seedream-v4-edit",
+  seedream: "bytedance/seedream-v4/edit",
 } as const;
 
 export type WavespeedModel = keyof typeof WAVESPEED_MODELS;
@@ -118,9 +118,9 @@ export type GenerateImageResult = {
 };
 
 const SEEDREAM_EDIT_BASE =
-  "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4.5/edit";
+  "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4/edit";
 const SEEDREAM_T2I_BASE =
-  "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4.5/text-to-image";
+  "https://api.wavespeed.ai/api/v3/bytedance/seedream-v4/text-to-image";
 const SEEDREAM_COST_USD = SEEDREAM_COST_PER_IMAGE;
 
 export type AdAspectRatio =
@@ -210,7 +210,7 @@ export async function generateAdImage(
   const startedAt = Date.now();
   const useEdit = (input.referenceImages?.length ?? 0) > 0;
   const inputHash = hashInput({
-    model: "seedream-v4.5",
+    model: "seedream-v4",
     edit: useEdit,
     prompt: input.prompt,
     size: `${width}x${height}`,
@@ -219,7 +219,7 @@ export async function generateAdImage(
 
   const body: Record<string, unknown> = {
     prompt: input.prompt,
-    size: `${width}x${height}`,
+    size: `${width}*${height}`,
     enable_sync_mode: true,
     enable_base64_output: false,
   };
@@ -255,8 +255,8 @@ export async function generateAdImage(
         bytes: result.bytes,
         prompt: input.prompt,
         model: useEdit
-          ? "bytedance/seedream-v4.5/edit"
-          : "bytedance/seedream-v4.5/text-to-image",
+          ? "bytedance/seedream-v4/edit"
+          : "bytedance/seedream-v4/text-to-image",
         metadata: { taskId: submitted.id, aspectRatio, useEdit },
       })
       .returning({ id: assets.id });
@@ -266,9 +266,9 @@ export async function generateAdImage(
       userId: input.userId ?? null,
       kind: "image",
       model: useEdit
-        ? "bytedance/seedream-v4.5/edit"
-        : "bytedance/seedream-v4.5/text-to-image",
-      promptVersion: "seedream-v4.5",
+        ? "bytedance/seedream-v4/edit"
+        : "bytedance/seedream-v4/text-to-image",
+      promptVersion: "seedream-v4",
       inputHash,
       input: { prompt: input.prompt, aspectRatio, size: `${width}x${height}`, useEdit },
       output: { assetId: asset.id },
@@ -297,9 +297,9 @@ export async function generateAdImage(
         userId: input.userId ?? null,
         kind: "image",
         model: useEdit
-          ? "bytedance/seedream-v4.5/edit"
-          : "bytedance/seedream-v4.5/text-to-image",
-        promptVersion: "seedream-v4.5",
+          ? "bytedance/seedream-v4/edit"
+          : "bytedance/seedream-v4/text-to-image",
+        promptVersion: "seedream-v4",
         inputHash,
         input: { prompt: input.prompt, aspectRatio, size: `${width}x${height}`, useEdit },
         costUsd: "0",
@@ -361,15 +361,15 @@ async function generateOneVariant(
   input: GenerateWithReferenceInput,
   variationDirection: string,
 ): Promise<{ assetId: string; imageUrl: string; r2Key: string }> {
-  const width = input.width ?? 1024;
-  const height = input.height ?? 1024;
+  const width = input.width ?? 2048;
+  const height = input.height ?? 2048;
   const startedAt = Date.now();
-  const finalPrompt = `Use the provided photo as the literal product — preserve its exact shape, color, material, finish, proportions, and surface details. Restage it as: ${input.prompt}. Style direction for this variant: ${variationDirection}. No watermark, no third-party logos, no UI chrome, photorealistic.`;
+  const finalPrompt = `Use the provided photo as the literal product — preserve its exact shape, color, material, finish, proportions, and surface details. Restage it as: ${input.prompt}. Style direction for this variant: ${variationDirection}. No watermark, no third-party logos, no UI chrome, photorealistic, ultra high quality, sharp details, professional photography.`;
   const inputHash = hashInput({
-    model: "seedream-v4.5",
+    model: "seedream-v4",
     edit: true,
     prompt: finalPrompt,
-    size: `${width}x${height}`,
+    size: `${width}*${height}`,
     refs: [input.referenceImageUrl],
   });
 
@@ -377,7 +377,7 @@ async function generateOneVariant(
     const submitted = await submitSeedream(
       {
         prompt: finalPrompt,
-        size: `${width}x${height}`,
+        size: `${width}*${height}`,
         enable_sync_mode: true,
         enable_base64_output: false,
         images: [input.referenceImageUrl],
@@ -415,7 +415,7 @@ async function generateOneVariant(
         height,
         bytes: result.bytes,
         prompt: finalPrompt,
-        model: "bytedance/seedream-v4.5/edit",
+        model: "bytedance/seedream-v4/edit",
         metadata: { taskId: submitted.id, withReference: true, variant: variationDirection },
       })
       .returning({ id: assets.id });
@@ -424,8 +424,8 @@ async function generateOneVariant(
       storeId: input.storeId,
       userId: input.userId ?? null,
       kind: "image",
-      model: "bytedance/seedream-v4.5/edit",
-      promptVersion: "seedream-v4.5",
+      model: "bytedance/seedream-v4/edit",
+      promptVersion: "seedream-v4",
       inputHash,
       input: {
         prompt: finalPrompt,
@@ -456,8 +456,8 @@ async function generateOneVariant(
         storeId: input.storeId,
         userId: input.userId ?? null,
         kind: "image",
-        model: "bytedance/seedream-v4.5/edit",
-        promptVersion: "seedream-v4.5",
+        model: "bytedance/seedream-v4/edit",
+        promptVersion: "seedream-v4",
         inputHash,
         input: {
           prompt: finalPrompt,
@@ -507,12 +507,19 @@ export async function generateImageWithReference(
   return { variants, costUsd: SEEDREAM_COST_PER_IMAGE * variants.length };
 }
 
+export type CustomImagePrompt = {
+  label: string;
+  prompt: string;
+  style: "hero" | "lifestyle" | "studio" | "editorial" | "closeup";
+};
+
 export type BatchImageInput = {
   referenceImageUrl: string;
   productTitle: string;
   storeId: string;
   userId: string | null;
   targetCount?: number;
+  customPrompts?: CustomImagePrompt[];
 };
 
 export type BatchImageResult = {
@@ -553,40 +560,107 @@ async function generateBatchVariant(
   return { ...result, kind: input.kind, style };
 }
 
+const styleToKind = (style: CustomImagePrompt["style"]): ImageKind => {
+  switch (style) {
+    case "hero":
+    case "studio":
+      return "hero";
+    case "lifestyle":
+      return "lifestyle";
+    case "editorial":
+    case "closeup":
+      return "product";
+    default:
+      return "product";
+  }
+};
+
 export async function generateProductImageBatch(
   input: BatchImageInput,
 ): Promise<BatchImageResult> {
   const count = input.targetCount ?? 12;
-  const shuffledStyles = [...PRODUCT_IMAGE_STYLES].sort(() => Math.random() - 0.5);
-  const selectedStyles = shuffledStyles.slice(0, count);
+  const hasCustomPrompts = input.customPrompts && input.customPrompts.length > 0;
+
+  console.log(`[wavespeed] Starting batch generation: ${count} images, ref=${input.referenceImageUrl?.slice(0, 50)}...`);
+  console.log(`[wavespeed] Using ${hasCustomPrompts ? "LLM-generated" : "fallback"} prompts`);
 
   const results: BatchImageResult["images"] = [];
+  const errors: string[] = [];
   const batchSize = 3;
 
-  for (let i = 0; i < selectedStyles.length; i += batchSize) {
-    const batch = selectedStyles.slice(i, i + batchSize);
-    const batchResults = await Promise.allSettled(
-      batch.map((style, batchIdx) => {
-        const globalIdx = i + batchIdx;
-        const kind = determineKind(globalIdx);
-        return generateBatchVariant(
-          {
-            referenceImageUrl: input.referenceImageUrl,
-            prompt: `Premium product photography of this exact product (${input.productTitle}). ${style}`,
-            storeId: input.storeId,
-            userId: input.userId,
-            kind,
-          },
-          style,
-        );
-      }),
-    );
+  if (hasCustomPrompts) {
+    const prompts = input.customPrompts!.slice(0, count);
 
-    for (const result of batchResults) {
-      if (result.status === "fulfilled") {
-        results.push(result.value);
+    for (let i = 0; i < prompts.length; i += batchSize) {
+      const batch = prompts.slice(i, i + batchSize);
+      console.log(`[wavespeed] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(prompts.length / batchSize)}`);
+
+      const batchResults = await Promise.allSettled(
+        batch.map((promptData) => {
+          const kind = styleToKind(promptData.style);
+          return generateBatchVariant(
+            {
+              referenceImageUrl: input.referenceImageUrl,
+              prompt: promptData.prompt,
+              storeId: input.storeId,
+              userId: input.userId,
+              kind,
+            },
+            promptData.label,
+          );
+        }),
+      );
+
+      for (const result of batchResults) {
+        if (result.status === "fulfilled") {
+          results.push(result.value);
+        } else {
+          const errorMsg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+          errors.push(errorMsg);
+          console.error(`[wavespeed] Image generation failed:`, errorMsg);
+        }
       }
     }
+  } else {
+    const shuffledStyles = [...PRODUCT_IMAGE_STYLES].sort(() => Math.random() - 0.5);
+    const selectedStyles = shuffledStyles.slice(0, count);
+
+    for (let i = 0; i < selectedStyles.length; i += batchSize) {
+      const batch = selectedStyles.slice(i, i + batchSize);
+      console.log(`[wavespeed] Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(selectedStyles.length / batchSize)}`);
+
+      const batchResults = await Promise.allSettled(
+        batch.map((style, batchIdx) => {
+          const globalIdx = i + batchIdx;
+          const kind = determineKind(globalIdx);
+          return generateBatchVariant(
+            {
+              referenceImageUrl: input.referenceImageUrl,
+              prompt: `Premium product photography of this exact product (${input.productTitle}). ${style}`,
+              storeId: input.storeId,
+              userId: input.userId,
+              kind,
+            },
+            style,
+          );
+        }),
+      );
+
+      for (const result of batchResults) {
+        if (result.status === "fulfilled") {
+          results.push(result.value);
+        } else {
+          const errorMsg = result.reason instanceof Error ? result.reason.message : String(result.reason);
+          errors.push(errorMsg);
+          console.error(`[wavespeed] Image generation failed:`, errorMsg);
+        }
+      }
+    }
+  }
+
+  console.log(`[wavespeed] Batch complete: ${results.length}/${count} successful, ${errors.length} failed`);
+  if (errors.length > 0 && results.length === 0) {
+    console.error(`[wavespeed] All images failed. First error:`, errors[0]);
   }
 
   return {

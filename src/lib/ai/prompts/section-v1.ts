@@ -14,7 +14,7 @@ const testimonialsSchema = z.object({
   title: z.string().min(1).max(100),
   testimonials: z.array(
     z.object({
-      quote: z.string().min(10).max(300),
+      quote: z.string().min(50).max(500),
       name: z.string().min(2).max(50),
       role: z.string().max(50),
       rating: z.number().int().min(1).max(5),
@@ -28,7 +28,7 @@ const valuePropsSchema = z.object({
     z.object({
       icon: z.string().min(1).max(10),
       title: z.string().min(1).max(50),
-      description: z.string().min(10).max(150),
+      description: z.string().min(10).max(300),
     })
   ).min(3).max(4),
 });
@@ -45,15 +45,15 @@ const comparisonSchema = z.object({
 
 const lifestyleSchema = z.object({
   headline: z.string().min(1).max(100),
-  body: z.string().min(20).max(300),
+  body: z.string().min(20).max(800),
 });
 
 const howItWorksSchema = z.object({
   title: z.string().min(1).max(100),
   steps: z.array(
     z.object({
-      title: z.string().min(1).max(60),
-      description: z.string().min(10).max(150),
+      title: z.string().min(1).max(80),
+      description: z.string().min(10).max(250),
       icon: z.string().max(10).optional(),
     })
   ).min(3).max(4),
@@ -63,8 +63,8 @@ const trustSchema = z.object({
   badges: z.array(
     z.object({
       icon: z.string().min(1).max(10),
-      title: z.string().min(1).max(60),
-      description: z.string().min(10).max(150),
+      title: z.string().min(1).max(80),
+      description: z.string().min(10).max(250),
     })
   ).min(3).max(4),
 });
@@ -370,18 +370,25 @@ function buildSectionPrompt(sectionType: string, product: ProductContext, target
   const targetInfo = describeTargeting(targeting);
 
   const sectionInstructions: Record<string, string> = {
-    testimonials: `Generate 6 realistic customer testimonials for this product. Each testimonial should:
-- Have a believable quote (not over-the-top, focus on specific results)
+    testimonials: `Generate 6 realistic, DETAILED customer testimonials for this product. Each testimonial should:
+- Have a LONG, detailed quote (3-4 sentences, 150-300 characters) that tells a mini-story about their experience
+- Mention specific results, timeframes, or improvements they noticed
+- Include emotional language about how the product made them feel
 - Include a realistic name (first name and last initial)
-- Include a role like "Verified Buyer" or specific context
+- Include a role like "Verified Buyer" or specific context (e.g., "Music Teacher", "Hobbyist", "Parent")
 - Have a rating of 4-5 stars
 - Be unique and diverse (different perspectives, use cases, demographics)
-The title should be engaging like "What customers are saying" or similar.`,
+
+IMPORTANT: Quotes should NOT be generic like "Great product!" - they should be specific stories.
+Example of a GOOD quote: "I was skeptical at first, but after just two weeks of using this, I noticed a significant improvement. My colleagues even commented on the difference. It's become an essential part of my daily routine and I've already recommended it to three friends."
+Example of a BAD quote: "Great product, works well. Would recommend."
+
+The title should be engaging like "What customers are saying" or "Real Results From Real People".`,
 
     valueProps: `Generate 3-4 value propositions that explain why customers should buy this product. Each value prop should:
-- Have an emoji icon that represents the benefit
-- Have a short, catchy title (3-5 words)
-- Have a brief description (1 sentence) explaining the benefit
+- Have an icon name from this list: SecurityCheckIcon, TruckIcon, StarIcon, SparklesIcon, RocketIcon, CheckmarkBadge01Icon, Award01Icon, HeartCheckIcon, Clock01Icon, RefreshIcon, LockIcon, DiamondIcon, FlashIcon, Target01Icon, GiftIcon, MusicNote01Icon, Leaf01Icon, FireIcon, ThumbsUpIcon, Shield01Icon
+- Have a short, catchy title (3-5 words, max 40 chars)
+- Have a concise description (1-2 sentences, max 200 chars) explaining the benefit
 The section title should be engaging like "Why choose us" or similar.`,
 
     comparison: `Generate 4-5 comparison rows that contrast this product with typical competitors. Each row should:
@@ -391,25 +398,26 @@ The section title should be engaging like "Why choose us" or similar.`,
 Be fair but highlight genuine differentiators.`,
 
     lifestyle: `Generate lifestyle copy that paints a picture of the customer using the product. Include:
-- A headline that speaks to aspirational outcomes
-- Body copy that describes the experience/transformation (2-3 sentences)`,
+- A headline that speaks to aspirational outcomes (max 80 chars)
+- Body copy that describes the experience/transformation (2-3 SHORT sentences, max 400 chars total)
+Keep the body concise - no fluff, just impactful statements.`,
 
     howItWorks: `Generate 3-4 steps explaining how to use this product or how it works. Each step should:
 - Have a clear, action-oriented title
 - Have a brief description explaining what happens
-- Optionally include an emoji icon`,
+- Have an icon from: HandPointingRight01Icon, Package01Icon, ShoppingCart01Icon, CheckmarkCircle01Icon, PackageDeliveredIcon, Touch01Icon, PackageOpenIcon, DeliveryTruck01Icon`,
 
     trust: `Generate 3-4 trust badges/guarantees that reassure customers. Each badge should:
-- Have an emoji icon (❤️, 🚛, 🔒, ⭐, etc.)
+- Have an icon from: SecurityCheckIcon, TruckIcon, RefreshIcon, Clock01Icon, LockIcon, HeartCheckIcon, Award01Icon, StarIcon, CheckmarkBadge01Icon, Shield01Icon, Medal01Icon, DeliveryTruck01Icon, PackageDeliveredIcon
 - Have a short title (e.g., "30-Day Guarantee", "Free Shipping")
 - Have a description explaining the promise`,
 
     announcement: `Generate 2-3 announcement badges for an announcement bar. Each badge should:
-- Have an emoji icon
+- Have an icon from: TruckIcon, StarIcon, GiftIcon, FlashIcon, Clock01Icon, SecurityCheckIcon, DeliveryTruck01Icon, SparklesIcon
 - Have short, punchy text (e.g., "Free Shipping on all orders", "30-Day Money Back")`,
 
     featureCards: `Generate 3-4 feature cards that highlight key product features. Each card should:
-- Have a single emoji icon that represents the feature
+- Have an icon from: SparklesIcon, DiamondIcon, StarIcon, FlashIcon, RocketIcon, SecurityCheckIcon, HeartCheckIcon, Award01Icon, MusicNote01Icon, Leaf01Icon, FireIcon, Target01Icon, ThumbsUpIcon, Shield01Icon
 - Have a short label (2-3 words, e.g., "Pure Sound", "Fine Craft", "Deep Tone")
 Focus on what makes this product special.`,
 
@@ -418,7 +426,7 @@ Focus on what makes this product special.`,
 - A subtitle (short tagline, 5-8 words)
 - A description (2-3 sentences about the product)
 - A badge text (like "Best Seller", "Limited Edition", or null if not applicable)
-- 3-4 feature badges with emoji icons and short labels`,
+- 3-4 feature badges with icons from: SparklesIcon, DiamondIcon, StarIcon, SecurityCheckIcon, Award01Icon, TruckIcon, RefreshIcon, CheckmarkBadge01Icon and short labels`,
 
     gallery: `Generate a title for a product gallery section. Should be something like "See it from every angle" or similar engaging text.`,
 

@@ -224,12 +224,16 @@ export type ComparisonData = {
   rows: Array<{ label: string; ours: string; theirs: string }>;
 };
 
+export type LifestyleVariant = "split" | "circular" | "full";
+
 export type LifestyleData = {
   headline: string;
   body: string;
   imageUrl: string;
   imagePosition?: "left" | "right";
   galleryImages?: string[];
+  variant?: LifestyleVariant;
+  features?: Array<{ icon: string; label: string }>;
 };
 
 export type GalleryImage = { url: string; caption?: string };

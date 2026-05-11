@@ -114,40 +114,18 @@ const FeatureBadges = ({ features }: { features: Array<{ icon: string; label: st
   </div>
 );
 
-const ImageGallery = ({ images, mainImage }: { images?: string[]; mainImage: string }) => {
-  const allImages = images?.length ? images : [mainImage];
-  const [activeIndex, setActiveIndex] = useState(0);
-
+const ImageGallery = ({ mainImage }: { images?: string[]; mainImage: string }) => {
   return (
-    <div className="flex flex-col gap-3 @3xl/store:flex-row @3xl/store:gap-4">
-      <div className="order-2 flex gap-2 overflow-x-auto pb-1 @3xl/store:order-1 @3xl/store:w-[72px] @3xl/store:flex-col @3xl/store:overflow-visible @3xl/store:pb-0">
-        {allImages.slice(0, 6).map((img, i) => (
-          <button
-            key={i}
-            onClick={() => setActiveIndex(i)}
-            className={cn(
-              "relative size-14 shrink-0 overflow-hidden transition @3xl/store:size-[72px]",
-              activeIndex === i
-                ? "ring-2 ring-[color:var(--store-primary)] ring-offset-2"
-                : "opacity-60 hover:opacity-100"
-            )}
-            style={{ borderRadius: "calc(var(--store-radius) * 0.5)" }}
-          >
-            <img src={img} alt="" className="h-full w-full object-cover" />
-          </button>
-        ))}
-      </div>
-      <div
-        data-img-styled
-        className="relative order-1 aspect-square flex-1 overflow-hidden @3xl/store:order-2"
-        style={{ borderRadius: "var(--store-radius)" }}
-      >
-        <img
-          src={allImages[activeIndex] ?? mainImage}
-          alt=""
-          className="h-full w-full object-cover"
-        />
-      </div>
+    <div
+      data-img-styled
+      className="relative aspect-square overflow-hidden"
+      style={{ borderRadius: "var(--store-radius)" }}
+    >
+      <img
+        src={mainImage}
+        alt=""
+        className="h-full w-full object-cover"
+      />
     </div>
   );
 };
@@ -217,9 +195,6 @@ const ProductDefault = ({ data }: Props) => (
 );
 
 const ProductGallery = ({ data }: Props) => {
-  const allImages = data.images?.length ? data.images : [data.imageUrl];
-  const [activeIndex, setActiveIndex] = useState(0);
-
   return (
     <section
       className="border-t px-5 py-12 @3xl/store:px-12 @3xl/store:py-16"
@@ -227,14 +202,14 @@ const ProductGallery = ({ data }: Props) => {
     >
       <div className="mx-auto max-w-[1200px]">
         <div className="grid grid-cols-1 gap-8 @3xl/store:gap-10 @5xl/store:grid-cols-2">
-          <div className="space-y-3 @3xl/store:space-y-4">
+          <div>
             <div
               data-img-styled
               className="relative aspect-square overflow-hidden"
               style={{ borderRadius: "var(--store-radius)" }}
             >
               <img
-                src={allImages[activeIndex] ?? data.imageUrl}
+                src={data.imageUrl}
                 alt=""
                 className="h-full w-full object-cover"
               />
@@ -243,23 +218,6 @@ const ProductGallery = ({ data }: Props) => {
                   <ProductBadge label={data.badge} />
                 </div>
               )}
-            </div>
-            <div className="grid grid-cols-4 gap-2 @3xl/store:gap-3">
-              {allImages.slice(0, 4).map((img, i) => (
-                <button
-                  key={i}
-                  onClick={() => setActiveIndex(i)}
-                  className={cn(
-                    "relative aspect-square overflow-hidden transition",
-                    activeIndex === i
-                      ? "ring-2 ring-[color:var(--store-primary)]"
-                      : "opacity-60 hover:opacity-100"
-                  )}
-                  style={{ borderRadius: "calc(var(--store-radius) * 0.6)" }}
-                >
-                  <img src={img} alt="" className="h-full w-full object-cover" />
-                </button>
-              ))}
             </div>
           </div>
           <div className="flex flex-col justify-center">
@@ -396,10 +354,8 @@ const SideFeatureCard = ({ icon, label }: ProductSideFeature) => (
 );
 
 const ProductRich = ({ data }: Props) => {
-  const allImages = data.images?.length ? data.images : [data.imageUrl];
   const galleryImages = data.galleryImages ?? [];
   const sideFeatures = data.sideFeatures ?? [];
-  const [activeIndex, setActiveIndex] = useState(0);
   const hasSideFeatures = sideFeatures.length > 0;
 
   return (
@@ -431,7 +387,7 @@ const ProductRich = ({ data }: Props) => {
               style={{ borderRadius: "var(--store-radius)" }}
             >
               <img
-                src={allImages[activeIndex] ?? data.imageUrl}
+                src={data.imageUrl}
                 alt=""
                 className="h-full w-full object-cover"
               />
@@ -441,26 +397,6 @@ const ProductRich = ({ data }: Props) => {
                 </div>
               )}
             </div>
-
-            {allImages.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-1">
-                {allImages.slice(0, 6).map((img, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setActiveIndex(i)}
-                    className={cn(
-                      "relative size-16 shrink-0 overflow-hidden transition @3xl/store:size-[72px]",
-                      activeIndex === i
-                        ? "ring-2 ring-[color:var(--store-primary)] ring-offset-2"
-                        : "opacity-60 hover:opacity-100"
-                    )}
-                    style={{ borderRadius: "calc(var(--store-radius) * 0.5)" }}
-                  >
-                    <img src={img} alt="" className="h-full w-full object-cover" />
-                  </button>
-                ))}
-              </div>
-            )}
 
             {hasSideFeatures && (
               <div className="mt-2 grid grid-cols-2 gap-2 @3xl/store:hidden">

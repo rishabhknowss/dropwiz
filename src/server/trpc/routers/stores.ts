@@ -3,7 +3,8 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { db } from "@/db";
-import { stores, products, assets, users, type StoreSection, type StorePage } from "@/db/schema";
+import { stores, products, assets, users, accounts, type StoreSection, type StorePage } from "@/db/schema";
+import { getShopPaymentSettings } from "@/lib/shopify/import";
 
 const FREE_TIERS = ["free", "starter"] as const;
 import { createPageFromTemplate, PAGE_TEMPLATES } from "@/lib/page-templates";
@@ -399,6 +400,80 @@ export const storesRouter = router({
       const row = rows[0];
       if (!row) throw new TRPCError({ code: "NOT_FOUND" });
       return row;
+    }),
+
+  getPaymentSettings: protectedProcedure
+    .input(z.object({ storeId: z.string().uuid() }))
+    .query(async ({ ctx, input }) => {
+      const storeRows = await db
+        .select({
+          id: stores.id,
+          publishedShopifyShop: stores.publishedShopifyShop,
+        })
+        .from(stores)
+        .where(and(eq(stores.id, input.storeId), eq(stores.userId, ctx.user.id)))
+        .limit(1);
+      const store = storeRows[0];
+      if (!store) throw new TRPCError({ code: "NOT_FOUND" });
+
+      if (!store.publishedShopifyShop) {
+        return {
+          connected: false,
+          shopDomain: null,
+          hasPaymentsEnabled: false,
+          supportedDigitalWallets: [] as string[],
+          currencyCode: null,
+        };
+      }
+
+      const accountRows = await db
+        .select({
+          accessToken: accounts.accessToken,
+          providerAccountId: accounts.providerAccountId,
+        })
+        .from(accounts)
+        .where(
+          and(
+            eq(accounts.userId, ctx.user.id),
+            eq(accounts.provider, "shopify"),
+            eq(accounts.providerAccountId, store.publishedShopifyShop)
+          )
+        )
+        .limit(1);
+      const account = accountRows[0];
+
+      if (!account?.accessToken) {
+        return {
+          connected: false,
+          shopDomain: store.publishedShopifyShop,
+          hasPaymentsEnabled: false,
+          supportedDigitalWallets: [] as string[],
+          currencyCode: null,
+        };
+      }
+
+      try {
+        const settings = await getShopPaymentSettings(
+          store.publishedShopifyShop,
+          account.accessToken
+        );
+        return {
+          connected: true,
+          shopDomain: store.publishedShopifyShop,
+          hasPaymentsEnabled: settings.hasPaymentsEnabled,
+          supportedDigitalWallets: settings.supportedDigitalWallets,
+          currencyCode: settings.currencyCode,
+        };
+      } catch {
+        return {
+          connected: true,
+          shopDomain: store.publishedShopifyShop,
+          hasPaymentsEnabled: false,
+          supportedDigitalWallets: [] as string[],
+          currencyCode: null,
+          error: "Failed to fetch payment settings",
+        };
+      }
     }),
 
   updateStrategy: protectedProcedure

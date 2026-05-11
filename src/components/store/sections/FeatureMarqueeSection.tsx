@@ -3,33 +3,50 @@ import { StoreIcon } from "@/components/editor/inspectors/fields/IconPickerField
 
 type Props = { data: FeatureMarqueeData };
 
+const MarqueeContent = ({ items }: { items: FeatureMarqueeData["items"] }) => (
+  <>
+    {items.map((item, i) => (
+      <div
+        key={i}
+        className="flex shrink-0 items-center gap-2 px-6 text-[12px] font-medium @3xl/store:px-8 @3xl/store:text-[13px]"
+      >
+        <StoreIcon name={item.icon || "CheckmarkCircle01Icon"} size={15} className="@3xl/store:!h-[16px] @3xl/store:!w-[16px]" />
+        <span>{item.label}</span>
+      </div>
+    ))}
+  </>
+);
+
 export const FeatureMarqueeSection = ({ data }: Props) => {
-  const items = [...data.items, ...data.items];
   const speed = data.speed ?? "normal";
-  const duration = speed === "slow" ? "60s" : speed === "fast" ? "20s" : "40s";
+  const duration = speed === "slow" ? "50s" : speed === "fast" ? "15s" : "25s";
 
   return (
     <section
-      className="overflow-hidden border-y py-3 @3xl/store:py-4"
-      style={{ borderColor: "color-mix(in srgb, var(--store-text) 6%, transparent)" }}
+      className="relative overflow-hidden border-y py-2.5 @3xl/store:py-3"
+      style={{
+        borderColor: "color-mix(in srgb, var(--store-text) 6%, transparent)",
+        background: "var(--store-primary)",
+        color: "var(--store-bg)",
+      }}
     >
-      <div
-        className="flex gap-6 whitespace-nowrap @3xl/store:gap-8"
-        style={{
-          animation: `dw-marquee ${duration} linear infinite`,
-          width: "fit-content",
-        }}
-      >
-        {items.map((item, i) => (
-          <div
-            key={i}
-            className="flex shrink-0 items-center gap-2 text-[12px] font-medium @3xl/store:gap-2.5 @3xl/store:text-[13px]"
-            style={{ color: "var(--store-text)" }}
-          >
-            <StoreIcon name={item.icon} size={16} className="@3xl/store:!h-[18px] @3xl/store:!w-[18px]" />
-            <span>{item.label}</span>
-          </div>
-        ))}
+      <style>{`
+        @keyframes feature-marquee-scroll {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+        .feature-marquee-track {
+          animation: feature-marquee-scroll ${duration} linear infinite;
+        }
+        .feature-marquee-track:hover {
+          animation-play-state: paused;
+        }
+      `}</style>
+      <div className="feature-marquee-track flex w-max">
+        <MarqueeContent items={data.items} />
+        <MarqueeContent items={data.items} />
+        <MarqueeContent items={data.items} />
+        <MarqueeContent items={data.items} />
       </div>
     </section>
   );

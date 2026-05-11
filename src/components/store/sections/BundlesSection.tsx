@@ -34,13 +34,13 @@ const SavingsBadge = ({ text, recommended }: { text: string; recommended?: boole
 const BundleQuantityDisplay = ({ quantity, freeQuantity }: { quantity: number; freeQuantity?: number }) => {
   if (freeQuantity && freeQuantity > 0) {
     return (
-      <div className="text-[15px] font-semibold @3xl/store:text-[17px]">
+      <div className="min-w-0 text-[15px] font-semibold @3xl/store:text-[17px]">
         Buy {quantity}, get {freeQuantity} free
       </div>
     );
   }
   return (
-    <div className="text-[15px] font-semibold @3xl/store:text-[17px]">
+    <div className="min-w-0 text-[15px] font-semibold @3xl/store:text-[17px]">
       {quantity} {quantity === 1 ? "item" : "items"}
     </div>
   );
@@ -137,7 +137,7 @@ const BundlesTiers = ({ data }: Props) => {
             The more you buy, the more you save
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-3 @3xl/store:grid-cols-3 @3xl/store:gap-4">
+        <div className="flex flex-wrap justify-center gap-3 @3xl/store:gap-4">
           {data.bundles.map((b, i) => {
             const price = bundlePrice(
               data.basePriceCents,
@@ -154,7 +154,7 @@ const BundlesTiers = ({ data }: Props) => {
                 key={i}
                 onClick={() => handleSelect(i)}
                 className={cn(
-                  "relative flex cursor-pointer flex-col overflow-hidden p-5 transition @3xl/store:p-6",
+                  "relative flex w-full cursor-pointer flex-col p-5 transition @3xl/store:w-auto @3xl/store:flex-[0_0_calc(33.333%-11px)] @3xl/store:max-w-[360px] @3xl/store:p-6",
                   isSelected && "ring-2 ring-[color:var(--store-primary)]",
                 )}
                 style={{

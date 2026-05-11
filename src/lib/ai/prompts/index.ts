@@ -39,6 +39,15 @@ import {
   productSchema,
   type ProductOutput,
 } from "./product-v1";
+import {
+  IMAGE_PROMPT_SYSTEM,
+  IMAGE_PROMPT_VERSION,
+  buildImagePromptUser,
+  imagePromptsJsonSchema,
+  imagePromptsSchema,
+  type ImagePromptOutput,
+  type SingleImagePrompt,
+} from "./image-prompt-v1";
 import type { ProductContext, TargetingContext } from "./types";
 export {
   generateTestimonials,
@@ -183,5 +192,36 @@ export async function generateProductFromAI(ctx: AIProductContext): Promise<Prod
   return result.output;
 }
 
-export type { HeroOutput, BundleOutput, FaqOutput, HookOutput, ProductOutput };
+export type ImagePromptContext = {
+  product: ProductContext;
+  targeting: TargetingContext;
+  count?: number;
+  storeId?: string | null;
+  userId?: string | null;
+};
+
+export async function generateImagePrompts(
+  ctx: ImagePromptContext
+): Promise<ImagePromptOutput> {
+  const result = await runTemplate({
+    kind: "image",
+    promptVersion: IMAGE_PROMPT_VERSION,
+    system: IMAGE_PROMPT_SYSTEM,
+    user: buildImagePromptUser(ctx.product, ctx.targeting, ctx.count ?? 10),
+    schema: imagePromptsSchema,
+    jsonSchema: imagePromptsJsonSchema as unknown as Record<string, unknown>,
+    logInput: {
+      title: ctx.product.title,
+      description: ctx.product.description?.slice(0, 200),
+      persona: ctx.targeting.persona,
+      angle: ctx.targeting.angle,
+      count: ctx.count ?? 10,
+    },
+    storeId: ctx.storeId,
+    userId: ctx.userId,
+  });
+  return result.output;
+}
+
+export type { HeroOutput, BundleOutput, FaqOutput, HookOutput, ProductOutput, ImagePromptOutput, SingleImagePrompt };
 export type { ProductContext, TargetingContext };

@@ -1,5 +1,54 @@
 import { shopifyGraphql } from "./client";
 
+const GET_SHOP_PAYMENT_SETTINGS_QUERY = `
+  query GetShopPaymentSettings {
+    shop {
+      name
+      currencyCode
+      paymentSettings {
+        supportedDigitalWallets
+      }
+    }
+  }
+`;
+
+type ShopPaymentSettingsResp = {
+  shop: {
+    name: string;
+    currencyCode: string;
+    paymentSettings: {
+      supportedDigitalWallets: string[];
+    };
+  };
+};
+
+export type ShopPaymentSettings = {
+  shopName: string;
+  currencyCode: string;
+  supportedDigitalWallets: string[];
+  hasPaymentsEnabled: boolean;
+};
+
+export async function getShopPaymentSettings(
+  shop: string,
+  accessToken: string
+): Promise<ShopPaymentSettings> {
+  const data = await shopifyGraphql<ShopPaymentSettingsResp>(
+    shop,
+    accessToken,
+    GET_SHOP_PAYMENT_SETTINGS_QUERY
+  );
+
+  const wallets = data.shop.paymentSettings.supportedDigitalWallets ?? [];
+
+  return {
+    shopName: data.shop.name,
+    currencyCode: data.shop.currencyCode,
+    supportedDigitalWallets: wallets,
+    hasPaymentsEnabled: wallets.length > 0,
+  };
+}
+
 const LIST_PRODUCTS_QUERY = `
   query ListProducts($first: Int!, $after: String, $query: String) {
     products(first: $first, after: $after, query: $query, sortKey: UPDATED_AT, reverse: true) {

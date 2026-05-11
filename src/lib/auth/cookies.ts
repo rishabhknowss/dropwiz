@@ -17,8 +17,8 @@ const baseOptions: SerializeOptions = {
   path: "/",
 };
 
-const accessOptions: SerializeOptions = { ...baseOptions, maxAge: 60 * 15 };
-const refreshOptions: SerializeOptions = { ...baseOptions, maxAge: 60 * 60 * 24 * 14 };
+const accessOptions: SerializeOptions = { ...baseOptions, maxAge: 60 * 60 * 24 * 7 };
+const refreshOptions: SerializeOptions = { ...baseOptions, maxAge: 60 * 60 * 24 * 30 };
 const oauthShortOptions: SerializeOptions = { ...baseOptions, maxAge: 60 * 10 };
 
 export async function sendAuthCookies(

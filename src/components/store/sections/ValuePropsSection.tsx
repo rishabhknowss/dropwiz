@@ -42,9 +42,9 @@ const ValuePropsGrid = ({ data }: Props) => (
           {data.title}
         </h2>
       )}
-      <div className="grid grid-cols-1 gap-7 @3xl/store:grid-cols-3 @3xl/store:gap-8 @5xl/store:gap-10">
+      <div className="flex flex-wrap justify-center gap-7 @3xl/store:gap-8 @5xl/store:gap-10">
         {data.props.map((p, i) => (
-          <div key={i} className="text-center">
+          <div key={i} className="w-full text-center @3xl/store:w-[calc(33.333%-24px)] @3xl/store:max-w-[320px]">
             <div className="mx-auto mb-4 inline-flex">
               <IconBadge icon={p.icon} />
             </div>

@@ -19,26 +19,10 @@ import type {
 } from "@/types/store-sections";
 import * as HugeIcons from "@hugeicons/core-free-icons";
 
-const log = (event: string, data: Record<string, unknown> = {}) => {
-  const ts = new Date().toISOString();
-  console.log(`[theme-render ${ts}] ${event}`, JSON.stringify(data, null, 2));
-};
-
 export function renderStoreToHtml(store: Store): { body: string; css: string } {
-  log("renderStoreToHtml.start", {
-    storeId: store.id,
-    sectionsCount: store.sections.length,
-    sectionTypes: store.sections.map((s) => s.type),
-  });
   const sections = [...store.sections].sort((a, b) => a.order - b.order);
-  const body = sections.map((s) => {
-    log("renderStoreToHtml.renderingSection", { type: s.type, id: s.id, order: s.order });
-    const html = renderSection(s);
-    log("renderStoreToHtml.sectionRendered", { type: s.type, htmlLength: html.length });
-    return html;
-  }).join("\n");
+  const body = sections.map((s) => renderSection(s)).join("\n");
   const css = renderCss(store.themeTokens as ThemeTokens);
-  log("renderStoreToHtml.complete", { bodyLength: body.length, cssLength: css.length });
   return { body, css };
 }
 
@@ -46,42 +30,9 @@ export function renderPageToHtml(
   store: Store,
   page: StorePage
 ): { body: string; css: string } {
-  log("renderPageToHtml.start", {
-    storeId: store.id,
-    pageId: page.id,
-    pageName: page.name,
-    pageType: page.type,
-    sectionsCount: page.sections.length,
-    sectionTypes: page.sections.map((s) => ({ id: s.id, type: s.type, order: s.order })),
-  });
   const sections = [...page.sections].sort((a, b) => a.order - b.order);
-  log("renderPageToHtml.sortedSections", {
-    sortedOrder: sections.map((s) => ({ type: s.type, order: s.order })),
-  });
-  const body = sections.map((s) => {
-    log("renderPageToHtml.renderingSection", {
-      type: s.type,
-      id: s.id,
-      order: s.order,
-      dataKeys: Object.keys(s.data || {}),
-      dataPreview: JSON.stringify(s.data).substring(0, 200),
-    });
-    const html = renderSection(s);
-    log("renderPageToHtml.sectionRendered", {
-      type: s.type,
-      htmlLength: html.length,
-      htmlPreview: html.substring(0, 300),
-      isEmpty: html.trim() === "",
-    });
-    return html;
-  }).join("\n");
+  const body = sections.map((s) => renderSection(s)).join("\n");
   const css = renderCss(store.themeTokens as ThemeTokens);
-  log("renderPageToHtml.complete", {
-    pageId: page.id,
-    bodyLength: body.length,
-    cssLength: css.length,
-    bodyPreview: body.substring(0, 500),
-  });
   return { body, css };
 }
 
@@ -89,94 +40,49 @@ export function renderSectionsToHtml(
   sections: StoreSection[],
   themeTokens: ThemeTokens
 ): { body: string; css: string } {
-  log("renderSectionsToHtml.start", {
-    sectionsCount: sections.length,
-    sectionTypes: sections.map((s) => s.type),
-  });
   const sortedSections = [...sections].sort((a, b) => a.order - b.order);
-  const body = sortedSections.map((s) => {
-    log("renderSectionsToHtml.renderingSection", { type: s.type, id: s.id });
-    const html = renderSection(s);
-    log("renderSectionsToHtml.sectionRendered", { type: s.type, htmlLength: html.length });
-    return html;
-  }).join("\n");
+  const body = sortedSections.map((s) => renderSection(s)).join("\n");
   const css = renderCss(themeTokens);
-  log("renderSectionsToHtml.complete", { bodyLength: body.length, cssLength: css.length });
   return { body, css };
 }
 
 function renderSection(section: StoreSection): string {
-  log("renderSection.start", {
-    sectionId: section.id,
-    sectionType: section.type,
-    sectionOrder: section.order,
-    hasData: !!section.data,
-    dataKeys: Object.keys(section.data || {}),
-  });
-
-  let result: string;
   switch (section.type) {
     case "announcement":
-      result = renderAnnouncement(section.data as AnnouncementData);
-      break;
+      return renderAnnouncement(section.data as AnnouncementData);
     case "header":
-      result = renderHeader(section.data as HeaderData);
-      break;
+      return renderHeader(section.data as HeaderData);
     case "hero":
-      result = renderHero(section.data as HeroData);
-      break;
+      return renderHero(section.data as HeroData);
     case "product":
-      result = renderProduct(section.data as ProductData);
-      break;
+      return renderProduct(section.data as ProductData);
     case "bundles":
-      result = renderBundles(section.data as BundleData);
-      break;
+      return renderBundles(section.data as BundleData);
     case "trust":
-      result = renderTrust(section.data as TrustData);
-      break;
+      return renderTrust(section.data as TrustData);
     case "faq":
-      result = renderFaq(section.data as FaqData);
-      break;
+      return renderFaq(section.data as FaqData);
     case "footer":
-      result = renderFooter(section.data as FooterData);
-      break;
+      return renderFooter(section.data as FooterData);
     case "lifestyle":
-      result = renderLifestyle(section.data as LifestyleData);
-      break;
+      return renderLifestyle(section.data as LifestyleData);
     case "gallery":
-      result = renderGallery(section.data as GalleryData);
-      break;
+      return renderGallery(section.data as GalleryData);
     case "testimonials":
-      result = renderTestimonials(section.data as TestimonialsData);
-      break;
+      return renderTestimonials(section.data as TestimonialsData);
     case "valueProps":
-      result = renderValueProps(section.data as ValuePropsData);
-      break;
+      return renderValueProps(section.data as ValuePropsData);
     case "video":
-      result = renderVideo(section.data as VideoData);
-      break;
+      return renderVideo(section.data as VideoData);
     case "featureMarquee":
-      result = renderFeatureMarquee(section.data as FeatureMarqueeData);
-      break;
+      return renderFeatureMarquee(section.data as FeatureMarqueeData);
     case "howItWorks":
-      result = renderHowItWorks(section.data as HowItWorksData);
-      break;
+      return renderHowItWorks(section.data as HowItWorksData);
     case "reviewStats":
-      result = renderReviewStats(section.data as ReviewStatsData);
-      break;
+      return renderReviewStats(section.data as ReviewStatsData);
     default:
-      log("renderSection.unknownType", { type: section.type });
-      result = "";
+      return "";
   }
-
-  log("renderSection.complete", {
-    sectionId: section.id,
-    sectionType: section.type,
-    resultLength: result.length,
-    isEmpty: result.trim() === "",
-  });
-
-  return result;
 }
 
 const fmtPrice = (cents: number, currency: string): string => {
@@ -222,8 +128,15 @@ const getIconSvg = (iconName?: string, size = "1em"): string => {
   const mappedName = ICON_NAME_MAP[iconName] ?? iconName;
   let iconData = (HugeIcons as Record<string, IconPathData>)[mappedName];
   if (!iconData || !Array.isArray(iconData)) {
+    const withSuffix = mappedName.endsWith("Icon") ? mappedName : mappedName + "Icon";
+    iconData = (HugeIcons as Record<string, IconPathData>)[withSuffix];
+  }
+  if (!iconData || !Array.isArray(iconData)) {
     const baseName = iconName.replace(/\d+Icon$/, "Icon");
     iconData = (HugeIcons as Record<string, IconPathData>)[baseName];
+  }
+  if (!iconData || !Array.isArray(iconData)) {
+    iconData = (HugeIcons as Record<string, IconPathData>)["SparklesIcon"];
   }
   if (!iconData || !Array.isArray(iconData)) return "";
   return iconDataToSvg(iconData, size);
@@ -565,21 +478,13 @@ const renderFeatureBadges = (features?: Array<{ icon: string; label: string }>):
   </div>`).join("")}</div>`;
 };
 
-const PAYMENT_FILE_MAP: Record<string, string> = {
-  visa: "visa.png",
-  mastercard: "mastercard.png",
-  amex: "amex.png",
-  paypal: "paypal.png",
-  applepay: "applepay.png",
-  googlepay: "gpay.png",
-  discover: "visa.png",
-  stripe: "shopify.png",
-};
-
-const renderPaymentBadges = (show?: boolean, methods?: string[]): string => {
+const renderPaymentBadges = (show?: boolean): string => {
   if (show === false) return "";
-  const activePayments = methods ?? ["visa", "mastercard", "amex", "paypal", "applepay", "googlepay"];
-  return `<div class="dw-payment-badges">${activePayments.map(p => `<div class="dw-payment-badge"><img src="{{ '${PAYMENT_FILE_MAP[p] ?? "visa.png"}' | asset_url }}" alt="${p}" /></div>`).join("")}</div>`;
+  return `<div class="dw-payment-badges">
+    {%- for type in shop.enabled_payment_types -%}
+      <div class="dw-payment-badge">{{ type | payment_type_svg_tag }}</div>
+    {%- endfor -%}
+  </div>`;
 };
 
 const renderProductImages = (mainImage: string, images?: string[]): string => {
@@ -615,7 +520,7 @@ const renderProduct = (d: ProductData): string => {
   const ratingHtml = renderProductRating(d.rating, d.reviewCount);
   const priceHtml = renderProductPrice(d);
   const featuresHtml = renderFeatureBadges(d.features);
-  const paymentHtml = renderPaymentBadges(d.showPaymentBadges, d.paymentMethods);
+  const paymentHtml = renderPaymentBadges(d.showPaymentBadges);
   const imagesHtml = renderProductImages(d.imageUrl, d.images);
   const formHtml = renderProductForm("Add to cart", variant !== "gallery");
 
@@ -789,13 +694,26 @@ const renderFaq = (d: FaqData): string => {
 
 const renderTrust = (d: TrustData): string => {
   if (!d.badges?.length) return "";
+  const variant = d.variant ?? "detailed";
   const items = d.badges
     .map((b) => {
-      const text = typeof b === "string" ? b : b.title;
-      return `<div class="dw-trust-item">${esc(text)}</div>`;
+      const badge = typeof b === "string" ? { title: b, description: "", icon: "" } : b;
+      const iconSvg = getIconSvg(badge.icon || "ShieldCheckIcon", "24");
+      if (variant === "simple") {
+        return `<div class="dw-trust-simple-item">
+          <div class="dw-trust-icon">${iconSvg}</div>
+          <span>${esc(badge.title)}</span>
+        </div>`;
+      }
+      return `<div class="dw-trust-card">
+        <div class="dw-trust-icon">${iconSvg}</div>
+        <div class="dw-trust-title">${esc(badge.title)}</div>
+        ${badge.description ? `<div class="dw-trust-desc">${esc(badge.description)}</div>` : ""}
+      </div>`;
     })
     .join("");
-  return `<section class="dw-trust"><div class="dw-container">${items}</div></section>`;
+  const wrapperClass = variant === "simple" ? "dw-trust-simple" : "dw-trust-grid";
+  return `<section class="dw-trust"><div class="dw-container"><div class="${wrapperClass}">${items}</div></div></section>`;
 };
 
 const renderTestimonials = (d: TestimonialsData): string => {
@@ -843,14 +761,48 @@ const renderValueProps = (d: ValuePropsData): string => {
 };
 
 const renderLifestyle = (d: LifestyleData): string => {
+  const variant = d.variant ?? "split";
   const right = (d.imagePosition ?? "right") === "right";
-  return `<section class="dw-section">
-    <div class="dw-container dw-grid-2 dw-items-center ${right ? "" : "dw-reverse"}">
+
+  if (variant === "circular") {
+    const features = d.features ?? [];
+    const leftBadges = features.slice(0, 2).map((f) =>
+      `<div class="dw-lifestyle-badge">
+        <div class="dw-lifestyle-badge-icon">${getIconSvg(f.icon || "SparklesIcon", "20")}</div>
+        <span class="dw-lifestyle-badge-label">${esc(f.label)}</span>
+      </div>`
+    ).join("");
+    const rightBadges = features.slice(2, 4).map((f) =>
+      `<div class="dw-lifestyle-badge">
+        <div class="dw-lifestyle-badge-icon">${getIconSvg(f.icon || "SparklesIcon", "20")}</div>
+        <span class="dw-lifestyle-badge-label">${esc(f.label)}</span>
+      </div>`
+    ).join("");
+
+    return `<section class="dw-lifestyle">
+      <div class="dw-lifestyle-circular">
+        <div class="dw-lifestyle-circular-header">
+          <h2 class="dw-h2">${esc(d.headline)}</h2>
+          <p class="dw-body">${esc(d.body)}</p>
+        </div>
+        <div class="dw-lifestyle-circular-content">
+          <div class="dw-lifestyle-badges dw-lifestyle-badges-left">${leftBadges}</div>
+          <div class="dw-lifestyle-circle-img">
+            ${d.imageUrl ? `<img src="${d.imageUrl}" alt="" />` : `<div class="dw-gradient"></div>`}
+          </div>
+          <div class="dw-lifestyle-badges dw-lifestyle-badges-right">${rightBadges}</div>
+        </div>
+      </div>
+    </section>`;
+  }
+
+  return `<section class="dw-lifestyle">
+    <div class="dw-lifestyle-split ${right ? "" : "dw-reverse"}">
       <div>
         <h2 class="dw-h2">${esc(d.headline)}</h2>
-        <p class="dw-sub">${esc(d.body)}</p>
+        <p class="dw-body">${esc(d.body)}</p>
       </div>
-      <div class="dw-lifestyle-img">
+      <div class="dw-lifestyle-rect-img">
         ${d.imageUrl ? `<img src="${d.imageUrl}" alt="" />` : `<div class="dw-gradient"></div>`}
       </div>
     </div>
@@ -875,22 +827,23 @@ const renderGallery = (d: GalleryData): string => {
   </section>`;
 };
 
-const renderFooterPaymentBadges = (show?: boolean, methods?: string[]): string => {
+const renderFooterPaymentBadges = (show?: boolean): string => {
   if (show === false) return "";
-  const defaultMethods = ["visa", "mastercard", "amex", "paypal", "applepay", "googlepay"];
-  const activePayments = methods ?? defaultMethods;
-  if (activePayments.length === 0) return "";
-  return `<div class="dw-footer-payments">${activePayments.map(p => `<div class="dw-footer-payment"><img src="{{ '${PAYMENT_FILE_MAP[p] ?? "visa.png"}' | asset_url }}" alt="${p}" /></div>`).join("")}</div>`;
+  return `<div class="dw-footer-payments">
+    {%- for type in shop.enabled_payment_types -%}
+      <div class="dw-footer-payment">{{ type | payment_type_svg_tag }}</div>
+    {%- endfor -%}
+  </div>`;
 };
 
 const renderFooter = (d: FooterData): string => {
   const showPayments = d.showPayments !== false;
   const showPoweredBy = d.showPoweredBy !== false;
   const logoHtml = d.logoUrl
-    ? `<img src="${esc(d.logoUrl)}" alt="${esc(d.storeName)}" class="dw-footer-logo-img">`
+    ? `<img src="${esc(d.logoUrl)}" alt="${esc(d.storeName)}" class="dw-footer-logo-img" style="height:32px;max-height:32px;max-width:140px;width:auto;object-fit:contain;">`
     : `<span class="dw-footer-name">${esc(d.storeName)}</span>`;
   const taglineHtml = d.tagline ? `<span class="dw-footer-tagline">${esc(d.tagline)}</span>` : "";
-  const paymentHtml = renderFooterPaymentBadges(showPayments, d.paymentMethods);
+  const paymentHtml = renderFooterPaymentBadges(showPayments);
   const copyrightExtra = d.copyrightText ? ` &middot; ${esc(d.copyrightText)}` : "";
   const poweredByHtml = showPoweredBy ? `<span>Built with <a href="https://dropwiz.ai" class="dw-footer-link">Dropwiz</a></span>` : "";
 
@@ -983,6 +936,7 @@ const renderHowItWorks = (d: HowItWorksData): string => {
         ${step.icon ? `<div class="dw-how-icon">${getIconSvg(step.icon)}</div>` : `<span class="dw-how-num">${i + 1}</span>`}
         <div class="dw-how-title">${esc(step.title)}</div>
         <div class="dw-how-desc">${esc(step.description)}</div>
+        ${step.imageUrl ? `<div class="dw-how-card-img"><img src="${step.imageUrl}" alt="${esc(step.title)}" /></div>` : ""}
       </div>`;
     })
     .join("");
@@ -1233,11 +1187,21 @@ ${getCardStyleCss()}
 .dw-grid-faq-twocol { display: grid; grid-template-columns: 1fr; gap: 28px; }
 
 .dw-trust { padding: 32px 0; border-top: 1px solid rgba(0,0,0,0.05); background: rgba(0,0,0,0.02); }
-.dw-trust .dw-container { display: grid; grid-template-columns: 1fr; gap: 12px; }
+.dw-trust .dw-container { max-width: 900px; }
 .dw-trust-item { font-size: 14px; opacity: 0.85; }
+.dw-trust-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+.dw-trust-card { background: var(--store-bg); border-radius: var(--store-radius); padding: 24px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.dw-trust-icon { width: 48px; height: 48px; border-radius: 50%; background: var(--store-primary); color: var(--store-bg); display: flex; align-items: center; justify-content: center; margin: 0 auto 12px; }
+.dw-trust-icon svg { width: 24px; height: 24px; stroke: currentColor; }
+.dw-trust-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+.dw-trust-desc { font-size: 13px; opacity: 0.7; line-height: 1.5; }
+.dw-trust-simple { display: flex; justify-content: center; gap: 32px; flex-wrap: wrap; }
+.dw-trust-simple-item { display: flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 500; }
+.dw-trust-simple-item .dw-trust-icon { width: 32px; height: 32px; margin: 0; }
+.dw-trust-simple-item .dw-trust-icon svg { width: 16px; height: 16px; }
 
-.dw-prop-grid { display: grid; grid-template-columns: 1fr; gap: 28px; }
-.dw-prop { text-align: center; }
+.dw-prop-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 32px; max-width: 1100px; margin: 0 auto; }
+.dw-prop { text-align: center; flex: 0 0 100%; max-width: 320px; }
 .dw-icon { display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; border-radius: var(--store-radius); background: color-mix(in oklab, var(--store-accent) 18%, transparent); color: var(--store-primary); font-size: 22px; margin-bottom: 14px; }
 .dw-icon svg { width: 24px; height: 24px; stroke: currentColor; }
 .dw-icon-placeholder { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: color-mix(in srgb, var(--store-primary) 12%, transparent); color: var(--store-primary); border-radius: 6px; font-size: 14px; }
@@ -1260,8 +1224,28 @@ ${getCardStyleCss()}
 .dw-cite-name { font-size: 14px; font-weight: 500; }
 .dw-cite-role { font-size: 12px; opacity: 0.6; }
 
+.dw-lifestyle { padding: 56px 20px; border-top: 1px solid rgba(0,0,0,0.05); }
+.dw-lifestyle h2 { font-size: 26px; font-weight: 500; line-height: 1.1; letter-spacing: -0.03em; margin: 0; }
+.dw-lifestyle .dw-body { margin-top: 16px; font-size: 14.5px; line-height: 1.55; opacity: 0.75; }
+.dw-lifestyle-split { display: grid; grid-template-columns: 1fr; gap: 28px; max-width: 1100px; margin: 0 auto; align-items: center; }
+.dw-lifestyle-split.dw-reverse > *:first-child { order: 2; }
+.dw-lifestyle-rect-img { border-radius: var(--store-radius); overflow: hidden; aspect-ratio: 4/5; }
+.dw-lifestyle-rect-img img { width: 100%; height: 100%; object-fit: cover; }
+.dw-lifestyle-rect-img .dw-gradient { width: 100%; height: 100%; }
 .dw-lifestyle-img { aspect-ratio: 4/5; border-radius: var(--store-radius); overflow: hidden; }
 .dw-lifestyle-img img { width: 100%; height: 100%; object-fit: cover; }
+.dw-lifestyle-circular { max-width: 1100px; margin: 0 auto; }
+.dw-lifestyle-circular-header { text-align: center; margin-bottom: 32px; }
+.dw-lifestyle-circular-header .dw-body { max-width: 600px; margin-left: auto; margin-right: auto; }
+.dw-lifestyle-circular-content { display: flex; flex-direction: column; align-items: center; gap: 24px; position: relative; }
+.dw-lifestyle-badges { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.dw-lifestyle-badge { display: flex; align-items: center; gap: 10px; padding: 12px; border-radius: 12px; background: rgba(0,0,0,0.04); }
+.dw-lifestyle-badge-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px; background: var(--store-primary); color: var(--store-bg); flex-shrink: 0; }
+.dw-lifestyle-badge-icon svg { width: 18px; height: 18px; stroke: currentColor; }
+.dw-lifestyle-badge-label { font-size: 12px; font-weight: 500; line-height: 1.3; }
+.dw-lifestyle-circle-img { width: 220px; height: 220px; border-radius: 50%; overflow: hidden; flex-shrink: 0; }
+.dw-lifestyle-circle-img img { width: 100%; height: 100%; object-fit: cover; }
+.dw-lifestyle-circle-img .dw-gradient { width: 100%; height: 100%; }
 
 .dw-gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
 .dw-gallery-item { position: relative; aspect-ratio: 1/1; overflow: hidden; border-radius: var(--store-radius); margin: 0; }
@@ -1270,13 +1254,13 @@ ${getCardStyleCss()}
 
 .dw-footer { border-top: 1px solid rgba(0,0,0,0.08); padding: 32px 0 28px; font-size: 12px; }
 .dw-footer-main { display: flex; flex-direction: column; align-items: center; gap: 24px; }
-.dw-footer-brand { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.dw-footer-logo-img { height: 32px; max-width: 140px; width: auto; object-fit: contain; }
+.dw-footer-brand { display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: 160px; }
+.dw-footer-logo-img { height: 32px !important; max-height: 32px !important; max-width: 140px !important; width: auto !important; object-fit: contain !important; display: block; }
 .dw-footer-name { font-size: 15px; font-weight: 600; }
 .dw-footer-tagline { font-size: 12px; opacity: 0.6; }
 .dw-footer-payments { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; }
 .dw-footer-payment { display: flex; align-items: center; justify-content: center; width: 56px; height: 40px; border: 1px solid rgba(0,0,0,0.1); background: #fff; border-radius: 6px; padding: 6px; overflow: hidden; }
-.dw-footer-payment img { height: 20px; width: auto; object-fit: contain; }
+.dw-footer-payment img, .dw-footer-payment svg { height: 20px; width: auto; max-width: 100%; object-fit: contain; }
 .dw-footer-bottom { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(0,0,0,0.05); font-size: 11px; opacity: 0.5; }
 .dw-footer-link { text-decoration: underline; }
 @container store (min-width: 640px) {
@@ -1306,12 +1290,19 @@ ${getCardStyleCss()}
 .dw-how-num { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background: var(--store-primary); color: var(--store-bg); font-size: 14px; font-weight: 700; margin-bottom: 12px; flex-shrink: 0; }
 .dw-how-title { font-size: 16px; font-weight: 600; }
 .dw-how-desc { font-size: 14px; line-height: 1.55; opacity: 0.7; margin-top: 6px; }
+.dw-how-card-img { margin-top: 16px; border-radius: calc(var(--store-radius) - 8px); overflow: hidden; aspect-ratio: 4/3; }
+.dw-how-card-img img { width: 100%; height: 100%; object-fit: cover; }
 .dw-how-numbered { display: flex; align-items: flex-start; gap: 16px; }
 .dw-how-numbered .dw-how-num { margin-bottom: 0; margin-top: 2px; }
 .dw-how-timeline { display: flex; align-items: flex-start; gap: 16px; position: relative; padding-left: 24px; }
 .dw-how-dot { position: absolute; left: 0; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--store-primary); }
 .dw-how-timeline::before { content: ''; position: absolute; left: 5px; top: 22px; width: 2px; height: calc(100% + 8px); background: rgba(0,0,0,0.1); }
 .dw-how-timeline:last-child::before { display: none; }
+
+@container store (min-width: 600px) {
+  .dw-prop { flex: 0 0 calc(50% - 16px); }
+  .dw-how-cards { grid-template-columns: repeat(2, 1fr); }
+}
 
 .dw-review-stats { display: flex; align-items: center; justify-content: center; gap: 10px; padding: 12px 20px; background: rgba(0,0,0,0.02); font-size: 14px; font-weight: 500; }
 .dw-review-stars { letter-spacing: 2px; color: #fbbf24; }
@@ -1453,8 +1444,22 @@ ${getCardStyleCss()}
   .dw-sub { font-size: 17px; }
   .dw-bundle-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .dw-faq-cards { grid-template-columns: repeat(2, 1fr); }
-  .dw-trust .dw-container { grid-template-columns: repeat(3, 1fr); gap: 16px; }
-  .dw-prop-grid { grid-template-columns: repeat(3, 1fr); gap: 40px; }
+  .dw-trust-grid { grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .dw-lifestyle { padding: 80px 48px; }
+  .dw-lifestyle h2 { font-size: 36px; }
+  .dw-lifestyle .dw-body { font-size: 16px; margin-top: 20px; }
+  .dw-lifestyle-split { grid-template-columns: 1fr 1fr; gap: 40px; }
+  .dw-lifestyle-circular-header { margin-bottom: 48px; }
+  .dw-lifestyle-circular-content { flex-direction: row; justify-content: center; gap: 0; }
+  .dw-lifestyle-badges { position: absolute; top: 50%; transform: translateY(-50%); width: 180px; grid-template-columns: 1fr; gap: 16px; }
+  .dw-lifestyle-badges-left { left: 0; }
+  .dw-lifestyle-badges-right { right: 0; }
+  .dw-lifestyle-badge { gap: 12px; padding: 16px; }
+  .dw-lifestyle-badge-icon { width: 40px; height: 40px; }
+  .dw-lifestyle-badge-icon svg { width: 20px; height: 20px; }
+  .dw-lifestyle-badge-label { font-size: 13px; }
+  .dw-lifestyle-circle-img { width: 280px; height: 280px; margin: 0 64px; }
+  .dw-prop { flex: 0 0 calc(33.333% - 24px); }
   .dw-testimonial-grid { grid-template-columns: repeat(3, 1fr); gap: 16px; }
   .dw-gallery-grid { grid-template-columns: repeat(3, 1fr); gap: 12px; }
   .dw-grid-faq-twocol { grid-template-columns: 0.9fr 1.4fr; gap: 48px; }
@@ -1497,6 +1502,8 @@ ${getCardStyleCss()}
   .dw-h1 { font-size: 72px; }
   .dw-ph-headline { font-size: 36px; }
   .dw-how-cards { grid-template-columns: repeat(4, 1fr); }
+  .dw-lifestyle h2 { font-size: 44px; }
+  .dw-lifestyle-circle-img { width: 320px; height: 320px; }
   .dw-prod-title { font-size: 36px; }
   .dw-prod-title-lg { font-size: 42px; }
 }

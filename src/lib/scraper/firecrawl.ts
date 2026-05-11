@@ -6,20 +6,29 @@ import type { ScrapedProduct } from "./index";
 
 const FIRECRAWL_API = "https://api.firecrawl.dev/v2";
 
-const EXTRACT_PROMPT = `Extract product information from this page for a dropshipping store.
+const EXTRACT_PROMPT = `Extract product information from this page for a premium e-commerce store.
 
 Required:
 - title: short product name (max 120 chars), no SKU codes
 - description: 2-4 sentences describing what the product does, materials, key features. Plain prose, no bullet lists, no marketing fluff.
 - priceCents: current selling price in smallest currency unit (cents/paise). Convert "$24.99" to 2499. If sale price exists, use that.
 - currency: ISO 4217 code uppercase (USD/INR/EUR/GBP)
-- images: array of 1-6 product image URLs, hi-res, in display order. Skip logos and unrelated images.
+- images: array of 6-12 HIGH RESOLUTION product image URLs. CRITICAL IMAGE REQUIREMENTS:
+  * For Amazon: Look for URLs containing "_AC_SL1500_" or higher - these are full resolution
+  * NEVER use URLs with "_SS40_", "_SS100_", "_SX38_", "_SY355_" etc - these are tiny thumbnails
+  * Transform Amazon URLs: replace "_AC_SL300_" with "_AC_SL1500_" to get high-res version
+  * For AliExpress: Remove size suffixes like "_640x640" from URLs
+  * Include: main product shots, alternate angles, lifestyle/in-use images, detail shots
+  * Extract from BOTH main image gallery AND "A+ content" / "enhanced brand content" sections
+  * Skip logos, icons, size charts, and unrelated images
+  * Order: main image first, then variations, then lifestyle shots
 - features: array of 3-6 short bullet phrases (max 80 chars each) summarizing key features/benefits. Empty array if none found.
 - reviewCount: total number of reviews/ratings if visible, 0 if not shown.
 - rating: average rating out of 5 (e.g. 4.6) if shown, 0 if not shown.
 - brand: brand or seller name if shown, empty string otherwise.
 
-Skip ads and related products. Focus only on the main product on the page.`;
+Skip ads and related products. Focus only on the main product on the page.
+For Amazon products, extract from BOTH the main image gallery and the A+ content section.`;
 
 type FirecrawlExtractSchema = {
   title: string;
@@ -130,12 +139,12 @@ export async function scrapeWithFirecrawl(sourceUrl: string): Promise<ScrapedPro
 
   const extracted = response.data.json;
   const platform = detectPlatform(sourceUrl);
-  const images = (extracted.images ?? []).filter(
+  const rawImages = (extracted.images ?? []).filter(
     (u) => typeof u === "string" && /^https?:\/\//i.test(u),
   );
 
-  if (images.length === 0 && response.data.metadata?.ogImage) {
-    images.push(response.data.metadata.ogImage);
+  if (rawImages.length === 0 && response.data.metadata?.ogImage) {
+    rawImages.push(response.data.metadata.ogImage);
   }
 
   const priceCents = Math.max(0, Math.round(extracted.priceCents ?? 0));
@@ -149,7 +158,7 @@ export async function scrapeWithFirecrawl(sourceUrl: string): Promise<ScrapedPro
     priceCents,
     estCostCents: estimateCost(priceCents, platform),
     currency: (extracted.currency ?? "USD").toUpperCase(),
-    originalImages: images.slice(0, 6),
+    originalImages: rawImages.slice(0, 10),
     variants: [],
     rawPayload: {
       provider: "firecrawl",

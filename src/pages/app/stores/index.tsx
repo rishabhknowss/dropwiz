@@ -109,28 +109,31 @@ const StoresIndex = () => {
       )}
 
       {hasStores && (
-        <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Published" value={published.length} icon={RocketIcon} variant="success" />
-          <StatCard label="Drafts" value={drafts.length} icon={Target02Icon} variant="default" />
-          <StatCard label="Generating" value={generating.length} icon={SparklesIcon} variant="warning" />
-          <StatCard label="Total" value={stores.data?.length ?? 0} icon={MagicWand01Icon} variant="accent" />
+        <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatCard label="Published" value={published.length} icon={RocketIcon} color="success" />
+          <StatCard label="Drafts" value={drafts.length} icon={Target02Icon} color="accent" />
+          <StatCard label="Generating" value={generating.length} icon={SparklesIcon} color="warning" />
+          <StatCard label="Total" value={stores.data?.length ?? 0} icon={MagicWand01Icon} color="default" />
         </div>
       )}
 
       {stores.isLoading ? (
-        <div className="text-[13px] text-[var(--dw-text-muted)]">Loading stores...</div>
+        <div className="flex items-center gap-2 text-[13px] text-[var(--dw-text-muted)]">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-[var(--dw-border)] border-t-[var(--dw-accent)]" />
+          Loading stores...
+        </div>
       ) : hasStores ? (
         <>
           <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-[14px] font-medium text-[var(--dw-text)]">Your Stores</h2>
-            <Button asChild size="sm" className="h-8 gap-1.5 bg-[var(--dw-accent)] text-[12px] hover:bg-[var(--dw-accent-hover)]">
+            <h2 className="text-[14px] font-semibold text-[var(--dw-text)]">Your Stores</h2>
+            <Button asChild size="sm" className="h-8 gap-1.5 rounded-lg bg-[var(--dw-accent)] text-[12px] font-medium hover:bg-[var(--dw-accent-hover)]">
               <Link href="/build/new">
                 <HugeiconsIcon icon={Add01Icon} size={14} />
                 New Store
               </Link>
             </Button>
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {stores.data?.map((s) => (
               <StoreCard key={s.id} store={s} />
             ))}
@@ -149,7 +152,7 @@ const StoreCard = ({ store }: { store: StoreCardData }) => {
 
   return (
     <Link href={`/app/stores/${store.id}/edit`}>
-      <div className="group overflow-hidden rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface)] transition-all hover:border-[var(--dw-border-strong)]">
+      <div className="group overflow-hidden rounded-xl border border-[var(--dw-border)] bg-[var(--dw-surface)] transition-all duration-200 hover:border-[var(--dw-border-strong)] hover:shadow-lg">
         <div
           className="relative aspect-[16/10] w-full overflow-hidden bg-[var(--dw-bg-tertiary)]"
           style={{
@@ -162,42 +165,45 @@ const StoreCard = ({ store }: { store: StoreCardData }) => {
               alt=""
               fill
               unoptimized
-              className="object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+              className="object-cover transition-transform duration-300 group-hover:scale-105"
             />
           )}
           {inProgress && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <div className="flex items-center gap-2 rounded-md bg-white/10 px-3 py-1.5 text-[11px] font-medium text-white backdrop-blur">
-                <span className="size-1.5 animate-pulse rounded-full bg-white" />
-                Generating...
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+              <div className="flex items-center gap-2 rounded-full bg-white/20 px-4 py-2 backdrop-blur-sm">
+                <div className="h-3 w-3 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                <span className="text-[11px] font-medium text-white">Generating...</span>
               </div>
             </div>
           )}
           {store.status === "failed" && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-              <div className="rounded-md bg-[var(--dw-error)] px-3 py-1.5 text-[11px] font-medium text-white">
+            <div className="absolute inset-0 flex items-center justify-center bg-black/60">
+              <div className="rounded-full bg-[var(--dw-error)] px-4 py-1.5 text-[11px] font-medium text-white">
                 Failed
               </div>
             </div>
           )}
-          <div className="absolute right-2 top-2">
+          <div className="absolute right-3 top-3">
             <StatusBadge status={store.status} />
           </div>
         </div>
-        <div className="p-3">
-          <h3 className="truncate text-[13px] font-medium text-[var(--dw-text)]">
-            {store.name ?? "Untitled store"}
-          </h3>
-          <p className="mt-0.5 text-[11px] text-[var(--dw-text-muted)]">
-            {new Date(store.createdAt).toLocaleDateString()}
-          </p>
-          <div className="mt-2 flex items-center justify-between border-t border-[var(--dw-border)] pt-2">
-            <span className="text-[11px] text-[var(--dw-text-muted)]">Edit store</span>
-            <HugeiconsIcon
-              icon={ArrowRight01Icon}
-              size={12}
-              className="text-[var(--dw-text-subtle)] transition-transform group-hover:translate-x-0.5 group-hover:text-[var(--dw-accent)]"
-            />
+        <div className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 flex-1">
+              <h3 className="truncate text-[13px] font-semibold text-[var(--dw-text)]">
+                {store.name ?? "Untitled store"}
+              </h3>
+              <p className="mt-0.5 text-[11px] text-[var(--dw-text-muted)]">
+                {new Date(store.createdAt).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
+            </div>
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[var(--dw-bg-tertiary)] text-[var(--dw-text-muted)] transition-all group-hover:bg-[var(--dw-accent)] group-hover:text-white">
+              <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+            </div>
           </div>
         </div>
       </div>
@@ -206,18 +212,19 @@ const StoreCard = ({ store }: { store: StoreCardData }) => {
 };
 
 const StatusBadge = ({ status }: { status: string }) => {
-  const config: Record<string, { bg: string; text: string; label: string }> = {
-    published: { bg: "bg-[var(--dw-success)]", text: "text-white", label: "Live" },
-    ready: { bg: "bg-[var(--dw-accent)]", text: "text-white", label: "Draft" },
-    failed: { bg: "bg-[var(--dw-error)]", text: "text-white", label: "Failed" },
-    generating: { bg: "bg-[var(--dw-warning)]", text: "text-black", label: "Building" },
-    scraping: { bg: "bg-[var(--dw-warning)]", text: "text-black", label: "Importing" },
+  const config: Record<string, { bg: string; dot: string; label: string }> = {
+    published: { bg: "bg-[var(--dw-success-bg)]", dot: "bg-[var(--dw-success)]", label: "Live" },
+    ready: { bg: "bg-[var(--dw-accent-subtle)]", dot: "bg-[var(--dw-accent)]", label: "Draft" },
+    failed: { bg: "bg-[var(--dw-error-bg)]", dot: "bg-[var(--dw-error)]", label: "Failed" },
+    generating: { bg: "bg-[var(--dw-warning-bg)]", dot: "bg-[var(--dw-warning)]", label: "Building" },
+    scraping: { bg: "bg-[var(--dw-warning-bg)]", dot: "bg-[var(--dw-warning)]", label: "Importing" },
   };
 
-  const c = config[status] ?? { bg: "bg-[var(--dw-bg-tertiary)]", text: "text-[var(--dw-text-muted)]", label: status };
+  const c = config[status] ?? { bg: "bg-[var(--dw-bg-tertiary)]", dot: "bg-[var(--dw-text-subtle)]", label: status };
 
   return (
-    <span className={cn("rounded px-1.5 py-0.5 text-[10px] font-medium", c.bg, c.text)}>
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-medium text-[var(--dw-text)]", c.bg)}>
+      <span className={cn("h-1.5 w-1.5 rounded-full", c.dot)} />
       {c.label}
     </span>
   );
@@ -227,43 +234,43 @@ const StatCard = ({
   label,
   value,
   icon,
-  variant,
+  color,
 }: {
   label: string;
   value: number;
   icon: typeof RocketIcon;
-  variant: "success" | "warning" | "default" | "accent";
+  color: "success" | "warning" | "accent" | "default";
 }) => {
   const iconColors = {
     success: "text-[var(--dw-success)]",
     warning: "text-[var(--dw-warning)]",
-    default: "text-[var(--dw-text-muted)]",
     accent: "text-[var(--dw-accent)]",
+    default: "text-[var(--dw-text-muted)]",
   };
 
   return (
-    <div className="rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface)] p-3">
+    <div className="rounded-xl border border-[var(--dw-border)] bg-[var(--dw-surface)] p-4">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-medium text-[var(--dw-text-muted)]">{label}</span>
-        <HugeiconsIcon icon={icon} size={16} className={iconColors[variant]} />
+        <HugeiconsIcon icon={icon} size={18} className={iconColors[color]} />
       </div>
-      <p className="mt-1 text-[22px] font-semibold tabular-nums text-[var(--dw-text)]">{value}</p>
+      <p className="mt-2 text-[26px] font-bold tabular-nums tracking-tight text-[var(--dw-text)]">{value}</p>
     </div>
   );
 };
 
 const EmptyState = () => (
-  <div className="rounded-lg border border-dashed border-[var(--dw-border)] bg-[var(--dw-surface)] p-10 text-center">
-    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-lg bg-[var(--dw-accent-subtle)]">
-      <HugeiconsIcon icon={MagicWand01Icon} size={24} className="text-[var(--dw-accent)]" />
+  <div className="flex flex-col items-center rounded-xl border border-dashed border-[var(--dw-border)] bg-[var(--dw-surface)] px-6 py-16 text-center">
+    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--dw-accent-subtle)]">
+      <HugeiconsIcon icon={MagicWand01Icon} size={26} className="text-[var(--dw-accent)]" />
     </div>
     <h3 className="text-[16px] font-semibold text-[var(--dw-text)]">Build your first store</h3>
-    <p className="mx-auto mt-1 max-w-sm text-[13px] text-[var(--dw-text-muted)]">
+    <p className="mx-auto mt-2 max-w-sm text-[13px] leading-relaxed text-[var(--dw-text-muted)]">
       Paste a product URL and Dropwiz generates a high-converting store in about 60 seconds.
     </p>
-    <Button asChild className="mt-4 gap-1.5 bg-[var(--dw-accent)] hover:bg-[var(--dw-accent-hover)]">
+    <Button asChild className="mt-6 h-10 gap-2 rounded-lg bg-[var(--dw-accent)] px-5 text-[13px] font-semibold hover:bg-[var(--dw-accent-hover)]">
       <Link href="/build/new">
-        <HugeiconsIcon icon={Add01Icon} size={14} />
+        <HugeiconsIcon icon={Add01Icon} size={16} />
         Create Store
       </Link>
     </Button>

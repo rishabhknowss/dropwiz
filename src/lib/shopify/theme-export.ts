@@ -1,5 +1,6 @@
 import type { Store, StorePage, ThemeTokens } from "@/db/schema";
 import { renderPageToHtml, renderSectionsToHtml, renderCss } from "./theme-render";
+import { buildThemeFilesV2 } from "./theme-export-v2";
 
 export type ThemeFile = {
   key: string;
@@ -8,10 +9,7 @@ export type ThemeFile = {
 
 export type PublishMode = "all" | "landing" | "product" | string;
 
-const log = (event: string, data: Record<string, unknown> = {}) => {
-  const ts = new Date().toISOString();
-  console.log(`[theme-export ${ts}] ${event}`, JSON.stringify(data, null, 2));
-};
+export type ThemeVersion = "v1" | "v2";
 
 const buildDropwizLayout = (): string => {
   return `<!DOCTYPE html>
@@ -119,188 +117,87 @@ const buildTemplate = (layout: string, sectionType: string): string => {
 
 export type BuildThemeFilesOptions = {
   publishMode?: PublishMode;
+  version?: ThemeVersion;
 };
 
 const getPagesByMode = (
   store: Store,
   publishMode: PublishMode
 ): { landingPage: StorePage | undefined; productPage: StorePage | undefined } => {
-  log("getPagesByMode.start", {
-    storeId: store.id,
-    publishMode,
-    totalPages: store.pages.length,
-    pageTypes: store.pages.map((p) => ({ id: p.id, type: p.type, name: p.name, isDefault: p.isDefault })),
-    sectionsCount: store.sections.length,
-  });
-
   const allLandingPages = store.pages.filter((p) => p.type === "landing");
   const allProductPages = store.pages.filter((p) => p.type === "product");
   const defaultLanding = allLandingPages.find((p) => p.isDefault) ?? allLandingPages[0];
   const defaultProduct = allProductPages[0];
 
-  log("getPagesByMode.filtered", {
-    landingPagesCount: allLandingPages.length,
-    productPagesCount: allProductPages.length,
-    defaultLandingId: defaultLanding?.id ?? null,
-    defaultLandingName: defaultLanding?.name ?? null,
-    defaultLandingSections: defaultLanding?.sections.map((s) => s.type) ?? [],
-    defaultProductId: defaultProduct?.id ?? null,
-    defaultProductName: defaultProduct?.name ?? null,
-    defaultProductSections: defaultProduct?.sections.map((s) => s.type) ?? [],
-  });
-
-  let result: { landingPage: StorePage | undefined; productPage: StorePage | undefined };
-
   switch (publishMode) {
     case "all":
-      result = { landingPage: defaultLanding, productPage: defaultProduct };
-      break;
+      return { landingPage: defaultLanding, productPage: defaultProduct };
     case "landing":
-      result = { landingPage: defaultLanding, productPage: undefined };
-      break;
+      return { landingPage: defaultLanding, productPage: undefined };
     case "product":
-      result = { landingPage: undefined, productPage: defaultProduct };
-      break;
+      return { landingPage: undefined, productPage: defaultProduct };
     default: {
       const specificPage = store.pages.find((p) => p.id === publishMode);
-      log("getPagesByMode.specificPageLookup", {
-        publishModeAsPageId: publishMode,
-        found: !!specificPage,
-        specificPageType: specificPage?.type ?? null,
-      });
       if (!specificPage) {
-        result = { landingPage: defaultLanding, productPage: defaultProduct };
+        return { landingPage: defaultLanding, productPage: defaultProduct };
       } else if (specificPage.type === "landing") {
-        result = { landingPage: specificPage, productPage: undefined };
+        return { landingPage: specificPage, productPage: undefined };
       } else {
-        result = { landingPage: undefined, productPage: specificPage };
+        return { landingPage: undefined, productPage: specificPage };
       }
     }
   }
-
-  log("getPagesByMode.result", {
-    publishMode,
-    hasLandingPage: !!result.landingPage,
-    landingPageId: result.landingPage?.id ?? null,
-    landingPageSectionsCount: result.landingPage?.sections.length ?? 0,
-    hasProductPage: !!result.productPage,
-    productPageId: result.productPage?.id ?? null,
-    productPageSectionsCount: result.productPage?.sections.length ?? 0,
-  });
-
-  return result;
 };
 
 export const buildThemeFiles = (
   store: Store,
   options: BuildThemeFilesOptions = {}
 ): ThemeFile[] => {
+  const version = options.version ?? "v1";
+
+  if (version === "v2") {
+    return buildThemeFilesV2(store, { publishMode: options.publishMode });
+  }
+
   const files: ThemeFile[] = [];
   const publishMode = options.publishMode ?? "all";
 
-  log("buildThemeFiles.start", {
-    storeId: store.id,
-    storeName: store.name,
-    publishMode,
-    optionsReceived: options,
-    pagesCount: store.pages.length,
-    sectionsCount: store.sections.length,
-    themeTokens: store.themeTokens,
-  });
-
-  log("buildThemeFiles.addingLayout", { key: "layout/dropwiz.liquid" });
   files.push({ key: "layout/dropwiz.liquid", value: buildDropwizLayout() });
 
   const { landingPage, productPage } = getPagesByMode(store, publishMode);
 
-  log("buildThemeFiles.renderingCss", {
-    themeTokens: store.themeTokens,
-  });
   const css = renderCss(store.themeTokens as ThemeTokens);
-  log("buildThemeFiles.cssRendered", {
-    cssLength: css.length,
-    cssPreview: css.substring(0, 500),
-  });
   files.push({ key: "assets/dropwiz-store.css", value: css });
 
   if (landingPage) {
-    log("buildThemeFiles.renderingLandingPage", {
-      pageId: landingPage.id,
-      pageName: landingPage.name,
-      sectionsCount: landingPage.sections.length,
-      sectionTypes: landingPage.sections.map((s) => ({ id: s.id, type: s.type, order: s.order })),
-    });
     const { body } = renderPageToHtml(store, landingPage);
-    log("buildThemeFiles.landingPageRendered", {
-      bodyLength: body.length,
-      bodyPreview: body.substring(0, 1000),
-    });
     const sectionLiquid = buildSectionLiquid(store.id, body, "landing");
-    log("buildThemeFiles.landingSectionLiquid", {
-      liquidLength: sectionLiquid.length,
-      liquidPreview: sectionLiquid.substring(0, 500),
-    });
     files.push({
       key: "sections/dropwiz-landing.liquid",
       value: sectionLiquid,
     });
-    const indexTemplate = buildTemplate("dropwiz", "dropwiz-landing");
-    log("buildThemeFiles.indexTemplate", {
-      template: indexTemplate,
-    });
     files.push({
       key: "templates/index.json",
-      value: indexTemplate,
-    });
-  } else {
-    log("buildThemeFiles.noLandingPage", {
-      reason: "landingPage is undefined",
+      value: buildTemplate("dropwiz", "dropwiz-landing"),
     });
   }
 
   if (productPage) {
-    log("buildThemeFiles.renderingProductPage", {
-      pageId: productPage.id,
-      pageName: productPage.name,
-      sectionsCount: productPage.sections.length,
-      sectionTypes: productPage.sections.map((s) => ({ id: s.id, type: s.type, order: s.order })),
-    });
     const { body } = renderPageToHtml(store, productPage);
-    log("buildThemeFiles.productPageRendered", {
-      bodyLength: body.length,
-      bodyPreview: body.substring(0, 1000),
-    });
     const sectionLiquid = buildSectionLiquid(store.id, body, "product");
-    log("buildThemeFiles.productSectionLiquid", {
-      liquidLength: sectionLiquid.length,
-      liquidPreview: sectionLiquid.substring(0, 500),
-    });
     files.push({
       key: "sections/dropwiz-product.liquid",
       value: sectionLiquid,
     });
-    const productTemplate = buildTemplate("dropwiz", "dropwiz-product");
-    log("buildThemeFiles.productTemplate", {
-      template: productTemplate,
-    });
     files.push({
       key: "templates/product.json",
-      value: productTemplate,
+      value: buildTemplate("dropwiz", "dropwiz-product"),
     });
   } else if (publishMode === "all" && store.sections.length > 0 && !productPage) {
-    log("buildThemeFiles.fallbackToStoreSections", {
-      reason: "No product page, using store.sections",
-      sectionsCount: store.sections.length,
-      sectionTypes: store.sections.map((s) => s.type),
-    });
     const { body } = renderSectionsToHtml(
       store.sections,
       store.themeTokens as ThemeTokens
     );
-    log("buildThemeFiles.storeSectionsRendered", {
-      bodyLength: body.length,
-      bodyPreview: body.substring(0, 1000),
-    });
     files.push({
       key: "sections/dropwiz-store.liquid",
       value: buildSectionLiquid(store.id, body, "store"),
@@ -309,19 +206,7 @@ export const buildThemeFiles = (
       key: "templates/product.json",
       value: buildTemplate("dropwiz", "dropwiz-store"),
     });
-  } else {
-    log("buildThemeFiles.noProductPage", {
-      reason: "productPage is undefined and no fallback conditions met",
-      publishMode,
-      storeSectionsCount: store.sections.length,
-    });
   }
-
-  log("buildThemeFiles.complete", {
-    totalFiles: files.length,
-    fileKeys: files.map((f) => f.key),
-    fileSizes: files.map((f) => ({ key: f.key, size: f.value.length })),
-  });
 
   return files;
 };

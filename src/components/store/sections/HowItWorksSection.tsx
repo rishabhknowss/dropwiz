@@ -28,11 +28,11 @@ const HowItWorksCards = ({ data }: Props) => (
           {data.title}
         </h2>
       )}
-      <div className="grid grid-cols-1 gap-4 @2xl/store:grid-cols-3 @3xl/store:gap-6">
+      <div className="flex flex-wrap justify-center gap-4 @3xl/store:gap-6">
         {data.steps.map((step, i) => (
           <div
             key={i}
-            className="relative overflow-hidden p-6 @3xl/store:p-8"
+            className="relative w-full overflow-hidden p-6 @2xl/store:w-[calc(33.333%-16px)] @2xl/store:max-w-[340px] @3xl/store:p-8"
             style={{
               background: "color-mix(in oklab, var(--store-accent) 6%, var(--store-bg))",
               borderRadius: "var(--store-radius)",
@@ -138,12 +138,12 @@ const HowItWorksNumbered = ({ data }: Props) => (
           {data.title}
         </h2>
       )}
-      <div className="space-y-6 @3xl/store:space-y-8">
+      <div className="space-y-8 @3xl/store:space-y-10">
         {data.steps.map((step, i) => (
           <div
             key={i}
             className={cn(
-              "flex flex-col gap-5 @3xl/store:flex-row @3xl/store:items-center @3xl/store:gap-8",
+              "flex flex-col gap-5 @3xl/store:flex-row @3xl/store:items-start @3xl/store:gap-8",
               i % 2 === 1 && "@3xl/store:flex-row-reverse"
             )}
           >
@@ -161,10 +161,10 @@ const HowItWorksNumbered = ({ data }: Props) => (
                 </div>
               </div>
             )}
-            <div className={cn("flex-1", !step.imageUrl && "text-center")}>
-              <div className="mb-3 flex items-center gap-3 @3xl/store:mb-4">
+            <div className={cn("flex-1", !step.imageUrl && "mx-auto max-w-[500px] text-center")}>
+              <div className={cn("mb-4 flex items-center gap-4", !step.imageUrl && "justify-center")}>
                 <span
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-[13px] font-bold @3xl/store:h-10 @3xl/store:w-10 @3xl/store:text-[15px]"
+                  className="flex h-12 w-12 items-center justify-center rounded-full text-[16px] font-bold @3xl/store:h-14 @3xl/store:w-14 @3xl/store:text-[18px]"
                   style={{
                     background: "var(--store-accent)",
                     color: "var(--store-primary)",
@@ -172,9 +172,17 @@ const HowItWorksNumbered = ({ data }: Props) => (
                 >
                   {i + 1}
                 </span>
-                <span className="text-[12px] font-medium uppercase tracking-[0.1em] opacity-50 @3xl/store:text-[13px]">
-                  Step {i + 1}
-                </span>
+                {step.icon && (
+                  <div
+                    className="flex h-12 w-12 items-center justify-center rounded-full @3xl/store:h-14 @3xl/store:w-14"
+                    style={{
+                      background: "color-mix(in oklab, var(--store-primary) 10%, transparent)",
+                      color: "var(--store-primary)",
+                    }}
+                  >
+                    <StoreIcon name={step.icon} size={22} className="@3xl/store:!h-[26px] @3xl/store:!w-[26px]" />
+                  </div>
+                )}
               </div>
               <h3 className="mb-2 text-[20px] font-semibold @3xl/store:text-[24px]">
                 {step.title}

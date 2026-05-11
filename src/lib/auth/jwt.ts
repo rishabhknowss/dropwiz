@@ -1,8 +1,8 @@
 import { SignJWT, jwtVerify } from "jose";
 import { env } from "@/env";
 
-const ACCESS_TTL = "15m";
-const REFRESH_TTL = "14d";
+const ACCESS_TTL = "7d";
+const REFRESH_TTL = "30d";
 
 const accessKey = new TextEncoder().encode(env.ACCESS_TOKEN_SECRET);
 const refreshKey = new TextEncoder().encode(env.REFRESH_TOKEN_SECRET);

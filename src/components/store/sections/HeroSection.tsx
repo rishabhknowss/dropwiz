@@ -18,7 +18,7 @@ import { StoreIcon } from "@/components/editor/inspectors/fields/IconPickerField
 type Props = { data: HeroData };
 
 export const HeroSection = ({ data }: Props) => {
-  const variant: HeroVariant = data.variant ?? "split";
+  const variant: HeroVariant = data.variant ?? "centered";
   switch (variant) {
     case "centered":
       return <HeroCentered data={data} />;

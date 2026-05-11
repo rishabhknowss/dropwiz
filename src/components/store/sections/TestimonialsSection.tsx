@@ -51,7 +51,7 @@ const TestimonialsGrid = ({ data }: Props) => (
           {data.title}
         </h2>
       )}
-      <div className="grid grid-cols-1 gap-3 @3xl/store:gap-4 @5xl/store:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 @2xl/store:grid-cols-2 @3xl/store:gap-4 @4xl/store:grid-cols-3">
         {data.testimonials.map((t, i) => (
           <div
             key={i}
@@ -59,8 +59,9 @@ const TestimonialsGrid = ({ data }: Props) => (
             className="flex flex-col p-5 @3xl/store:p-6"
             style={{
               borderRadius: "var(--store-radius)",
-              border: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)",
-              background: "color-mix(in srgb, var(--store-text) 2%, var(--store-bg))",
+              border: "1px solid color-mix(in srgb, var(--store-text) 10%, transparent)",
+              background: "var(--store-bg)",
+              boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
             }}
           >
             {t.rating && (
@@ -122,8 +123,9 @@ const TestimonialsMarquee = ({ data }: Props) => {
                 className="flex w-[280px] shrink-0 flex-col p-4 @3xl/store:w-[340px] @3xl/store:p-5"
                 style={{
                   borderRadius: "var(--store-radius)",
-                  border: "1px solid color-mix(in srgb, var(--store-text) 8%, transparent)",
-                  background: "color-mix(in srgb, var(--store-text) 2%, var(--store-bg))",
+                  border: "1px solid color-mix(in srgb, var(--store-text) 10%, transparent)",
+                  background: "var(--store-bg)",
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
                 }}
               >
                 {t.rating && (
