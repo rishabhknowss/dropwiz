@@ -18,6 +18,11 @@ const FAQS = [
       "Simply paste a product URL. Our AI scrapes the product title, description, images, variants, and pricing. Then it generates persuasive sales copy, trust badges, FAQs, and a conversion-optimized layout — all in under 60 seconds.",
   },
   {
+    question: "How do credits work?",
+    answer:
+      "Credits power AI features like copywriting, image generation, and store builds. Each store generation uses credits based on complexity. PRO subscribers get a monthly credit allowance that resets each billing cycle. You can purchase additional credits anytime if you need more.",
+  },
+  {
     question: "Can I publish directly to Shopify?",
     answer:
       "Yes! Connect your Shopify store with one click. Dropwiz pushes your product pages directly to your store, complete with products, images, and optimized content. No copy-pasting required.",

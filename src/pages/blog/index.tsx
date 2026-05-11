@@ -49,7 +49,7 @@ const BlogIndex = ({ posts, categories }: BlogIndexProps) => {
         <div className="not-prose mb-8 flex flex-wrap gap-2">
           <Link
             href="/blog"
-            className="rounded-full bg-[color:var(--dw-accent)] px-4 py-2 text-sm font-medium text-white"
+            className="rounded-full bg-[color:var(--dw-accent)] px-4 py-2 text-sm font-medium text-[#0A0A0A]"
           >
             All Posts
           </Link>
@@ -145,7 +145,7 @@ const BlogIndex = ({ posts, categories }: BlogIndexProps) => {
           </p>
           <Link
             href="/build/new"
-            className="mt-4 inline-block whitespace-nowrap rounded-full bg-[color:var(--dw-accent)] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90"
+            className="mt-4 inline-block whitespace-nowrap rounded-full bg-[color:var(--dw-accent)] px-6 py-3 font-medium text-[#0A0A0A] transition-opacity hover:opacity-90"
           >
             Start Building →
           </Link>

@@ -213,7 +213,7 @@ export const ImagePickerField = ({
                 onClick={() => setCount(n)}
                 className={`size-6 rounded text-[11px] font-medium transition ${
                   count === n
-                    ? "bg-[color:var(--dw-accent)] text-white"
+                    ? "bg-[color:var(--dw-accent)] text-[#0A0A0A]"
                     : "bg-[color:var(--dw-surface2)] text-[color:var(--dw-text)] hover:bg-[color:var(--dw-surface2)]/80"
                 }`}
               >

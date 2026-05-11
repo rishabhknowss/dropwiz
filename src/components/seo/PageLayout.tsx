@@ -17,7 +17,7 @@ export const PageLayout = ({
       <header className="border-b border-[color:var(--dw-border)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link href="/" className="text-xl font-semibold tracking-tight">
-            Dropwiz
+            drop<span className="text-[color:var(--dw-accent)]">wiz</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm md:flex">
             <Link
@@ -47,7 +47,7 @@ export const PageLayout = ({
           </nav>
           <Link
             href="/build/new"
-            className="rounded-full bg-[color:var(--dw-accent)] px-4 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
+            className="rounded-full bg-[color:var(--dw-accent)] px-4 py-2 text-sm font-medium text-[#0A0A0A] transition-opacity hover:opacity-90"
           >
             Start Free
           </Link>

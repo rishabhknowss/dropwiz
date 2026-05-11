@@ -122,7 +122,7 @@ const GlossaryTermPage = ({ term, relatedTerms }: GlossaryTermPageProps) => {
             </Link>
             <Link
               href="/build/new"
-              className="rounded-full bg-[color:var(--dw-accent)] px-5 py-2 font-medium text-white transition-opacity hover:opacity-90"
+              className="rounded-full bg-[color:var(--dw-accent)] px-5 py-2 font-medium text-[#0A0A0A] transition-opacity hover:opacity-90"
             >
               Build Your Store →
             </Link>

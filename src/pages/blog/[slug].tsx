@@ -201,7 +201,7 @@ const BlogPostPage = ({ post, relatedPosts }: BlogPostPageProps) => {
           </p>
           <Link
             href="/build/new"
-            className="mt-4 inline-block whitespace-nowrap rounded-full bg-[color:var(--dw-accent)] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90"
+            className="mt-4 inline-block whitespace-nowrap rounded-full bg-[color:var(--dw-accent)] px-6 py-3 font-medium text-[#0A0A0A] transition-opacity hover:opacity-90"
           >
             Start Building Free →
           </Link>

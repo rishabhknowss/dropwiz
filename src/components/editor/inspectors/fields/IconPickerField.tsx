@@ -924,7 +924,7 @@ export const IconPickerField = ({ label, value, onCommit }: Props) => {
                   title={name.replace("Icon", "")}
                   className={`flex h-9 w-9 items-center justify-center rounded-md transition ${
                     value === name
-                      ? "bg-[color:var(--dw-accent)] text-white"
+                      ? "bg-[color:var(--dw-accent)] text-[#0A0A0A]"
                       : "hover:bg-[color:var(--dw-surface2)]"
                   }`}
                 >

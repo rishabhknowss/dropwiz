@@ -74,7 +74,7 @@ export const PricingSection = () => {
             >
               {plan.highlight && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="rounded-full bg-[#0A0A0A] px-4 py-1.5 text-[12px] font-bold text-[var(--dw-accent)] shadow-lg">
+                  <span className="rounded-full bg-white px-4 py-1.5 text-[12px] font-bold text-[#0A0A0A] shadow-lg">
                     MOST POPULAR
                   </span>
                 </div>

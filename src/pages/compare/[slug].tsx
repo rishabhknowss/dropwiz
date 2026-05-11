@@ -67,7 +67,7 @@ const ComparisonPage = ({ comparison }: ComparisonPageProps) => {
                 </div>
               )}
             </div>
-            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-[color:var(--dw-accent)] text-lg font-bold text-white">
+            <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full bg-[color:var(--dw-accent)] text-lg font-bold text-[#0A0A0A]">
               VS
             </div>
             <div className="flex-1 rounded-xl border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-6 text-center">
@@ -261,7 +261,7 @@ const ComparisonPage = ({ comparison }: ComparisonPageProps) => {
           </p>
           <Link
             href="/build/new"
-            className="mt-4 inline-block whitespace-nowrap rounded-full bg-[color:var(--dw-accent)] px-6 py-3 font-medium text-white transition-opacity hover:opacity-90"
+            className="mt-4 inline-block whitespace-nowrap rounded-full bg-[color:var(--dw-accent)] px-6 py-3 font-medium text-[#0A0A0A] transition-opacity hover:opacity-90"
           >
             Build Your Store →
           </Link>

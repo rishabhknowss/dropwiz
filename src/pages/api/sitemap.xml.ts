@@ -17,10 +17,7 @@ const staticPages = [
   { url: "/glossary", changefreq: "weekly", priority: 0.8 },
   { url: "/compare", changefreq: "weekly", priority: 0.8 },
   { url: "/tools", changefreq: "weekly", priority: 0.8 },
-  { url: "/tools/product-description-generator", changefreq: "monthly", priority: 0.7 },
-  { url: "/tools/store-name-generator", changefreq: "monthly", priority: 0.7 },
   { url: "/tools/profit-calculator", changefreq: "monthly", priority: 0.7 },
-  { url: "/tools/headline-generator", changefreq: "monthly", priority: 0.7 },
   { url: "/products", changefreq: "daily", priority: 0.9 },
   { url: "/niches", changefreq: "weekly", priority: 0.8 },
 ];

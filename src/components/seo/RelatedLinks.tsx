@@ -48,7 +48,7 @@ export const CTASidebar = () => {
         </p>
         <Link
           href="/build/new"
-          className="inline-flex w-full items-center justify-center rounded-lg bg-[color:var(--dw-accent)] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
+          className="inline-flex w-full items-center justify-center rounded-lg bg-[color:var(--dw-accent)] px-4 py-2.5 text-sm font-medium text-[#0A0A0A] transition-opacity hover:opacity-90"
         >
           Start Free →
         </Link>
