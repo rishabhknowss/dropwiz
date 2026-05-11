@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Tick02Icon, Loading03Icon, SparklesIcon } from "@hugeicons/core-free-icons";
-import { DWTopNav } from "@/components/dw/TopNav";
 import { api } from "@/utils/api";
 import { ProgressLoader } from "@/components/ui/loaders";
 import type { ProductAnalysis } from "@/lib/scraper";
@@ -102,7 +101,6 @@ const BuildGenerating = () => {
 
   return (
     <div className="min-h-screen bg-[var(--dw-bg)] text-[var(--dw-text)]">
-      <DWTopNav active="Product" />
       <div className="dw-grid-pattern fixed inset-0 opacity-30" />
       <main
         className="relative mx-auto px-5 py-10 transition-[max-width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] md:px-6 md:py-14"

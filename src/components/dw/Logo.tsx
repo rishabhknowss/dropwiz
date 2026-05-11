@@ -36,7 +36,7 @@ export const DWLogo = ({
             letterSpacing: "-0.02em",
           }}
         >
-          Dropwiz
+          drop<span className="text-[var(--dw-accent)]">wiz</span>
         </span>
       )}
     </div>
@@ -80,7 +80,7 @@ export const DWLogoText = ({
         letterSpacing: "-0.02em",
       }}
     >
-      Dropwiz
+      drop<span className="text-[var(--dw-accent)]">wiz</span>
     </span>
   );
 };
