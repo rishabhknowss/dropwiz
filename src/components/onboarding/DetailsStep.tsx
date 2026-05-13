@@ -3,7 +3,7 @@ import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   ArrowLeft01Icon,
-  ArrowRight01Icon,
+  SparklesIcon,
   LinkSquare01Icon,
   MagicWand01Icon,
 } from "@hugeicons/core-free-icons";
@@ -12,17 +12,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { validateProductUrl } from "@/lib/url-validation";
 import { useOnboarding } from "./OnboardingContext";
-import { COUNTRIES, CURRENCIES, TARGET_AUDIENCES, LANGUAGES } from "./types";
 
 export const DetailsStep = () => {
   const {
     data,
     setUrl,
     setAiPrompt,
-    setCountry,
-    setCurrency,
-    setTargetAudience,
-    setTargetLanguage,
     goToStep,
   } = useOnboarding();
 
@@ -53,56 +48,59 @@ export const DetailsStep = () => {
       setUrl(validation.normalizedUrl ?? localUrl.trim());
     }
 
-    goToStep("building");
+    goToStep("customize");
   };
 
-  const sourceLabels: Record<string, { title: string; placeholder: string; hint: string }> = {
+  const sourceLabels: Record<string, { badge: string; title: string; subtitle: string; placeholder: string }> = {
     supplier: {
-      title: "Import from supplier",
+      badge: "Product URL",
+      title: "Paste your link",
+      subtitle: "We'll extract product details and generate your store.",
       placeholder: "https://www.amazon.com/dp/B0...",
-      hint: "Paste your supplier product link",
     },
     competitor: {
-      title: "Import from competitor",
-      placeholder: "https://competitor.com/products/...",
-      hint: "Paste competitor product URL",
+      badge: "Competitor Store",
+      title: "Drop the link",
+      subtitle: "We'll analyze their listing and build something better.",
+      placeholder: "https://competitor.myshopify.com/products/...",
     },
     shopify: {
-      title: "Connect Shopify",
+      badge: "Shopify Product",
+      title: "Paste your link",
+      subtitle: "We'll enhance your existing product page.",
       placeholder: "https://your-shop.myshopify.com/products/...",
-      hint: "Paste your Shopify product URL",
     },
     ai: {
-      title: "Create with AI",
+      badge: "AI Mode",
+      title: "Describe your product",
+      subtitle: "Tell us about your product idea and we'll generate everything.",
       placeholder: "A premium wireless noise-cancelling headphone...",
-      hint: "Describe your product idea",
     },
   };
 
   const labels = sourceLabels[data.source ?? "supplier"];
 
   return (
-    <div className="mx-auto max-w-[600px]">
-      <motion.button
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        type="button"
-        onClick={handleBack}
-        className="mb-8 inline-flex items-center gap-2 text-[13px] text-[var(--dw-text-muted)] transition-colors hover:text-[var(--dw-text)]"
-      >
-        <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
-        Back
-      </motion.button>
-
-      <div className="block">
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="mb-4 inline-flex items-center gap-2.5 rounded-full bg-[var(--dw-accent)]/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--dw-accent)]"
+    <div className="mx-auto max-w-[540px]">
+      <div className="mb-10 flex items-center gap-4">
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          type="button"
+          onClick={handleBack}
+          className="flex size-10 items-center justify-center rounded-full border border-[var(--dw-border)] bg-white text-[#666666] transition-all hover:border-[#0A0A0A] hover:text-[#0A0A0A]"
         >
-          <span className="size-1.5 rounded-full bg-[var(--dw-accent)]" />
-          {labels.title}
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
+        </motion.button>
+
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--dw-border)] bg-white px-4 py-2 text-[12px] font-semibold uppercase tracking-wider text-[#0A0A0A]"
+        >
+          <span className="size-2 rounded-full bg-[var(--dw-accent)]" />
+          {labels.badge}
         </motion.div>
       </div>
 
@@ -110,20 +108,18 @@ export const DetailsStep = () => {
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="text-[32px] font-bold leading-tight tracking-tight text-[var(--dw-text)] md:text-[40px]"
+        className="text-[32px] font-bold leading-[1.1] tracking-tight text-[#0A0A0A] md:text-[44px]"
       >
-        {isAiMode ? "Describe your product" : "Paste your product link"}
+        {labels.title}
       </motion.h1>
 
       <motion.p
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="mt-3 text-[15px] text-[var(--dw-text-muted)]"
+        className="mt-4 text-[16px] leading-relaxed text-[#666666]"
       >
-        {isAiMode
-          ? "Tell us about your product idea and we'll generate everything."
-          : "We'll scrape the product details and build your store."}
+        {labels.subtitle}
       </motion.p>
 
       <motion.form
@@ -131,120 +127,44 @@ export const DetailsStep = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
         onSubmit={handleSubmit}
-        className="mt-8 space-y-6"
+        className="mt-10 space-y-6"
       >
-        <div className="space-y-2">
-          <label className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--dw-text-subtle)]">
-            {labels.hint}
-          </label>
-          {isAiMode ? (
-            <textarea
-              value={localPrompt}
-              onChange={(e) => setLocalPrompt(e.target.value)}
-              placeholder={labels.placeholder}
-              rows={4}
+        {isAiMode ? (
+          <textarea
+            value={localPrompt}
+            onChange={(e) => setLocalPrompt(e.target.value)}
+            placeholder={labels.placeholder}
+            rows={4}
+            autoFocus
+            className="w-full rounded-2xl border-2 border-[var(--dw-border)] bg-white p-5 text-[15px] text-[#0A0A0A] placeholder:text-[#999999] transition-all focus:border-[#0A0A0A] focus:outline-none"
+          />
+        ) : (
+          <div className="relative">
+            <HugeiconsIcon
+              icon={LinkSquare01Icon}
+              size={18}
+              className="absolute left-5 top-1/2 -translate-y-1/2 text-[#999999]"
+            />
+            <Input
+              type="url"
+              required
               autoFocus
-              className="w-full rounded-xl border border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] p-4 text-[14px] text-[var(--dw-text)] placeholder:text-[var(--dw-text-subtle)] transition-all focus:border-[var(--dw-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--dw-accent)]/20"
-            />
-          ) : (
-            <div className="relative">
-              <HugeiconsIcon
-                icon={LinkSquare01Icon}
-                size={16}
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--dw-text-subtle)]"
-              />
-              <Input
-                type="url"
-                required
-                autoFocus
-                value={localUrl}
-                onChange={(e) => setLocalUrl(e.target.value)}
-                placeholder={labels.placeholder}
-                className="h-13 rounded-xl border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] pl-11 text-[14px] transition-all focus:border-[var(--dw-accent)] focus:ring-[var(--dw-accent)]/20"
-              />
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-xl border border-[var(--dw-border)] bg-[var(--dw-surface)] p-5">
-          <h3 className="mb-4 text-[14px] font-semibold text-[var(--dw-text)]">
-            Customize your store
-          </h3>
-
-          <div className="grid grid-cols-2 gap-4">
-            <SelectField
-              label="Country"
-              value={data.country}
-              onChange={setCountry}
-              options={COUNTRIES.map((c) => ({ value: c.code, label: c.label }))}
-            />
-            <SelectField
-              label="Currency"
-              value={data.currency}
-              onChange={setCurrency}
-              options={CURRENCIES.map((c) => ({ value: c.code, label: c.label }))}
-            />
-            <SelectField
-              label="Language"
-              value={data.targetLanguage}
-              onChange={setTargetLanguage}
-              options={LANGUAGES.map((l) => ({ value: l.code, label: l.label }))}
-            />
-            <SelectField
-              label="Target audience"
-              value={data.targetAudience}
-              onChange={setTargetAudience}
-              options={TARGET_AUDIENCES.map((a) => ({ value: a.id, label: a.label }))}
+              value={localUrl}
+              onChange={(e) => setLocalUrl(e.target.value)}
+              placeholder={labels.placeholder}
+              className="h-14 rounded-2xl border-2 border-[var(--dw-border)] bg-white pl-13 text-[15px] transition-all focus:border-[#0A0A0A] focus:ring-0"
             />
           </div>
-        </div>
+        )}
 
         <Button
           type="submit"
-          className="h-13 w-full gap-2.5 rounded-xl bg-gradient-to-r from-[var(--dw-accent)] to-[var(--dw-accent-hover)] text-[14px] font-semibold text-[#0A0A0A] shadow-lg shadow-[var(--dw-accent)]/20 transition-all hover:shadow-[var(--dw-accent)]/30 hover:brightness-110"
+          className="h-14 w-full gap-2.5 rounded-2xl bg-[#0A0A0A] text-[15px] font-semibold text-white transition-all hover:bg-[#1a1a1a]"
         >
-          {isAiMode ? (
-            <>
-              <HugeiconsIcon icon={MagicWand01Icon} size={16} />
-              Create with AI
-            </>
-          ) : (
-            <>
-              <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
-              Generate Store
-            </>
-          )}
+          <HugeiconsIcon icon={SparklesIcon} size={18} />
+          Generate Store
         </Button>
       </motion.form>
     </div>
   );
 };
-
-const SelectField = ({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: string;
-  onChange: (v: string) => void;
-  options: Array<{ value: string; label: string }>;
-}) => (
-  <div className="space-y-2">
-    <span className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--dw-text-subtle)]">
-      {label}
-    </span>
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="h-11 w-full cursor-pointer rounded-lg border border-[var(--dw-border)] bg-[var(--dw-bg-tertiary)] px-3 text-[13px] text-[var(--dw-text)] transition-all focus:border-[var(--dw-accent)] focus:outline-none focus:ring-2 focus:ring-[var(--dw-accent)]/20"
-    >
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
-  </div>
-);

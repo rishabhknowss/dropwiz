@@ -83,7 +83,8 @@ const SignUp = () => {
         },
         onError: (err) => {
           toast.error(getErrorMessage(err), { id });
-          const fieldErrors = err.data?.zod?.fieldErrors;
+          const data = err.data as { zod?: { fieldErrors?: Record<string, string[]> } } | undefined;
+          const fieldErrors = data?.zod?.fieldErrors;
           if (fieldErrors) {
             for (const [key, msgs] of Object.entries(fieldErrors)) {
               if (

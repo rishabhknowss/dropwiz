@@ -74,7 +74,7 @@ function randomTheme(): ThemeTokens {
       ...preset.colors,
       secondary: preset.colors.primary,
     },
-    typography: { sans: "Geist Sans", display: "Geist Sans", mono: "Geist Mono" },
+    typography: { sans: "Space Grotesk", display: "Space Grotesk", mono: "Space Mono" },
     radius: preset.radius,
     buttons: { shape: "rounded", size: "md" },
   };
@@ -90,7 +90,7 @@ function defaultTheme(): ThemeTokens {
       background: "#fafaf7",
       text: "#0a0a0a",
     },
-    typography: { sans: "Geist Sans", display: "Geist Sans", mono: "Geist Mono" },
+    typography: { sans: "Space Grotesk", display: "Space Grotesk", mono: "Space Mono" },
     radius: 12,
     buttons: { shape: "rounded", size: "md" },
   };

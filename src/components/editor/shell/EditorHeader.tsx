@@ -30,8 +30,9 @@ export const EditorHeader = ({
     >
       <HugeiconsIcon icon={ArrowLeft01Icon} size={14} />
     </Link>
-    <Link href="/" className="hidden text-[18px] font-bold tracking-tight text-[var(--dw-text)] md:block">
-      drop<span className="text-[var(--dw-accent)]">wiz</span>
+    <Link href="/app/stores" className="hidden items-center gap-1.5 md:flex">
+      <img src="/logo.png" alt="dropwiz" className="h-6 w-auto" />
+      <span className="text-[15px] font-semibold text-[var(--dw-text)]">dropwiz</span>
     </Link>
     <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[12px] text-[color:var(--dw-text-dim)] md:flex-none md:gap-2 md:text-[13px]">
       <span className="hidden opacity-50 md:inline">/</span>

@@ -3,8 +3,16 @@ import type { AppRouter } from "@/server/trpc/routers/_app";
 
 type AppError = TRPCClientErrorLike<AppRouter>;
 
+type ZodErrorData = {
+  zod?: {
+    fieldErrors?: Record<string, string[]>;
+    formErrors?: string[];
+  };
+};
+
 export function getErrorMessage(err: AppError): string {
-  const fieldErrors = err.data?.zod?.fieldErrors;
+  const data = err.data as ZodErrorData | undefined;
+  const fieldErrors = data?.zod?.fieldErrors;
   if (fieldErrors) {
     for (const messages of Object.values(fieldErrors)) {
       if (Array.isArray(messages) && messages.length > 0 && messages[0]) {
@@ -13,7 +21,7 @@ export function getErrorMessage(err: AppError): string {
     }
   }
 
-  const formErrors = err.data?.zod?.formErrors;
+  const formErrors = data?.zod?.formErrors;
   if (Array.isArray(formErrors) && formErrors.length > 0) {
     return String(formErrors[0]);
   }

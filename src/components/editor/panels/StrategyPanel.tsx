@@ -55,16 +55,16 @@ const ANGLES = [
 export const StrategyPanel = ({ storeId }: { storeId: string }) => {
   const store = api.stores.getMine.useQuery({ storeId });
   if (!store.data) return null;
-  const key = `${store.data.id}-${store.data.updatedAt.toISOString()}`;
+  const key = `${store.data.id}-${store.data.updatedAt}`;
   return <Form key={key} storeId={storeId} data={store.data} />;
 };
 
 type FormData = {
-  name: string | null;
-  persona: string | null;
-  angle: string | null;
-  targetLanguage: string;
-  currency: string;
+  name?: string | null;
+  persona?: string | null;
+  angle?: string | null;
+  targetLanguage?: string;
+  currency?: string;
 };
 
 const Form = ({ storeId, data }: { storeId: string; data: FormData }) => {

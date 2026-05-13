@@ -4,39 +4,42 @@
 @plugin "@tailwindcss/typography";
 
 :root {
-  --dw-bg: #0A0A0A;
-  --dw-bg-secondary: #0F0F0F;
-  --dw-bg-tertiary: #141414;
-  --dw-surface: #181818;
-  --dw-surface2: #1E1E1E;
-  --dw-surface-hover: #242424;
-  --dw-border: #2A2A2A;
-  --dw-border-strong: #3A3A3A;
-  --dw-text: #F5F5F5;
-  --dw-text-secondary: #B0B0B0;
-  --dw-text-muted: #787878;
-  --dw-text-subtle: #505050;
-  --dw-accent: #00FFCC;
-  --dw-accent-hover: #00E6B8;
-  --dw-accent-light: #33FFD6;
-  --dw-accent-subtle: rgba(0, 255, 204, 0.08);
-  --dw-accent-glow: rgba(0, 255, 204, 0.25);
-  --dw-secondary: #FFB347;
-  --dw-secondary-subtle: rgba(255, 179, 71, 0.1);
-  --dw-success: #00E676;
-  --dw-success-bg: rgba(0, 230, 118, 0.1);
-  --dw-warning: #FFC107;
-  --dw-warning-bg: rgba(255, 193, 7, 0.1);
-  --dw-error: #FF5252;
-  --dw-error-bg: rgba(255, 82, 82, 0.1);
-  --dw-tier-pro: #00FFCC;
-  --dw-tier-pro-bg: rgba(0, 255, 204, 0.1);
-  --dw-tier-agency: #FFB347;
-  --dw-tier-agency-bg: rgba(255, 179, 71, 0.1);
-  --dw-tier-enterprise: #FF6B9D;
-  --dw-tier-enterprise-bg: rgba(255, 107, 157, 0.1);
-  --dw-jade: #00E676;
-  --dw-signal: #FF5252;
+  --dw-bg: #FFFFFF;
+  --dw-bg-secondary: #FAFAFA;
+  --dw-bg-tertiary: #F5F5F5;
+  --dw-bg-blue: #EEF4FF;
+  --dw-surface: #FFFFFF;
+  --dw-surface2: #F8F8F8;
+  --dw-surface-hover: #F0F0F0;
+  --dw-border: #E5E5E5;
+  --dw-border-strong: #D1D1D1;
+  --dw-text: #0F0F0F;
+  --dw-text-secondary: #3D3D3D;
+  --dw-text-muted: #6B6B6B;
+  --dw-text-subtle: #9A9A9A;
+  --dw-accent: #F9C74F;
+  --dw-accent-hover: #F4B93D;
+  --dw-accent-dark: #E5A82E;
+  --dw-accent-subtle: rgba(249, 199, 79, 0.12);
+  --dw-accent-glow: rgba(249, 199, 79, 0.3);
+  --dw-secondary: #3B82F6;
+  --dw-secondary-subtle: rgba(59, 130, 246, 0.1);
+  --dw-success: #22C55E;
+  --dw-success-bg: rgba(34, 197, 94, 0.1);
+  --dw-warning: #F59E0B;
+  --dw-warning-bg: rgba(245, 158, 11, 0.1);
+  --dw-error: #EF4444;
+  --dw-error-bg: rgba(239, 68, 68, 0.1);
+  --dw-tier-pro: #F9C74F;
+  --dw-tier-pro-bg: rgba(249, 199, 79, 0.1);
+  --dw-tier-agency: #3B82F6;
+  --dw-tier-agency-bg: rgba(59, 130, 246, 0.1);
+  --dw-tier-enterprise: #A855F7;
+  --dw-tier-enterprise-bg: rgba(168, 85, 247, 0.1);
+  --dw-jade: #22C55E;
+  --dw-signal: #EF4444;
+  --dw-gradient-start: #FFE4A0;
+  --dw-gradient-end: #FFDAB3;
 
   --background: var(--dw-bg);
   --foreground: var(--dw-text);
@@ -45,7 +48,7 @@
   --popover: var(--dw-surface);
   --popover-foreground: var(--dw-text);
   --primary: var(--dw-accent);
-  --primary-foreground: #08080C;
+  --primary-foreground: #0F0F0F;
   --secondary: var(--dw-surface2);
   --secondary-foreground: var(--dw-text);
   --muted: var(--dw-surface2);
@@ -99,13 +102,13 @@
 [data-radix-portal],
 [data-slot="dialog-content"],
 [data-slot="dropdown-menu-content"] {
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-display: var(--font-geist-sans);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+  --font-display: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -137,7 +140,7 @@
     border-color: var(--border);
   }
   html {
-    font-family: var(--font-sans);
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
@@ -145,13 +148,13 @@
   body {
     background: var(--dw-bg);
     color: var(--dw-text);
-    font-family: var(--font-sans);
+    font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
     letter-spacing: -0.011em;
     overflow-x: hidden;
   }
   ::selection {
     background: var(--dw-accent);
-    color: white;
+    color: var(--dw-text);
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -313,13 +316,13 @@
   color: var(--dw-text);
 }
 
-.prose :where(a):not(:where([class~="not-prose"] *)) {
+.prose :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)) {
   color: var(--dw-accent);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
-.prose :where(a):not(:where([class~="not-prose"] *)):hover {
+.prose :where(a):not(:where([class~="not-prose"], [class~="not-prose"] *)):hover {
   color: var(--dw-accent-hover);
 }
 

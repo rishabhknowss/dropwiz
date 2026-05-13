@@ -1,8 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import { motion, AnimatePresence } from "motion/react";
+import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Tick02Icon, SparklesIcon, MagicWand01Icon } from "@hugeicons/core-free-icons";
+import {
+  Tick02Icon,
+  SparklesIcon,
+  ArrowLeft01Icon,
+} from "@hugeicons/core-free-icons";
 import { cn } from "@/lib/utils";
 import { api } from "@/utils/api";
 import { useOnboarding } from "./OnboardingContext";
@@ -48,11 +51,22 @@ export const BuildingStep = () => {
   const [scrapeError, setScrapeError] = useState<string | null>(null);
   const [scrapeComplete, setScrapeComplete] = useState(false);
 
-  const scrape = api.scrape.preview.useMutation();
+  const scrape = api.scrape.preview.useMutation({
+    onSuccess: (result) => {
+      setScrapedProduct(result);
+      setCompletedSteps(["scrape"]);
+      setStepDetails((prev) => ({ ...prev, scrape: "Product detected" }));
+      setTimeout(() => {
+        setScrapeComplete(true);
+      }, 400);
+    },
+    onError: (err) => {
+      setScrapeError(err.message || "Failed to fetch");
+    },
+  });
   const timerRefs = useRef<NodeJS.Timeout[]>([]);
   const startTimeRef = useRef(Date.now());
   const hasStartedRef = useRef(false);
-  const urlRef = useRef(data.url);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -121,35 +135,19 @@ export const BuildingStep = () => {
 
   useEffect(() => {
     if (hasStartedRef.current) return;
+    if (!data.url && !isAiMode) return;
     hasStartedRef.current = true;
 
     if (isAiMode) {
       setTimeout(() => {
         setScrapeComplete(true);
       }, 300);
-    } else if (urlRef.current) {
-      scrape.mutate(
-        { url: urlRef.current },
-        {
-          onSuccess: (result) => {
-            setScrapedProduct(result);
-            setCompletedSteps(["scrape"]);
-            setStepDetails((prev) => ({ ...prev, scrape: "Product detected" }));
-            setTimeout(() => {
-              setScrapeComplete(true);
-            }, 400);
-          },
-          onError: (err) => {
-            setScrapeError(err.message || "Failed to fetch");
-          },
-        },
-      );
+    } else if (data.url) {
+      scrape.mutate({ url: data.url });
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [data.url, isAiMode, scrape]);
 
   const progress = Math.min(100, Math.round((completedSteps.length / steps.length) * 100));
-  const productImage = data.scrapedProduct?.images?.[0];
 
   if (scrapeError) {
     return (
@@ -174,171 +172,145 @@ export const BuildingStep = () => {
   }
 
   return (
-    <div className="mx-auto max-w-[900px]">
-      <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
-        <div className="flex-1">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="mb-4 inline-flex items-center gap-2.5 rounded-full bg-[var(--dw-accent)]/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--dw-accent)]"
-          >
-            <HugeiconsIcon icon={SparklesIcon} size={12} className="animate-pulse" />
-            Building Store
-          </motion.div>
+    <div className="mx-auto max-w-[540px]">
+      <div className="mb-10 flex items-center gap-4">
+        <motion.button
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          type="button"
+          onClick={() => goToStep("customize")}
+          className="flex size-10 items-center justify-center rounded-full border border-[var(--dw-border)] bg-white text-[#666666] transition-all hover:border-[#0A0A0A] hover:text-[#0A0A0A]"
+        >
+          <HugeiconsIcon icon={ArrowLeft01Icon} size={18} />
+        </motion.button>
 
-          <motion.h1
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.15 }}
-            className="text-[32px] font-bold leading-tight tracking-tight text-[var(--dw-text)] md:text-[40px]"
-          >
-            Building your store<span className="text-[var(--dw-accent)]">.</span>
-          </motion.h1>
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.1 }}
+          className="inline-flex items-center gap-2 rounded-full border border-[var(--dw-border)] bg-white px-4 py-2 text-[12px] font-semibold uppercase tracking-wider text-[#0A0A0A]"
+        >
+          <span className="size-2 animate-pulse rounded-full bg-[var(--dw-accent)]" />
+          Building
+        </motion.div>
+      </div>
 
-          <motion.p
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mt-3 text-[15px] text-[var(--dw-text-muted)]"
-          >
-            Writing conversion-optimized copy, generating imagery, and assembling your store.
-          </motion.p>
+      <motion.h1
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+        className="text-[32px] font-bold leading-[1.1] tracking-tight text-[#0A0A0A] md:text-[44px]"
+      >
+        Creating your store
+      </motion.h1>
 
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.25 }}
-            className="mt-6 flex items-baseline gap-3"
-          >
-            <span className="dw-mono text-[48px] font-light tracking-tight text-[var(--dw-text)]">
-              {formatTime(elapsedSeconds)}
-            </span>
-            <span className="text-[14px] text-[var(--dw-text-muted)]">elapsed</span>
-          </motion.div>
+      <motion.p
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="mt-4 text-[16px] leading-relaxed text-[#666666]"
+      >
+        AI is writing conversion-optimized copy and generating imagery.
+      </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--dw-surface2)]"
-          >
+      <motion.div
+        initial={{ opacity: 0, y: 15 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+        className="mt-8 flex items-center gap-4"
+      >
+        <span className="font-mono text-[56px] font-light tracking-tight text-[#0A0A0A]">
+          {formatTime(elapsedSeconds)}
+        </span>
+        <span className="text-[14px] text-[#666666]">elapsed</span>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="mt-6 h-1.5 overflow-hidden rounded-full bg-[#E5E5E5]"
+      >
+        <motion.div
+          className="h-full bg-[#0A0A0A]"
+          initial={{ width: 0 }}
+          animate={{ width: `${progress}%` }}
+          transition={{ duration: 0.5, ease: "easeOut" }}
+        />
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.35 }}
+        className="mt-10 space-y-1"
+      >
+        {steps.map((step, index) => {
+          const isCompleted = completedSteps.includes(step.id);
+          const isActive = currentStepIndex === index && !isCompleted;
+          const isScraping = step.id === "scrape" && scrape.isPending;
+          const detail = stepDetails[step.id];
+
+          return (
             <motion.div
-              className="h-full bg-gradient-to-r from-[var(--dw-accent)] to-[var(--dw-accent-hover)]"
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
-            />
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.35 }}
-            className="mt-8 space-y-2"
-          >
-            {steps.map((step, index) => {
-              const isCompleted = completedSteps.includes(step.id);
-              const isActive = currentStepIndex === index && !isCompleted;
-              const isScraping = step.id === "scrape" && scrape.isPending;
-              const detail = stepDetails[step.id];
-
-              return (
-                <motion.div
-                  key={step.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.4 + index * 0.05 }}
-                  className={cn(
-                    "flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-300",
-                    isCompleted
-                      ? "bg-[var(--dw-jade)]/8"
-                      : isActive || isScraping
-                        ? "border border-[var(--dw-accent)]/30 bg-[var(--dw-accent)]/8"
-                        : "bg-transparent"
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "relative flex size-7 shrink-0 items-center justify-center rounded-lg transition-all",
-                      isCompleted
-                        ? "bg-[var(--dw-jade)] text-[#0a0a0a]"
-                        : isActive || isScraping
-                          ? "bg-[var(--dw-accent)] text-[#0a0a0a]"
-                          : "bg-[var(--dw-surface2)] text-[var(--dw-text-muted)]"
-                    )}
-                  >
-                    {isCompleted ? (
-                      <HugeiconsIcon icon={Tick02Icon} size={14} />
-                    ) : (isActive || isScraping) ? (
-                      <>
-                        <HugeiconsIcon icon={SparklesIcon} size={14} className="animate-pulse" />
-                        <span className="absolute inset-0 animate-ping rounded-lg bg-[var(--dw-accent)] opacity-30" />
-                      </>
-                    ) : (
-                      <span className="size-1.5 rounded-full bg-current animate-pulse" />
-                    )}
-                  </div>
-
-                  <div className="min-w-0 flex-1">
-                    <div
-                      className={cn(
-                        "text-[14px] font-medium transition-colors",
-                        isCompleted
-                          ? "text-[var(--dw-jade)] line-through decoration-[var(--dw-jade)]/40"
-                          : isActive || isScraping
-                            ? "text-[var(--dw-text)]"
-                            : "text-[var(--dw-text-muted)]"
-                      )}
-                    >
-                      {isCompleted ? step.label : (isActive || isScraping) ? step.activeLabel : step.label}
-                    </div>
-                  </div>
-
-                  {detail && isCompleted && (
-                    <span className="rounded-md bg-[var(--dw-surface2)] px-2.5 py-1 text-[11px] font-medium text-[var(--dw-text-muted)]">
-                      {detail}
-                    </span>
-                  )}
-                </motion.div>
-              );
-            })}
-          </motion.div>
-        </div>
-
-        <AnimatePresence>
-          {(productImage || isAiMode) && completedSteps.length >= 1 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, x: 20 }}
-              animate={{ opacity: 1, scale: 1, x: 0 }}
-              transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 20 }}
-              className="flex flex-col items-center lg:w-[340px]"
+              key={step.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.4 + index * 0.05 }}
+              className={cn(
+                "flex items-center gap-4 rounded-2xl px-4 py-3.5 transition-all duration-300",
+                isCompleted
+                  ? "bg-[#E8F5E9]"
+                  : isActive || isScraping
+                    ? "border-2 border-[#0A0A0A] bg-white"
+                    : "bg-transparent"
+              )}
             >
-              <div className="relative w-full overflow-hidden rounded-2xl border border-[var(--dw-border)] bg-white p-4 shadow-xl shadow-black/20">
-                {isAiMode ? (
-                  <div className="flex aspect-square items-center justify-center bg-gradient-to-br from-[var(--dw-accent)]/10 to-[var(--dw-accent)]/5 rounded-xl">
-                    <HugeiconsIcon icon={MagicWand01Icon} size={64} className="text-[var(--dw-accent)]" />
-                  </div>
-                ) : productImage && (
-                  <div className="relative aspect-square">
-                    <Image
-                      src={productImage}
-                      alt="Product"
-                      fill
-                      className="object-contain"
-                      unoptimized
-                    />
-                  </div>
+              <div
+                className={cn(
+                  "relative flex size-6 shrink-0 items-center justify-center rounded-full transition-all",
+                  isCompleted
+                    ? "bg-[#22C55E] text-white"
+                    : isActive || isScraping
+                      ? "bg-[#0A0A0A] text-white"
+                      : "border border-[#D1D5DB] bg-white text-[#9CA3AF]"
+                )}
+              >
+                {isCompleted ? (
+                  <HugeiconsIcon icon={Tick02Icon} size={12} />
+                ) : (isActive || isScraping) ? (
+                  <>
+                    <HugeiconsIcon icon={SparklesIcon} size={12} className="animate-pulse" />
+                  </>
+                ) : (
+                  <span className="size-1.5 rounded-full bg-current" />
                 )}
               </div>
-              <div className="mt-4 flex items-center gap-2 text-[12px] font-medium text-[var(--dw-jade)]">
-                <span className="size-2 rounded-full bg-[var(--dw-jade)] animate-pulse" />
-                {isAiMode ? "AI GENERATING" : "PRODUCT DETECTED"}
+
+              <div className="min-w-0 flex-1">
+                <div
+                  className={cn(
+                    "text-[14px] font-medium transition-colors",
+                    isCompleted
+                      ? "text-[#22C55E]"
+                      : isActive || isScraping
+                        ? "text-[#0A0A0A]"
+                        : "text-[#9CA3AF]"
+                  )}
+                >
+                  {isCompleted ? step.label : (isActive || isScraping) ? step.activeLabel : step.label}
+                </div>
               </div>
+
+              {detail && isCompleted && (
+                <span className="rounded-full bg-white px-3 py-1 text-[11px] font-medium text-[#666666]">
+                  {detail}
+                </span>
+              )}
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          );
+        })}
+      </motion.div>
     </div>
   );
 };

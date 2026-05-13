@@ -345,7 +345,7 @@ const SortableSectionRow = ({
 }: {
   id: string;
   index: number;
-  section: { type: string; data: Record<string, unknown> };
+  section: { type?: string; data?: Record<string, unknown> };
   onRemove: () => void;
 }) => {
   const {

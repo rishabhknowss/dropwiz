@@ -5,18 +5,16 @@ import Image from "next/image";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   SparklesIcon,
-  Loading03Icon,
   Delete01Icon,
   Cancel01Icon,
-  AlertCircleIcon,
-  Edit02Icon,
-  Globe02Icon,
+  ArrowRight01Icon,
+  Add01Icon,
+  Loading03Icon,
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard";
 import { OnboardingModal } from "@/components/dw/OnboardingModal";
 import { ShopifyConnectModal } from "@/components/shopify/ShopifyConnectModal";
-import { CardSkeleton } from "@/components/ui/loaders";
 import { api } from "@/utils/api";
 import { cn } from "@/lib/utils";
 import type { RouterOutputs } from "@/utils/api";
@@ -28,6 +26,18 @@ type StoreCardData = RouterOutputs["stores"]["listMine"][number];
 const getInitialOnboardingState = () => {
   if (typeof window === "undefined") return false;
   return localStorage.getItem(ONBOARDING_KEY) !== "true";
+};
+
+const PROMO_BANNER = {
+  id: "shopify",
+  badge: "Shopify exclusive offer!",
+  title: "3 months for",
+  highlight: "$1!",
+  subtitle: "This offer is also available for the creation of multiple stores",
+  cta: "Get the offer",
+  href: "https://www.shopify.com/in/free-trial",
+  image: "/shopify-logo.png",
+  gradient: "from-[#0A0A0A] to-[#1a2a1a]",
 };
 
 const StoresIndex = () => {
@@ -101,32 +111,18 @@ const StoresIndex = () => {
 
   if (!me.data) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--dw-bg)]">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-[#FAFAFA]">
         <div className="relative mb-4">
           <div className="absolute inset-0 rounded-full bg-[var(--dw-accent)] opacity-20 blur-xl" />
-          <div className="relative h-10 w-10 rounded-full border-2 border-[var(--dw-border)] border-t-[var(--dw-accent)] dw-spin" />
+          <div className="relative h-10 w-10 rounded-full border-2 border-[#E5E5E5] border-t-[var(--dw-accent)] animate-spin" />
         </div>
-        <div className="text-[13px] font-medium text-[var(--dw-text-muted)]">Loading your dashboard</div>
+        <div className="text-[13px] font-medium text-[#666666]">Loading your dashboard</div>
       </div>
     );
   }
 
-  const hasStores = (stores.data?.length ?? 0) > 0;
-
   return (
-    <DashboardLayout
-      title={`Welcome back, ${me.data.name ?? me.data.email.split("@")[0]}`}
-      subtitle={me.data.emailVerified ? "Pro account" : "Free tier"}
-      action={
-        <Link
-          href="/build/new"
-          className="inline-flex h-9 items-center gap-2 rounded-xl bg-[var(--dw-accent)] px-4 text-[12px] font-semibold text-[#0A0A0A] transition-all hover:bg-[var(--dw-accent-hover)]"
-        >
-          <HugeiconsIcon icon={SparklesIcon} size={14} />
-          New Store
-        </Link>
-      }
-    >
+    <DashboardLayout>
       {showOnboarding && (
         <OnboardingModal
           userName={me.data?.name ?? undefined}
@@ -145,33 +141,80 @@ const StoresIndex = () => {
         />
       )}
 
-      {stores.isLoading ? (
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {[...Array(8)].map((_, i) => (
-            <CardSkeleton key={i} />
-          ))}
-        </div>
-      ) : hasStores ? (
-        <div className="animate-fade-up">
-          <div className="mb-6 flex items-center justify-between">
-            <p className="text-[13px] text-[var(--dw-text-muted)]">
-              {stores.data?.length} store{stores.data?.length !== 1 ? "s" : ""} created
+      <div className="p-6 lg:p-8">
+        <section className="mb-10">
+          <div
+            className={cn(
+              "relative overflow-hidden rounded-2xl bg-gradient-to-r p-6",
+              PROMO_BANNER.gradient
+            )}
+          >
+            <span className="mb-3 inline-block rounded-full bg-white/10 px-3 py-1 text-[11px] font-medium text-white/80">
+              {PROMO_BANNER.badge}
+            </span>
+            <h3 className="text-[28px] font-bold leading-tight text-white">
+              {PROMO_BANNER.title}{" "}
+              <span className="text-[var(--dw-accent)]">{PROMO_BANNER.highlight}</span>
+            </h3>
+            <p className="mt-2 max-w-[280px] text-[13px] leading-relaxed text-white/60">
+              {PROMO_BANNER.subtitle}
             </p>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {stores.data?.map((s, i) => (
-              <StoreCard
-                key={s.id}
-                store={s}
-                index={i}
-                onDelete={() => setDeleteTarget(s)}
+            <a
+              href={PROMO_BANNER.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2 text-[13px] font-semibold text-[#0A0A0A] transition-all hover:bg-white/90"
+            >
+              {PROMO_BANNER.cta}
+              <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+            </a>
+            <div className="absolute bottom-4 right-4">
+              <Image
+                src={PROMO_BANNER.image}
+                alt=""
+                width={80}
+                height={80}
+                className="opacity-80"
+                unoptimized
               />
-            ))}
+            </div>
           </div>
-        </div>
-      ) : (
-        <EmptyState />
-      )}
+        </section>
+
+        <section className="mb-10">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="text-[20px] font-bold text-[#0A0A0A]">Your stores</h2>
+            <Link
+              href="/build/new"
+              className="inline-flex items-center gap-2 rounded-lg bg-[#0A0A0A] px-4 py-2 text-[13px] font-medium text-white transition-all hover:bg-[#1a1a1a]"
+            >
+              New store
+            </Link>
+          </div>
+
+          {stores.isLoading ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="aspect-[4/3] animate-pulse rounded-2xl bg-[#E5E5E5]" />
+              ))}
+            </div>
+          ) : (stores.data?.length ?? 0) > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {stores.data?.map((s, i) => (
+                <StoreCard
+                  key={s.id}
+                  store={s}
+                  index={i}
+                  onDelete={() => setDeleteTarget(s)}
+                />
+              ))}
+            </div>
+          ) : (
+            <EmptyState />
+          )}
+        </section>
+
+      </div>
     </DashboardLayout>
   );
 };
@@ -185,92 +228,52 @@ const StoreCard = ({
   index?: number;
   onDelete: () => void;
 }) => {
-  const inProgress = store.status === "generating" || store.status === "scraping";
-  const isFailed = store.status === "failed";
-  const hasThumb = !!store.thumbnailUrl && !inProgress && !isFailed;
+  const isBuilt = (store.status === "ready" || store.status === "published") && !!store.thumbnailUrl && store.thumbnailUrl.length > 10;
 
   return (
-    <div
-      className="animate-slide-up group relative overflow-hidden rounded-lg border border-[var(--dw-border)] bg-[var(--dw-surface)] transition-all duration-200 hover:border-[var(--dw-accent)]/30"
-      style={{ animationDelay: `${index * 30}ms`, animationFillMode: "both" }}
+    <Link
+      href={`/app/stores/${store.id}/edit`}
+      className="group relative overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white p-2 transition-all hover:border-[#CCCCCC] hover:shadow-md"
+      style={{ animationDelay: `${index * 30}ms` }}
     >
       <div
-        className="relative aspect-[4/3] w-full overflow-hidden"
-        style={{
-          background: hasThumb
-            ? "var(--dw-bg-tertiary)"
-            : isFailed
-            ? "linear-gradient(135deg, #1a1a1a 0%, #2a1a1a 100%)"
-            : `linear-gradient(135deg, ${store.themePreview.bg} 0%, ${store.themePreview.primary}40 100%)`,
-        }}
+        className={cn(
+          "relative aspect-[4/3] w-full overflow-hidden rounded-xl border",
+          isBuilt ? "border-[#E5E5E5] bg-[#F5F5F5]" : "border-[#E0E0E0] bg-[#F0F0F0]"
+        )}
       >
-        {hasThumb && store.thumbnailUrl && (
+        {isBuilt ? (
           <Image
-            src={store.thumbnailUrl}
+            src={store.thumbnailUrl!}
             alt=""
             fill
             unoptimized
-            className="object-cover"
+            className="object-cover transition-transform group-hover:scale-105"
           />
-        )}
-        {inProgress && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-            <div className="flex items-center gap-1.5 rounded-md bg-white/10 px-2.5 py-1.5">
-              <HugeiconsIcon icon={Loading03Icon} size={11} className="text-[var(--dw-accent)] dw-spin" />
-              <span className="text-[10px] font-medium text-white">Building...</span>
-            </div>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <HugeiconsIcon icon={SparklesIcon} size={28} className="text-[#BBBBBB]" />
           </div>
         )}
-        {isFailed && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60">
-            <HugeiconsIcon icon={AlertCircleIcon} size={16} className="text-[var(--dw-error)]" />
-            <span className="mt-1 text-[9px] font-medium text-[var(--dw-error)]">Failed</span>
-          </div>
-        )}
-        <div className="absolute right-1.5 top-1.5">
-          <StatusBadge status={store.status} />
-        </div>
       </div>
 
-      <div className="p-2.5">
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate text-[12px] font-semibold text-[var(--dw-text)]">
-              {store.name ?? "Untitled store"}
-            </h3>
-            <p className="mt-0.5 flex items-center gap-1 text-[9px] text-[var(--dw-text-subtle)]">
-              {new Date(store.createdAt).toLocaleDateString("en-US", {
-                month: "short",
-                day: "numeric",
-              })}
-              {store.publishedShopifyUrl && (
-                <span className="inline-flex items-center gap-0.5 text-[var(--dw-success)]">
-                  <HugeiconsIcon icon={Globe02Icon} size={8} />
-                  Live
-                </span>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              onDelete();
-            }}
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-[var(--dw-text-subtle)] transition-all hover:bg-[var(--dw-error)]/10 hover:text-[var(--dw-error)]"
-          >
-            <HugeiconsIcon icon={Delete01Icon} size={11} />
-          </button>
+      <div className="flex items-center justify-between px-1 pt-2.5 pb-1">
+        <div className="min-w-0 flex-1">
+          <h3 className="truncate text-[13px] font-medium text-[#0A0A0A]">
+            {store.name ?? "Untitled store"}
+          </h3>
         </div>
-
-        <Link
-          href={`/app/stores/${store.id}/edit`}
-          className="flex w-full items-center justify-center gap-1 rounded-md bg-[var(--dw-surface2)] px-2.5 py-1.5 text-[10px] font-medium text-[var(--dw-text)] transition-all hover:bg-[var(--dw-accent)] hover:text-[#0A0A0A]"
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            onDelete();
+          }}
+          className="flex size-7 items-center justify-center rounded-lg text-[#CCCCCC] opacity-0 transition-all hover:bg-red-50 hover:text-[#DC2626] group-hover:opacity-100"
         >
-          <HugeiconsIcon icon={Edit02Icon} size={11} />
-          Edit Store
-        </Link>
+          <HugeiconsIcon icon={Delete01Icon} size={14} />
+        </button>
       </div>
-    </div>
+    </Link>
   );
 };
 
@@ -286,24 +289,24 @@ const DeleteModal = ({
   isDeleting: boolean;
 }) => (
   <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} />
-    <div className="animate-scale-in relative w-full max-w-md overflow-hidden rounded-2xl border border-[var(--dw-border)] bg-[var(--dw-surface)] shadow-2xl">
+    <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" onClick={onClose} />
+    <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white shadow-2xl">
       <button
         onClick={onClose}
-        className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-[var(--dw-text-muted)] transition-colors hover:bg-[var(--dw-surface2)] hover:text-[var(--dw-text)]"
+        className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-lg text-[#999999] transition-colors hover:bg-[#F5F5F5] hover:text-[#666666]"
       >
         <HugeiconsIcon icon={Cancel01Icon} size={16} />
       </button>
 
       <div className="p-6">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--dw-error)]/10">
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-red-50">
           <HugeiconsIcon icon={Delete01Icon} size={24} className="text-[var(--dw-error)]" />
         </div>
 
-        <h3 className="text-[18px] font-bold text-[var(--dw-text)]">Delete store?</h3>
-        <p className="mt-2 text-[14px] leading-relaxed text-[var(--dw-text-muted)]">
+        <h3 className="text-[18px] font-bold text-[#0A0A0A]">Delete store?</h3>
+        <p className="mt-2 text-[14px] leading-relaxed text-[#666666]">
           This will permanently delete{" "}
-          <span className="font-semibold text-[var(--dw-text)]">{store.name ?? "this store"}</span> and all its
+          <span className="font-semibold text-[#0A0A0A]">{store.name ?? "this store"}</span> and all its
           associated data. This action cannot be undone.
         </p>
 
@@ -311,7 +314,7 @@ const DeleteModal = ({
           <button
             onClick={onClose}
             disabled={isDeleting}
-            className="flex-1 rounded-xl border border-[var(--dw-border)] bg-[var(--dw-surface2)] px-4 py-3 text-[13px] font-semibold text-[var(--dw-text)] transition-all hover:bg-[var(--dw-surface-hover)] disabled:opacity-50"
+            className="flex-1 rounded-xl border border-[#E5E5E5] bg-white px-4 py-3 text-[13px] font-semibold text-[#0A0A0A] transition-all hover:bg-[#F5F5F5] disabled:opacity-50"
           >
             Cancel
           </button>
@@ -322,7 +325,7 @@ const DeleteModal = ({
           >
             {isDeleting ? (
               <>
-                <HugeiconsIcon icon={Loading03Icon} size={14} className="dw-spin" />
+                <HugeiconsIcon icon={Loading03Icon} size={14} className="animate-spin" />
                 Deleting...
               </>
             ) : (
@@ -338,95 +341,23 @@ const DeleteModal = ({
   </div>
 );
 
-const StatusBadge = ({ status }: { status: string }) => {
-  const config: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-    published: {
-      bg: "bg-[var(--dw-success)]/10",
-      text: "text-[var(--dw-success)]",
-      dot: "bg-[var(--dw-success)]",
-      label: "Live",
-    },
-    ready: {
-      bg: "bg-[var(--dw-accent)]/10",
-      text: "text-[var(--dw-accent)]",
-      dot: "bg-[var(--dw-accent)]",
-      label: "Draft",
-    },
-    failed: {
-      bg: "bg-[var(--dw-error)]/10",
-      text: "text-[var(--dw-error)]",
-      dot: "bg-[var(--dw-error)]",
-      label: "Failed",
-    },
-    generating: {
-      bg: "bg-[var(--dw-warning)]/10",
-      text: "text-[var(--dw-warning)]",
-      dot: "bg-[var(--dw-warning)]",
-      label: "Building",
-    },
-    scraping: {
-      bg: "bg-[var(--dw-warning)]/10",
-      text: "text-[var(--dw-warning)]",
-      dot: "bg-[var(--dw-warning)]",
-      label: "Importing",
-    },
-  };
-
-  const c = config[status] ?? {
-    bg: "bg-[var(--dw-surface2)]",
-    text: "text-[var(--dw-text-muted)]",
-    dot: "bg-[var(--dw-text-subtle)]",
-    label: status,
-  };
-
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1 rounded-md px-2 py-1 text-[9px] font-semibold uppercase tracking-wide backdrop-blur-sm",
-        c.bg,
-        c.text
-      )}
-    >
-      <span
-        className={cn(
-          "h-1 w-1 rounded-full",
-          c.dot,
-          status === "generating" || status === "scraping" ? "animate-pulse" : ""
-        )}
-      />
-      {c.label}
-    </span>
-  );
-};
-
 const EmptyState = () => (
-  <div className="animate-fade-up relative overflow-hidden rounded-2xl border border-dashed border-[var(--dw-border)] bg-[var(--dw-surface)] px-8 py-20 text-center">
-    <div className="dw-grid-pattern absolute inset-0 opacity-30" />
-    <div className="absolute -left-20 -top-20 h-40 w-40 rounded-full bg-[var(--dw-accent)] opacity-10 blur-3xl" />
-    <div className="absolute -bottom-20 -right-20 h-40 w-40 rounded-full bg-[var(--dw-secondary)] opacity-10 blur-3xl" />
-
+  <div className="relative overflow-hidden rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-8 py-16 text-center">
     <div className="relative z-10">
-      <div className="relative mx-auto mb-6 inline-flex">
-        <div className="absolute inset-0 rounded-2xl bg-[var(--dw-accent)] opacity-20 blur-xl" />
-        <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-[var(--dw-accent)] to-[var(--dw-accent-hover)]">
-          <HugeiconsIcon icon={SparklesIcon} size={28} className="text-[#0A0A0A]" />
-        </div>
+      <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[var(--dw-accent)]/10">
+        <HugeiconsIcon icon={SparklesIcon} size={24} className="text-[var(--dw-accent)]" />
       </div>
-      <h3 className="text-[20px] font-bold tracking-tight text-[var(--dw-text)]">Create your first store</h3>
-      <p className="mx-auto mt-3 max-w-md text-[14px] leading-relaxed text-[var(--dw-text-muted)]">
-        Paste any product URL and watch AI generate a high-converting store with custom copy, imagery, and optimized
-        layouts.
+      <h3 className="text-[18px] font-bold text-[#0A0A0A]">Create your first store</h3>
+      <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-[#666666]">
+        Paste any product URL and watch AI generate a high-converting store with custom copy and imagery.
       </p>
       <Link
         href="/build/new"
-        className="mt-8 inline-flex h-12 items-center gap-2.5 rounded-xl bg-gradient-to-r from-[var(--dw-accent)] to-[var(--dw-accent-hover)] px-6 text-[14px] font-semibold text-[#0A0A0A] shadow-lg shadow-[var(--dw-accent)]/20 transition-all hover:shadow-[var(--dw-accent)]/30 hover:brightness-110"
+        className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-3 text-[14px] font-semibold text-white transition-all hover:bg-[#1a1a1a]"
       >
-        <HugeiconsIcon icon={SparklesIcon} size={16} />
+        <HugeiconsIcon icon={Add01Icon} size={16} />
         Create Store
       </Link>
-      <p className="mt-4 text-[11px] font-medium uppercase tracking-wide text-[var(--dw-text-subtle)]">
-        60 seconds · No credit card required
-      </p>
     </div>
   </div>
 );

@@ -70,9 +70,9 @@ export const STORE_TEMPLATES: StoreTemplate[] = [
         text: "#0a0a0a",
       },
       typography: {
-        display: "Geist Sans",
-        sans: "Geist Sans",
-        mono: "Geist Mono",
+        display: "Space Grotesk",
+        sans: "Space Grotesk",
+        mono: "Space Mono",
       },
       radius: 12,
       buttons: { shape: "rounded", size: "md" },

@@ -1,4 +1,14 @@
 import { useMemo, useState } from "react";
+import { HugeiconsIcon } from "@hugeicons/react";
+import {
+  PaintBoardIcon,
+  TextFontIcon,
+  SquareIcon,
+  Image01Icon,
+  GridIcon,
+  StarIcon,
+  CropIcon,
+} from "@hugeicons/core-free-icons";
 import type { ThemeTokens, ButtonStyle, ImageStyle, CardStyle } from "@/db/schema";
 import { api } from "@/utils/api";
 import { runSilent, runWithToast } from "@/hooks/useToastMutation";
@@ -8,14 +18,14 @@ import { cn } from "@/lib/utils";
 
 type DesignTab = "colors" | "typography" | "buttons" | "images" | "cards" | "icons" | "radius";
 
-const TABS: Array<{ id: DesignTab; label: string; icon: string }> = [
-  { id: "colors", label: "Colors", icon: "≡" },
-  { id: "typography", label: "Typography", icon: "Aa" },
-  { id: "buttons", label: "Buttons", icon: "▢" },
-  { id: "images", label: "Images", icon: "⬚" },
-  { id: "cards", label: "Cards", icon: "▣" },
-  { id: "icons", label: "Icons", icon: "☆" },
-  { id: "radius", label: "Border Radius", icon: "◼" },
+const TABS: Array<{ id: DesignTab; label: string; icon: typeof PaintBoardIcon }> = [
+  { id: "colors", label: "Colors", icon: PaintBoardIcon },
+  { id: "typography", label: "Typography", icon: TextFontIcon },
+  { id: "buttons", label: "Buttons", icon: SquareIcon },
+  { id: "images", label: "Images", icon: Image01Icon },
+  { id: "cards", label: "Cards", icon: GridIcon },
+  { id: "icons", label: "Icons", icon: StarIcon },
+  { id: "radius", label: "Radius", icon: CropIcon },
 ];
 
 const BUTTON_STYLES: Array<{ id: ButtonStyle; label: string }> = [
@@ -191,25 +201,25 @@ const DesignForm = ({
         </div>
       </div>
       <div className="flex -mx-4 border-t border-[color:var(--dw-border)]">
-        <div className="flex w-[140px] shrink-0 flex-col gap-1 border-r border-[color:var(--dw-border)] p-2">
+        <div className="flex w-[130px] shrink-0 flex-col gap-0.5 border-r border-[color:var(--dw-border)] py-2 px-1.5">
           {TABS.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-[13px] transition",
+                "flex items-center gap-2 rounded-lg px-2.5 py-2 text-left text-[12px] transition",
                 activeTab === tab.id
-                  ? "bg-[color:var(--dw-surface2)] text-[color:var(--dw-text)]"
-                  : "text-[color:var(--dw-text-muted)] hover:bg-[color:var(--dw-surface2)]/50"
+                  ? "bg-[#F0F0F0] text-[#0A0A0A] font-medium"
+                  : "text-[#666666] hover:bg-[#F5F5F5] hover:text-[#0A0A0A]"
               )}
             >
-              <span className="w-5 text-center text-[14px] opacity-60">{tab.icon}</span>
+              <HugeiconsIcon icon={tab.icon} size={14} strokeWidth={activeTab === tab.id ? 2 : 1.5} />
               <span>{tab.label}</span>
             </button>
           ))}
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-3">
           {activeTab === "colors" && (
             <ColorsTab tokens={tokens} setColor={setColor} />
           )}
@@ -267,62 +277,48 @@ const ColorsTab = ({
 
   return (
     <div className="space-y-4">
-      <div className="text-[15px] font-medium">Color Palette</div>
-      <div className="space-y-3">
-        <ColorPaletteButton
-          label="Primary"
-          color={primary}
-          onChange={(v) => setColor("primary", v)}
-          variant="primary"
-        />
-        <ColorPaletteButton
-          label="Secondary"
-          color={secondary}
-          onChange={(v) => setColor("secondary", v)}
-          variant="secondary"
-        />
-        <ColorPaletteButton
-          label="Accent"
-          color={accent}
-          onChange={(v) => setColor("accent", v)}
-          variant="accent"
-        />
+      <div className="text-[13px] font-medium text-[#0A0A0A]">Color Palette</div>
+      <div className="space-y-2">
+        <ColorRow label="Primary" sublabel="Buttons, CTAs" color={primary} onChange={(v) => setColor("primary", v)} />
+        <ColorRow label="Secondary" sublabel="Headings, text" color={secondary} onChange={(v) => setColor("secondary", v)} />
+        <ColorRow label="Accent" sublabel="Backgrounds" color={accent} onChange={(v) => setColor("accent", v)} />
       </div>
     </div>
   );
 };
 
-const ColorPaletteButton = ({
+const ColorRow = ({
   label,
+  sublabel,
   color,
   onChange,
-  variant,
 }: {
   label: string;
+  sublabel: string;
   color: string;
   onChange: (v: string) => void;
-  variant: "primary" | "secondary" | "accent";
-}) => {
-  const bgColor = variant === "primary" ? color : variant === "secondary" ? color : "#f5f5f5";
-  const textColor = variant === "accent" ? "rgba(0,0,0,0.4)" : "#fff";
-
-  return (
+}) => (
+  <div className="group relative flex items-center gap-3 rounded-lg border border-[#E5E5E5] bg-white p-2.5 transition hover:border-[#CCCCCC]">
     <div
-      className="relative flex h-14 cursor-pointer items-center rounded-xl px-4 transition hover:opacity-90"
-      style={{ background: bgColor }}
+      className="relative size-9 shrink-0 overflow-hidden rounded-lg border border-[#E5E5E5] shadow-sm transition group-hover:scale-105"
+      style={{ backgroundColor: color }}
     >
-      <span className="text-[14px] font-medium" style={{ color: textColor }}>
-        {label}
-      </span>
       <input
         type="color"
         value={color}
         onChange={(e) => onChange(e.target.value)}
-        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        className="absolute inset-0 size-full cursor-pointer opacity-0"
       />
     </div>
-  );
-};
+    <div className="min-w-0 flex-1">
+      <div className="text-[12px] font-medium text-[#0A0A0A]">{label}</div>
+      <div className="text-[10px] text-[#999999]">{sublabel}</div>
+    </div>
+    <div className="rounded bg-[#F5F5F5] px-2 py-1 font-mono text-[10px] uppercase text-[#666666]">
+      {color}
+    </div>
+  </div>
+);
 
 const TypographyTab = ({
   activeFontId,
@@ -337,36 +333,38 @@ const TypographyTab = ({
 
   return (
     <div className="space-y-4">
-      <div className="text-[15px] font-medium">Fonts</div>
-      <div className="space-y-3">
-        <div className="flex items-center gap-3">
-          <span className="w-16 text-[13px] text-[color:var(--dw-text-muted)]">Titles</span>
-          <div className="flex flex-1 items-center gap-2">
-            <div
-              className="flex-1 rounded-lg bg-[color:var(--dw-surface2)] px-4 py-3 text-[14px]"
-              style={{ fontFamily: activePreset.display }}
-            >
+      <div className="text-[13px] font-medium text-[#0A0A0A]">Font Pairing</div>
+      <div className="space-y-2">
+        <div className="flex items-center gap-3 rounded-lg border border-[#E5E5E5] bg-white p-2.5">
+          <div
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#F5F5F5] text-[16px] font-semibold text-[#0A0A0A]"
+            style={{ fontFamily: activePreset.display }}
+          >
+            Aa
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[12px] font-medium text-[#0A0A0A]">Headings</div>
+            <div className="truncate text-[10px] text-[#999999]" style={{ fontFamily: activePreset.display }}>
               {activePreset.display}
-            </div>
-            <div
-              className="flex h-11 w-11 items-center justify-center rounded-lg bg-[color:var(--dw-surface2)] text-[14px] font-semibold"
-              style={{ fontFamily: activePreset.display }}
-            >
-              AA
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="w-16 text-[13px] text-[color:var(--dw-text-muted)]">Content</span>
+        <div className="flex items-center gap-3 rounded-lg border border-[#E5E5E5] bg-white p-2.5">
           <div
-            className="flex-1 rounded-lg bg-[color:var(--dw-surface2)] px-4 py-3 text-[14px]"
+            className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#F5F5F5] text-[14px] text-[#0A0A0A]"
             style={{ fontFamily: activePreset.body }}
           >
-            {activePreset.body}
+            Aa
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[12px] font-medium text-[#0A0A0A]">Body</div>
+            <div className="truncate text-[10px] text-[#999999]" style={{ fontFamily: activePreset.body }}>
+              {activePreset.body}
+            </div>
           </div>
         </div>
       </div>
-      <div className="h-px bg-[color:var(--dw-border)]" />
+      <div className="text-[13px] font-medium text-[#0A0A0A]">Presets</div>
       <div className="space-y-1.5">
         {FONT_PRESETS.map((preset) => {
           const active = activeFontId === preset.id;
@@ -376,29 +374,25 @@ const TypographyTab = ({
               onClick={() => setFont(preset)}
               disabled={isPending}
               className={cn(
-                "flex w-full cursor-pointer items-center gap-3 rounded-[10px] border p-2.5 text-left transition",
+                "flex w-full items-center gap-3 rounded-lg border bg-white p-2.5 text-left transition",
                 active
-                  ? "border-[color:var(--dw-accent)] bg-[color:var(--dw-surface2)]"
-                  : "border-[color:var(--dw-border)] hover:border-[color:var(--dw-accent)]/40"
+                  ? "border-[#0A0A0A] ring-1 ring-[#0A0A0A]"
+                  : "border-[#E5E5E5] hover:border-[#CCCCCC]"
               )}
             >
               <div
-                className="w-10 shrink-0 text-[20px] font-semibold leading-none"
+                className="flex size-8 shrink-0 items-center justify-center rounded-md bg-[#F5F5F5] text-[14px] font-semibold"
                 style={{ fontFamily: preset.display }}
               >
                 Aa
               </div>
-              <div className="flex-1 overflow-hidden">
-                <div
-                  className="text-[13px] font-medium"
-                  style={{ fontFamily: preset.display }}
-                >
-                  {preset.name}
-                </div>
-                <div className="dw-mono truncate text-[10px] text-[color:var(--dw-text-muted)]">
-                  {preset.vibe}
-                </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[12px] font-medium text-[#0A0A0A]">{preset.name}</div>
+                <div className="truncate text-[10px] text-[#999999]">{preset.vibe}</div>
               </div>
+              {active && (
+                <div className="size-2 shrink-0 rounded-full bg-[#0A0A0A]" />
+              )}
             </button>
           );
         })}
@@ -446,8 +440,8 @@ const ButtonsTab = ({
 
   return (
     <div className="space-y-4">
-      <div className="text-[15px] font-medium">Styles</div>
-      <div className="space-y-2">
+      <div className="text-[13px] font-medium text-[#0A0A0A]">Button Styles</div>
+      <div className="grid grid-cols-2 gap-2">
         {BUTTON_STYLES.map((style) => {
           const active = buttonStyle === style.id;
           const btnStyles = getButtonStyles(style.id);
@@ -456,16 +450,19 @@ const ButtonsTab = ({
               key={style.id}
               onClick={() => setButtonStyle(style.id)}
               className={cn(
-                "w-full rounded-xl border-2 p-1 transition",
-                active ? "border-white" : "border-transparent"
+                "flex flex-col items-center gap-2 rounded-lg border bg-white p-2.5 transition",
+                active
+                  ? "border-[#0A0A0A] ring-1 ring-[#0A0A0A]"
+                  : "border-[#E5E5E5] hover:border-[#CCCCCC]"
               )}
             >
               <div
-                className="flex h-12 items-center justify-center rounded-lg text-[14px] font-medium transition"
+                className="flex h-9 w-full items-center justify-center rounded-md text-[12px] font-medium"
                 style={btnStyles}
               >
-                {style.label}
+                Button
               </div>
+              <span className="text-[10px] text-[#666666]">{style.label}</span>
             </button>
           );
         })}
@@ -503,8 +500,8 @@ const ImagesTab = ({
 
   return (
     <div className="space-y-4">
-      <div className="text-[15px] font-medium">Styles</div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="text-[13px] font-medium text-[#0A0A0A]">Image Styles</div>
+      <div className="grid grid-cols-2 gap-2">
         {IMAGE_STYLES.map((style) => {
           const active = imageStyle === style.id;
           const imgStyles = getImageStyles(style.id);
@@ -513,17 +510,19 @@ const ImagesTab = ({
               key={style.id}
               onClick={() => setImageStyle(style.id)}
               className={cn(
-                "flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition",
-                active ? "border-white" : "border-transparent hover:border-[color:var(--dw-border)]"
+                "flex flex-col items-center gap-2 rounded-lg border bg-white p-2.5 transition",
+                active
+                  ? "border-[#0A0A0A] ring-1 ring-[#0A0A0A]"
+                  : "border-[#E5E5E5] hover:border-[#CCCCCC]"
               )}
             >
-              <div
-                className="aspect-[4/3] w-full overflow-hidden bg-[#9ca3af]"
-                style={imgStyles}
-              >
-                <div className="h-full w-full bg-gradient-to-br from-[#d1d5db] to-[#9ca3af]" />
+              <div className="aspect-[4/3] w-full overflow-hidden rounded-md bg-[#F5F5F5] p-1">
+                <div
+                  className="size-full bg-gradient-to-br from-[#E0E0E0] to-[#CCCCCC]"
+                  style={imgStyles}
+                />
               </div>
-              <span className="text-[12px] text-[color:var(--dw-text-muted)]">{style.label}</span>
+              <span className="text-[10px] text-[#666666]">{style.label}</span>
             </button>
           );
         })}
@@ -557,8 +556,8 @@ const CardsTab = ({
 
   return (
     <div className="space-y-4">
-      <div className="text-[15px] font-medium">Styles</div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="text-[13px] font-medium text-[#0A0A0A]">Card Styles</div>
+      <div className="grid grid-cols-2 gap-2">
         {CARD_STYLES.map((style) => {
           const active = cardStyle === style.id;
           const cardStyles = getCardStyles(style.id);
@@ -567,21 +566,23 @@ const CardsTab = ({
               key={style.id}
               onClick={() => setCardStyle(style.id)}
               className={cn(
-                "flex flex-col items-center gap-2 rounded-xl border-2 p-3 transition",
-                active ? "border-white" : "border-transparent hover:border-[color:var(--dw-border)]"
+                "flex flex-col items-center gap-2 rounded-lg border bg-white p-2.5 transition",
+                active
+                  ? "border-[#0A0A0A] ring-1 ring-[#0A0A0A]"
+                  : "border-[#E5E5E5] hover:border-[#CCCCCC]"
               )}
             >
-              <div className="relative aspect-[4/3] w-full">
+              <div className="relative aspect-[4/3] w-full rounded-md bg-[#F5F5F5] p-1">
                 <div
-                  className="absolute left-0 top-0 h-3/4 w-3/4 bg-[#6b7280]"
+                  className="absolute left-1.5 top-1.5 h-2/3 w-2/3 bg-[#E0E0E0]"
                   style={cardStyles}
                 />
                 <div
-                  className="absolute bottom-0 right-0 h-3/4 w-3/4 bg-[#9ca3af]"
+                  className="absolute bottom-1.5 right-1.5 h-2/3 w-2/3 bg-[#D0D0D0]"
                   style={cardStyles}
                 />
               </div>
-              <span className="text-[12px] text-[color:var(--dw-text-muted)]">{style.label}</span>
+              <span className="text-[10px] text-[#666666]">{style.label}</span>
             </button>
           );
         })}
@@ -592,9 +593,15 @@ const CardsTab = ({
 
 const IconsTab = () => (
   <div className="space-y-4">
-    <div className="text-[15px] font-medium">Icon Style</div>
-    <div className="text-[13px] text-[color:var(--dw-text-muted)]">
-      Icon customization coming soon
+    <div className="text-[13px] font-medium text-[#0A0A0A]">Icon Style</div>
+    <div className="flex items-center gap-3 rounded-lg border border-[#E5E5E5] bg-white p-3">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-[#F5F5F5]">
+        <HugeiconsIcon icon={StarIcon} size={16} className="text-[#999999]" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[12px] font-medium text-[#0A0A0A]">Coming soon</div>
+        <div className="text-[10px] text-[#999999]">Icon customization is in development</div>
+      </div>
     </div>
   </div>
 );
@@ -611,35 +618,35 @@ const RadiusTab = ({
   setButtonRadius: (r: number) => void;
 }) => (
   <div className="space-y-4">
-    <div className="text-[15px] font-medium">Rounded corners</div>
-    <div className="space-y-3">
-      <div className="flex items-center justify-between rounded-lg bg-[color:var(--dw-surface2)] px-4 py-3">
-        <span className="text-[14px]">Theme radius</span>
-        <div className="flex items-center gap-2">
-          <input
-            type="range"
-            min={0}
-            max={32}
-            value={radius}
-            onChange={(e) => setRadius(Number(e.target.value))}
-            className="w-24 cursor-pointer accent-[color:var(--dw-accent)]"
-          />
-          <span className="w-6 text-right text-[14px] text-[color:var(--dw-text-muted)]">{radius}</span>
+    <div className="text-[13px] font-medium text-[#0A0A0A]">Border Radius</div>
+    <div className="space-y-2">
+      <div className="rounded-lg border border-[#E5E5E5] bg-white p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[12px] font-medium text-[#0A0A0A]">Theme radius</span>
+          <span className="rounded bg-[#F5F5F5] px-2 py-0.5 font-mono text-[10px] text-[#666666]">{radius}px</span>
         </div>
+        <input
+          type="range"
+          min={0}
+          max={32}
+          value={radius}
+          onChange={(e) => setRadius(Number(e.target.value))}
+          className="w-full cursor-pointer accent-[#0A0A0A]"
+        />
       </div>
-      <div className="flex items-center justify-between rounded-lg bg-[color:var(--dw-surface2)] px-4 py-3">
-        <span className="text-[14px]">Button radius</span>
-        <div className="flex items-center gap-2">
-          <input
-            type="range"
-            min={0}
-            max={32}
-            value={buttonRadius}
-            onChange={(e) => setButtonRadius(Number(e.target.value))}
-            className="w-24 cursor-pointer accent-[color:var(--dw-accent)]"
-          />
-          <span className="w-6 text-right text-[14px] text-[color:var(--dw-text-muted)]">{buttonRadius}</span>
+      <div className="rounded-lg border border-[#E5E5E5] bg-white p-3">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-[12px] font-medium text-[#0A0A0A]">Button radius</span>
+          <span className="rounded bg-[#F5F5F5] px-2 py-0.5 font-mono text-[10px] text-[#666666]">{buttonRadius}px</span>
         </div>
+        <input
+          type="range"
+          min={0}
+          max={32}
+          value={buttonRadius}
+          onChange={(e) => setButtonRadius(Number(e.target.value))}
+          className="w-full cursor-pointer accent-[#0A0A0A]"
+        />
       </div>
     </div>
   </div>

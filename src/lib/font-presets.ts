@@ -9,11 +9,11 @@ export type FontPreset = {
 
 export const FONT_PRESETS: FontPreset[] = [
   {
-    id: "geist",
-    name: "Geist",
-    display: "Geist Sans",
-    body: "Geist Sans",
-    mono: "Geist Mono",
+    id: "space",
+    name: "Space Grotesk",
+    display: "Space Grotesk",
+    body: "Space Grotesk",
+    mono: "Space Mono",
     vibe: "Clean · modern default",
   },
   {
@@ -41,12 +41,12 @@ export const FONT_PRESETS: FontPreset[] = [
     vibe: "Geometric · neutral",
   },
   {
-    id: "space",
-    name: "Space",
-    display: "Space Grotesk",
-    body: "Space Grotesk",
-    mono: "Space Mono",
-    vibe: "Display · techy",
+    id: "inter",
+    name: "Inter",
+    display: "Inter",
+    body: "Inter",
+    mono: "JetBrains Mono",
+    vibe: "Neutral · versatile",
   },
   {
     id: "instrument",
@@ -75,11 +75,7 @@ export const FONT_PRESETS: FontPreset[] = [
 ];
 
 export const ALL_FONT_FAMILIES = Array.from(
-  new Set(
-    FONT_PRESETS.flatMap((p) => [p.display, p.body, p.mono]).filter(
-      (f) => f !== "Geist Sans" && f !== "Geist Mono",
-    ),
-  ),
+  new Set(FONT_PRESETS.flatMap((p) => [p.display, p.body, p.mono])),
 );
 
 export function googleFontsUrl(): string {

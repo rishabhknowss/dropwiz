@@ -1,7 +1,7 @@
 import { Html, Head, Main, NextScript } from "next/document";
 
 const GOOGLE_FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap";
+  "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Fraunces:wght@400;500;600;700&family=Lora:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&family=Instrument+Sans:wght@400;500;600;700&family=Playfair+Display:wght@400;500;600;700;800&family=Archivo:wght@400;500;600;700&family=Archivo+Black&display=swap";
 
 const Document = () => {
   return (

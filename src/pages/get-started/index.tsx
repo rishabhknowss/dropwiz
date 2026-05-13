@@ -4,6 +4,7 @@ import {
   OnboardingShell,
   SourceSelectionStep,
   DetailsStep,
+  CustomizeStep,
   BuildingStep,
   CompleteStep,
   useOnboarding,
@@ -17,6 +18,8 @@ const OnboardingContent = () => {
       return <SourceSelectionStep />;
     case "details":
       return <DetailsStep />;
+    case "customize":
+      return <CustomizeStep />;
     case "building":
       return <BuildingStep />;
     case "complete":

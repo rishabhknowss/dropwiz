@@ -23,8 +23,9 @@ const STEPS = [
 
 export const HowItWorks = () => {
   return (
-    <section id="how-it-works" className="bg-[var(--dw-bg-secondary)] px-4 py-20 lg:px-8 lg:py-28">
-      <div className="mx-auto max-w-7xl">
+    <section id="how-it-works" className="bg-[var(--dw-bg-secondary)] py-20 lg:py-28">
+      <div className="mx-auto max-w-6xl px-4 lg:px-8">
+        <div className="px-4 lg:px-8">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -109,6 +110,7 @@ export const HowItWorks = () => {
               </div>
             </motion.div>
           </motion.div>
+        </div>
         </div>
       </div>
     </section>

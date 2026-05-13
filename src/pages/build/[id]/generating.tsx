@@ -1,26 +1,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
+import Head from "next/head";
+import { motion } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
-import { Tick02Icon, Loading03Icon, SparklesIcon } from "@hugeicons/core-free-icons";
+import { Tick02Icon, SparklesIcon } from "@hugeicons/core-free-icons";
 import { api } from "@/utils/api";
-import { ProgressLoader } from "@/components/ui/loaders";
 import type { ProductAnalysis } from "@/lib/scraper";
 
 type Step = {
   id: string;
   label: string;
+  activeLabel: string;
   phase: "scrape" | "build" | "render";
 };
 
 const STEPS: Step[] = [
-  { id: "fetch", label: "Fetching product data", phase: "scrape" },
-  { id: "margin", label: "Margin constraints", phase: "scrape" },
-  { id: "perceived", label: "Perceived value", phase: "scrape" },
-  { id: "reviews", label: "Analyzing reviews", phase: "scrape" },
-  { id: "trend", label: "Trend analysis", phase: "scrape" },
-  { id: "copy", label: "Writing hook copy and bundles", phase: "build" },
-  { id: "images", label: "Composing hero imagery", phase: "build" },
-  { id: "render", label: "Rendering store", phase: "render" },
+  { id: "fetch", label: "Product data fetched", activeLabel: "Fetching product data", phase: "scrape" },
+  { id: "margin", label: "Margin calculated", activeLabel: "Calculating margins", phase: "scrape" },
+  { id: "perceived", label: "Features extracted", activeLabel: "Extracting features", phase: "scrape" },
+  { id: "reviews", label: "Reviews analyzed", activeLabel: "Analyzing reviews", phase: "scrape" },
+  { id: "trend", label: "Market analyzed", activeLabel: "Analyzing market", phase: "scrape" },
+  { id: "copy", label: "Copy written", activeLabel: "Writing conversion copy", phase: "build" },
+  { id: "images", label: "Images generated", activeLabel: "Generating hero images", phase: "build" },
+  { id: "render", label: "Store assembled", activeLabel: "Assembling store", phase: "render" },
 ];
 
 const STEP_DURATION_MS = 900;
@@ -54,7 +56,7 @@ const BuildGenerating = () => {
   const phaseCeiling = useMemo(() => {
     if (status === "scraping") return 4;
     if (status === "generating") return 6;
-    if (status === "ready") return STEPS.length - 1;
+    if (status === "ready") return STEPS.length;
     return 0;
   }, [status]);
 
@@ -70,7 +72,7 @@ const BuildGenerating = () => {
     if (
       status === "ready" &&
       statusQuery.data?.slug &&
-      stepIndex >= STEPS.length - 1 &&
+      stepIndex >= STEPS.length &&
       !me.isLoading
     ) {
       const target =
@@ -91,97 +93,206 @@ const BuildGenerating = () => {
     storeId,
   ]);
 
-  const scrapeStepIndices = STEPS.map((s, i) => (s.phase === "scrape" ? i : -1)).filter(
-    (i) => i >= 0,
-  );
-  const scrapeDone = stepIndex >= scrapeStepIndices[scrapeStepIndices.length - 1];
-
   const failed = status === "failed";
-  const progress = (stepIndex / STEPS.length) * 100;
+  const progress = Math.min(100, Math.round((stepIndex / STEPS.length) * 100));
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+  };
 
   return (
-    <div className="min-h-screen bg-[var(--dw-bg)] text-[var(--dw-text)]">
-      <div className="dw-grid-pattern fixed inset-0 opacity-30" />
-      <main
-        className="relative mx-auto px-5 py-10 transition-[max-width] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] md:px-6 md:py-14"
-        style={{ maxWidth: productImage ? "1100px" : "600px" }}
-      >
-        <div
-          className={`grid gap-12 transition-[grid-template-columns] duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-            productImage
-              ? "grid-cols-1 md:grid-cols-[1.1fr_0.9fr]"
-              : "grid-cols-1"
-          }`}
-        >
-          <div className="animate-fade-up">
-            <div className={`mb-5 inline-flex items-center gap-2.5 rounded-full px-4 py-2 text-[11px] font-semibold uppercase tracking-wide ${
-              failed
-                ? "bg-[var(--dw-error)]/10 text-[var(--dw-error)]"
-                : "bg-[var(--dw-accent)]/10 text-[var(--dw-accent)]"
-            }`}>
-              {failed ? (
-                <span className="size-2 rounded-full bg-[var(--dw-error)]" />
-              ) : (
-                <HugeiconsIcon icon={SparklesIcon} size={14} className="animate-pulse" />
-              )}
-              {failed ? "Generation Failed" : "Building Store"}
-            </div>
+    <>
+      <Head>
+        <title>Building Your Store | Dropwiz</title>
+      </Head>
+      <div className="relative min-h-screen bg-white">
+        <header className="relative z-10 flex items-center border-b border-[#E5E5E5] px-6 py-4 md:px-10">
+          <div className="flex items-center gap-1">
+            <img src="/logo.png" alt="dropwiz" className="h-7 w-auto" />
+            <span className="text-[18px] font-bold text-[#0A0A0A]">dropwiz</span>
+          </div>
+        </header>
 
-            <h1 className="dw-display text-[32px] text-[var(--dw-text)] md:text-[42px] lg:text-[48px]">
-              {scrapeDone ? "Building your store" : "Analyzing product"}
-              <span className="dw-gradient-text">.</span>
-            </h1>
-            <p className="mt-4 max-w-[480px] text-[15px] leading-relaxed text-[var(--dw-text-muted)]">
-              {scrapeDone
-                ? "Writing conversion-optimized copy, generating imagery, and assembling your store."
-                : "Analyzing listing, margins, perceived value, and market trends."}
-            </p>
+        <main className="relative z-10 mx-auto max-w-[900px] px-5 pb-16 pt-8 md:px-8 md:pb-20 md:pt-12">
+          <div className="flex flex-col gap-8 lg:flex-row lg:gap-16">
+            <div className="flex-1">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className={`mb-5 inline-flex items-center gap-2.5 rounded-full border px-4 py-2 text-[11px] font-semibold uppercase tracking-wider ${
+                  failed
+                    ? "border-red-200 bg-red-50 text-red-600"
+                    : "border-[#E5E5E5] bg-white text-[#0A0A0A]"
+                }`}
+              >
+                {failed ? (
+                  <span className="size-2 rounded-full bg-red-500" />
+                ) : (
+                  <span className="size-2 animate-pulse rounded-full bg-[#0A0A0A]" />
+                )}
+                {failed ? "Generation Failed" : "Building Store"}
+              </motion.div>
 
-            <div className="mt-8 flex items-end gap-3">
-              <div className="dw-mono text-[48px] font-bold leading-none tracking-tight text-[var(--dw-text)] md:text-[56px]">
-                {String(Math.floor(elapsed / 60)).padStart(2, "0")}
-                <span className="animate-pulse">:</span>
-                {String(elapsed % 60).padStart(2, "0")}
-              </div>
-              <div className="mb-2 text-[12px] font-medium text-[var(--dw-text-subtle)]">elapsed</div>
-            </div>
+              <motion.h1
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-[32px] font-bold leading-tight tracking-tight text-[#0A0A0A] md:text-[44px]"
+              >
+                Building your store<span className="text-[#0A0A0A]">.</span>
+              </motion.h1>
 
-            <div className="mt-8">
-              <ProgressLoader progress={progress} />
-            </div>
+              <motion.p
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.15 }}
+                className="mt-4 text-[15px] leading-relaxed text-[#666666]"
+              >
+                AI is generating hero images, writing conversion copy, and assembling your store.
+              </motion.p>
 
-            <div className="mt-8 space-y-3">
-              {STEPS.map((step, i) => (
-                <StepRow
-                  key={step.id}
-                  step={step}
-                  done={i < stepIndex}
-                  active={i === stepIndex && !failed}
-                  detail={detailFor(step.id, analysis)}
-                  index={i}
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-8 flex items-baseline gap-3"
+              >
+                <span className="font-mono text-[56px] font-light tracking-tight text-[#0A0A0A]">
+                  {formatTime(elapsed)}
+                </span>
+                <span className="text-[14px] text-[#666666]">elapsed</span>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.25 }}
+                className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#E5E5E5]"
+              >
+                <motion.div
+                  className="h-full bg-[#0A0A0A]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${progress}%` }}
+                  transition={{ duration: 0.5, ease: "easeOut" }}
                 />
-              ))}
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="mt-10 space-y-1.5"
+              >
+                {STEPS.map((step, i) => {
+                  const done = i < stepIndex;
+                  const active = i === stepIndex && !failed;
+                  const detail = detailFor(step.id, analysis);
+
+                  return (
+                    <motion.div
+                      key={step.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.35 + i * 0.05 }}
+                      className={`flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300 ${
+                        done
+                          ? "bg-[#F5F5F5]"
+                          : active
+                            ? "border border-[#0A0A0A] bg-white"
+                            : "bg-transparent"
+                      }`}
+                    >
+                      <div
+                        className={`relative flex size-6 shrink-0 items-center justify-center rounded-full transition-all ${
+                          done
+                            ? "bg-[#0A0A0A] text-white"
+                            : active
+                              ? "bg-[#0A0A0A] text-white"
+                              : "border border-[#D1D5DB] bg-white text-[#9CA3AF]"
+                        }`}
+                      >
+                        {done ? (
+                          <HugeiconsIcon icon={Tick02Icon} size={12} />
+                        ) : active ? (
+                          <HugeiconsIcon icon={SparklesIcon} size={12} className="animate-pulse" />
+                        ) : (
+                          <span className="size-1.5 rounded-full bg-current" />
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className={`text-[14px] font-medium transition-colors ${
+                            done
+                              ? "text-[#0A0A0A]"
+                              : active
+                                ? "text-[#0A0A0A]"
+                                : "text-[#9CA3AF]"
+                          }`}
+                        >
+                          {done ? step.label : active ? step.activeLabel : step.label}
+                        </div>
+                      </div>
+
+                      {detail && done && (
+                        <span className="rounded-full bg-white px-3 py-1 text-[11px] font-medium text-[#666666]">
+                          {detail}
+                        </span>
+                      )}
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+
+              {failed && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-8 rounded-2xl border border-red-200 bg-red-50 p-5"
+                >
+                  <div className="text-[15px] font-semibold text-red-600">Generation failed</div>
+                  <div className="mt-2 text-[13px] text-[#666666]">
+                    {statusQuery.data?.failureReason ??
+                      "Something went wrong. Please try a different product URL."}
+                  </div>
+                  <button
+                    onClick={() => router.push("/build/new")}
+                    className="mt-4 rounded-xl bg-[#0A0A0A] px-5 py-2.5 text-[13px] font-semibold text-white transition-all hover:bg-[#1a1a1a]"
+                  >
+                    Try Again
+                  </button>
+                </motion.div>
+              )}
             </div>
 
-            {failed && (
-              <div className="mt-8 rounded-2xl border border-[var(--dw-error)]/30 bg-[var(--dw-error)]/5 p-5">
-                <div className="text-[15px] font-semibold text-[var(--dw-error)]">Generation failed</div>
-                <div className="mt-2 text-[13px] text-[var(--dw-text-muted)]">
-                  {statusQuery.data?.failureReason ??
-                    "Something went wrong. Please try a different product URL."}
+            {productImage && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, x: 20 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                transition={{ delay: 0.4, type: "spring", stiffness: 200, damping: 20 }}
+                className="flex flex-col items-center lg:w-[320px]"
+              >
+                <div className="relative w-full overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white p-5 shadow-lg shadow-black/5">
+                  <div className="relative aspect-square rounded-xl bg-[#FAFAFA]">
+                    <img
+                      src={productImage}
+                      alt="Product"
+                      className="h-full w-full object-contain p-2"
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="mt-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#0A0A0A]">
+                  <span className="size-2 rounded-full bg-[#22C55E] animate-pulse" />
+                  Product Detected
+                </div>
+              </motion.div>
             )}
           </div>
-
-          {productImage && (
-            <div className="md:sticky md:top-10 md:self-start">
-              <ProductImageCard productImage={productImage} />
-            </div>
-          )}
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </>
   );
 };
 
@@ -200,83 +311,5 @@ const detailFor = (id: string, analysis: ProductAnalysis | null): string | null 
       return null;
   }
 };
-
-const StepRow = ({
-  step,
-  done,
-  active,
-  detail,
-  index = 0,
-}: {
-  step: Step;
-  done: boolean;
-  active: boolean;
-  detail: string | null;
-  index?: number;
-}) => (
-  <div
-    className={`animate-slide-up flex items-center gap-4 rounded-xl border px-4 py-3.5 transition-all duration-300 ${
-      active
-        ? "border-[var(--dw-accent)]/30 bg-[var(--dw-accent)]/5 shadow-lg shadow-[var(--dw-accent)]/5"
-        : done
-          ? "border-[var(--dw-border)] bg-[var(--dw-surface)]"
-          : "border-[var(--dw-border)] bg-[var(--dw-surface)] opacity-50"
-    }`}
-    style={{ animationDelay: `${index * 50}ms`, animationFillMode: "both" }}
-  >
-    <div
-      className={`flex size-6 shrink-0 items-center justify-center rounded-lg transition-all ${
-        done
-          ? "bg-[var(--dw-success)]/15 text-[var(--dw-success)]"
-          : active
-            ? "bg-[var(--dw-accent)]/15 text-[var(--dw-accent)]"
-            : "bg-[var(--dw-surface2)] text-[var(--dw-text-subtle)]"
-      }`}
-    >
-      {done ? (
-        <HugeiconsIcon icon={Tick02Icon} size={12} />
-      ) : active ? (
-        <HugeiconsIcon icon={Loading03Icon} size={12} className="dw-spin" />
-      ) : (
-        <span className="size-1.5 rounded-full bg-current" />
-      )}
-    </div>
-    <div className="flex-1">
-      <div
-        className={`text-[13px] font-medium transition-all ${
-          done ? "text-[var(--dw-text-muted)] line-through" : active ? "text-[var(--dw-text)]" : "text-[var(--dw-text-muted)]"
-        }`}
-      >
-        {step.label}
-      </div>
-    </div>
-    {detail && (
-      <div className="dw-mono shrink-0 rounded-md bg-[var(--dw-surface2)] px-2 py-1 text-[10px] font-medium tracking-wide text-[var(--dw-text-muted)]">
-        {detail}
-      </div>
-    )}
-  </div>
-);
-
-const ProductImageCard = ({ productImage }: { productImage: string }) => (
-  <div className="animate-slide-in-right relative overflow-hidden rounded-2xl border border-[var(--dw-border)] bg-[var(--dw-surface)]">
-    <div className="absolute -right-20 -top-20 h-40 w-40 rounded-full bg-[var(--dw-accent)] opacity-10 blur-3xl" />
-    <div className="relative aspect-square w-full overflow-hidden bg-[var(--dw-surface2)]">
-      <img
-        src={productImage}
-        alt=""
-        className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-      />
-    </div>
-    <div className="p-4">
-      <div className="flex items-center gap-2">
-        <div className="h-2 w-2 rounded-full bg-[var(--dw-success)] animate-pulse" />
-        <span className="text-[11px] font-semibold uppercase tracking-wide text-[var(--dw-text-muted)]">
-          Product detected
-        </span>
-      </div>
-    </div>
-  </div>
-);
 
 export default BuildGenerating;

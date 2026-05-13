@@ -1,6 +1,36 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 
+const TickDivider = () => (
+  <div className="-mx-4 overflow-hidden border-y border-[var(--dw-border)] bg-[var(--dw-bg)] lg:-mx-8">
+    <div
+      className="flex h-16 lg:h-24"
+      style={{
+        width: "200%",
+        animation: "tickScroll 30s linear infinite",
+      }}
+    >
+      {Array.from({ length: 400 }).map((_, i) => (
+        <div
+          key={i}
+          className="h-full border-r border-[var(--dw-border)]/30"
+          style={{ width: "8px", flexShrink: 0 }}
+        />
+      ))}
+    </div>
+    <style jsx>{`
+      @keyframes tickScroll {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+    `}</style>
+  </div>
+);
+
 const FAQS = [
   {
     question: "What is Dropwiz?",
@@ -43,69 +73,78 @@ export const FAQSection = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section id="faq" className="bg-[var(--dw-bg-secondary)] px-4 py-20 lg:px-8 lg:py-28">
-      <div className="mx-auto max-w-3xl">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-12 text-center lg:mb-16"
-        >
-          <h2 className="text-[36px] font-bold tracking-tight text-[var(--dw-text)] lg:text-[48px]">
-            Frequently asked
-            <br />
-            questions
-          </h2>
-        </motion.div>
+    <section id="faq" className="bg-[var(--dw-bg)]">
+      <div className="mx-auto max-w-6xl px-4 lg:px-8">
+        <div className="px-4 lg:px-8">
+          <TickDivider />
 
-        <div className="space-y-4">
-          {FAQS.map((faq, i) => (
+          <div className="-mx-4 bg-[var(--dw-bg-secondary)] lg:-mx-8">
+            <div className="grid gap-8 px-6 py-12 lg:grid-cols-2 lg:gap-16 lg:px-8 lg:py-24">
             <motion.div
-              key={faq.question}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: i * 0.05 }}
+              transition={{ duration: 0.6 }}
+              className="lg:sticky lg:top-32 lg:self-start"
             >
-              <button
-                type="button"
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="w-full rounded-2xl border border-[var(--dw-border)] bg-[var(--dw-surface)] p-6 text-left transition-all hover:border-[var(--dw-text)]/20 hover:shadow-lg"
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-[17px] font-semibold text-[var(--dw-text)]">{faq.question}</span>
-                  <div
-                    className={`flex size-8 shrink-0 items-center justify-center rounded-full transition-all ${
-                      openIndex === i ? "bg-[var(--dw-text)] text-[var(--dw-bg)]" : "bg-[var(--dw-bg-tertiary)] text-[var(--dw-text-muted)]"
-                    }`}
-                  >
-                    <svg
-                      className={`size-4 transition-transform ${openIndex === i ? "rotate-45" : ""}`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </div>
-                </div>
-                <AnimatePresence>
-                  {openIndex === i && (
-                    <motion.div
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: "auto", opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.3 }}
-                      className="overflow-hidden"
-                    >
-                      <p className="mt-4 text-[15px] leading-relaxed text-[var(--dw-text-muted)]">{faq.answer}</p>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </button>
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[var(--dw-border)] bg-[var(--dw-bg)] px-4 py-2">
+                <div className="size-2 rounded-full bg-[var(--dw-accent)]" />
+                <span className="text-[13px] font-medium text-[var(--dw-text)]">FAQ</span>
+              </div>
+              <h2 className="text-[28px] font-bold leading-tight tracking-tight text-[var(--dw-text)] lg:text-[40px]">
+                Frequently Asked
+                <br />
+                Questions
+              </h2>
             </motion.div>
-          ))}
+
+            <div className="space-y-3">
+              {FAQS.map((faq, i) => (
+                <motion.div
+                  key={faq.question}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: i * 0.03 }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                    className="w-full border border-[var(--dw-border)] bg-[var(--dw-bg)] p-5 text-left transition-all"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <span className="text-[15px] font-semibold text-[var(--dw-text)]">{faq.question}</span>
+                      <svg
+                        className={`size-5 shrink-0 text-[var(--dw-text-muted)] transition-transform duration-200 ${
+                          openIndex === i ? "rotate-180" : ""
+                        }`}
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </div>
+                    <AnimatePresence>
+                      {openIndex === i && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <p className="mt-4 text-[14px] leading-relaxed text-[var(--dw-text-muted)]">{faq.answer}</p>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>

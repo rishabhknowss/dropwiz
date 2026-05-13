@@ -17,26 +17,11 @@ type BlogPostPageProps = {
   relatedPosts: BlogPost[];
 };
 
-const AUTHOR_AVATARS: Record<string, string> = {
-  "Sarah Kim": "/testimonials/sarah.jpg",
-  "Alex Chen": "/testimonials/marcus.jpg",
-  "Jessica Lee": "/testimonials/jessica.jpg",
-  "Lisa Park": "/testimonials/jessica.jpg",
-  "David Park": "/testimonials/david.jpg",
-  "Emma Wilson": "/testimonials/sarah.jpg",
-  "Mike Rodriguez": "/testimonials/marcus.jpg",
-  "Amanda Torres": "/testimonials/jessica.jpg",
-  "Robert Chang": "/testimonials/david.jpg",
-  "Tom Wilson": "/testimonials/marcus.jpg",
-};
-
 const BlogPostPage = ({ post, relatedPosts }: BlogPostPageProps) => {
   const headings = post.content
     .split("\n")
     .filter((line) => line.startsWith("## "))
     .map((line) => line.replace("## ", "").trim());
-
-  const authorAvatar = AUTHOR_AVATARS[post.author.name] || "/testimonials/david.jpg";
 
   return (
     <>
@@ -73,55 +58,50 @@ const BlogPostPage = ({ post, relatedPosts }: BlogPostPageProps) => {
             <div className="mb-4 flex items-center gap-3">
               <Link
                 href={`/blog?category=${post.category}`}
-                className="rounded-full bg-[color:var(--dw-accent)]/10 px-3 py-1 text-sm font-medium capitalize text-[color:var(--dw-accent)] transition-colors hover:bg-[color:var(--dw-accent)]/20"
+                className="rounded-full bg-[#0A0A0A] px-3 py-1 text-sm font-medium capitalize text-white transition-colors hover:bg-[#1a1a1a]"
               >
                 {post.category}
               </Link>
-              <span className="text-sm text-[color:var(--dw-text-muted)]">
+              <span className="text-sm text-[#666666]">
                 {post.readTime} read
               </span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-[color:var(--dw-text)] md:text-4xl lg:text-5xl">
+            <h1 className="text-3xl font-bold tracking-tight text-[#0A0A0A] md:text-4xl lg:text-5xl">
               {post.title}
             </h1>
-            <p className="mt-4 text-lg text-[color:var(--dw-text-secondary)]">
+            <p className="mt-4 text-lg text-[#666666]">
               {post.excerpt}
             </p>
-            <div className="mt-6 flex items-center gap-4 border-t border-[color:var(--dw-border)] pt-6">
-              <img
-                src={authorAvatar}
-                alt={post.author.name}
-                className="size-12 shrink-0 rounded-full object-cover"
-              />
-              <div className="min-w-0">
-                <div className="font-medium text-[color:var(--dw-text)]">{post.author.name}</div>
-                <div className="text-sm text-[color:var(--dw-text-muted)]">
-                  <span>
-                    Published{" "}
-                    {new Date(post.publishedAt).toLocaleDateString("en-US", {
-                      year: "numeric",
+            <div className="mt-6 flex items-center gap-2 border-t border-[#E5E5E5] pt-6 text-sm text-[#666666]">
+              <span className="font-medium text-[#0A0A0A]">{post.author.name}</span>
+              <span>·</span>
+              <span>
+                Published{" "}
+                {new Date(post.publishedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                })}
+              </span>
+              {post.updatedAt !== post.publishedAt && (
+                <>
+                  <span className="hidden sm:inline">·</span>
+                  <span className="hidden sm:inline">
+                    Updated{" "}
+                    {new Date(post.updatedAt).toLocaleDateString("en-US", {
                       month: "short",
                       day: "numeric",
+                      year: "numeric",
                     })}
                   </span>
-                  {post.updatedAt !== post.publishedAt && (
-                    <span className="hidden sm:inline">
-                      {" · Updated "}
-                      {new Date(post.updatedAt).toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                    </span>
-                  )}
-                </div>
-              </div>
+                </>
+              )}
             </div>
           </header>
 
           {headings.length > 0 && (
-            <nav className="not-prose mb-10 rounded-xl border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-5">
-              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[color:var(--dw-text-muted)]">
+            <nav className="not-prose mb-10 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] p-5">
+              <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-[#666666]">
                 Table of Contents
               </h2>
               <ul className="space-y-2">
@@ -129,7 +109,7 @@ const BlogPostPage = ({ post, relatedPosts }: BlogPostPageProps) => {
                   <li key={i}>
                     <a
                       href={`#${heading.toLowerCase().replace(/\s+/g, "-").replace(/[^\w-]/g, "")}`}
-                      className="text-sm text-[color:var(--dw-text-secondary)] transition-colors hover:text-[color:var(--dw-accent)]"
+                      className="text-sm text-[#666666] transition-colors hover:text-[#0A0A0A]"
                     >
                       {heading}
                     </a>
@@ -139,7 +119,7 @@ const BlogPostPage = ({ post, relatedPosts }: BlogPostPageProps) => {
             </nav>
           )}
 
-          <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:scroll-mt-20 prose-a:text-[color:var(--dw-accent)] prose-code:rounded prose-code:bg-[color:var(--dw-surface)] prose-code:px-1.5 prose-code:py-0.5 prose-pre:bg-[color:var(--dw-surface)] prose-table:border-collapse prose-th:border prose-th:border-[color:var(--dw-border)] prose-th:bg-[color:var(--dw-surface)] prose-th:p-2 prose-td:border prose-td:border-[color:var(--dw-border)] prose-td:p-2">
+          <div className="prose prose-lg max-w-none prose-headings:text-[#0A0A0A] prose-headings:scroll-mt-20 prose-p:text-[#333333] prose-a:text-[#0A0A0A] prose-a:no-underline prose-a:font-medium prose-a:transition-colors hover:prose-a:text-[#666666] prose-strong:text-[#0A0A0A] prose-code:rounded prose-code:bg-[#F5F5F5] prose-code:px-1.5 prose-code:py-0.5 prose-code:text-[#0A0A0A] prose-pre:bg-[#F5F5F5] prose-table:border-collapse prose-th:border prose-th:border-[#E5E5E5] prose-th:bg-[#FAFAFA] prose-th:p-2 prose-td:border prose-td:border-[#E5E5E5] prose-td:p-2 prose-li:text-[#333333]">
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
@@ -161,7 +141,7 @@ const BlogPostPage = ({ post, relatedPosts }: BlogPostPageProps) => {
             {post.tags.map((tag) => (
               <span
                 key={tag}
-                className="rounded-full border border-[color:var(--dw-border)] px-3 py-1 text-sm"
+                className="rounded-full border border-[#E5E5E5] px-3 py-1 text-sm text-[#666666]"
               >
                 #{tag}
               </span>
@@ -171,21 +151,21 @@ const BlogPostPage = ({ post, relatedPosts }: BlogPostPageProps) => {
 
         {relatedPosts.length > 0 && (
           <section className="mt-16">
-            <h2 className="mb-6 text-2xl font-bold">Related Articles</h2>
+            <h2 className="mb-6 text-2xl font-bold text-[#0A0A0A]">Related Articles</h2>
             <div className="not-prose grid gap-6 sm:grid-cols-3">
               {relatedPosts.map((relatedPost) => (
                 <Link
                   key={relatedPost.slug}
                   href={`/blog/${relatedPost.slug}`}
-                  className="group rounded-xl border border-[color:var(--dw-border)] bg-[color:var(--dw-surface)] p-5 transition-all hover:border-[color:var(--dw-accent)]/40 hover:shadow-lg"
+                  className="group rounded-xl border border-[#E5E5E5] bg-white p-5 transition-all hover:border-[#0A0A0A]/30 hover:shadow-lg"
                 >
-                  <span className="text-xs font-medium capitalize text-[color:var(--dw-accent)]">
+                  <span className="rounded-full bg-[#F5F5F5] px-2.5 py-1 text-xs font-medium capitalize text-[#0A0A0A]">
                     {relatedPost.category}
                   </span>
-                  <h3 className="mt-2 font-semibold transition-colors group-hover:text-[color:var(--dw-accent)]">
+                  <h3 className="mt-3 font-semibold text-[#0A0A0A]">
                     {relatedPost.title}
                   </h3>
-                  <p className="mt-2 line-clamp-2 text-sm text-[color:var(--dw-text-muted)]">
+                  <p className="mt-2 line-clamp-2 text-sm text-[#666666]">
                     {relatedPost.excerpt}
                   </p>
                 </Link>
@@ -194,14 +174,14 @@ const BlogPostPage = ({ post, relatedPosts }: BlogPostPageProps) => {
           </section>
         )}
 
-        <div className="not-prose mt-12 rounded-xl border border-[color:var(--dw-accent)]/20 bg-gradient-to-r from-[color:var(--dw-accent)]/5 to-transparent p-6 text-center sm:p-8">
-          <h3 className="text-xl font-bold text-[color:var(--dw-text)] sm:text-2xl">Build Your Store with AI</h3>
-          <p className="mt-2 text-sm text-[color:var(--dw-text-muted)] sm:text-base">
+        <div className="not-prose mt-12 rounded-xl border border-[#E5E5E5] bg-[#FAFAFA] p-6 text-center sm:p-8">
+          <h3 className="text-xl font-bold text-[#0A0A0A] sm:text-2xl">Build Your Store with AI</h3>
+          <p className="mt-2 text-sm text-[#666666] sm:text-base">
             Turn any product into a professional, high-converting store page in seconds.
           </p>
           <Link
             href="/build/new"
-            className="mt-4 inline-block whitespace-nowrap rounded-full bg-[color:var(--dw-accent)] px-6 py-3 font-medium text-[#0A0A0A] transition-opacity hover:opacity-90"
+            className="mt-4 inline-block whitespace-nowrap rounded-lg bg-[#0A0A0A] px-6 py-3 font-medium text-white transition-all hover:bg-[#1a1a1a]"
           >
             Start Building Free →
           </Link>

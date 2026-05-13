@@ -98,11 +98,11 @@ export const EditorSidebar = ({
               className={cn(
                 "mx-2 mb-1 flex cursor-pointer flex-col items-center gap-1 rounded-lg px-1 py-2 transition",
                 active
-                  ? "bg-[color:var(--dw-surface2)] text-[color:var(--dw-accent)]"
-                  : "text-[color:var(--dw-text-muted)] hover:bg-[color:var(--dw-surface2)] hover:text-[color:var(--dw-text)]",
+                  ? "bg-[#F0F0F0] text-[#0A0A0A]"
+                  : "text-[#999999] hover:bg-[#F5F5F5] hover:text-[#666666]",
               )}
             >
-              <HugeiconsIcon icon={tab.icon} size={17} />
+              <HugeiconsIcon icon={tab.icon} size={17} strokeWidth={active ? 2 : 1.5} />
               <span className="text-[10px] font-medium leading-none">{tab.label}</span>
             </button>
           );

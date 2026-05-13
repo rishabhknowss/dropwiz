@@ -16,6 +16,16 @@ import { toast } from "sonner";
 import { ShopifyConnectModal } from "@/components/shopify/ShopifyConnectModal";
 import { UpgradeModal } from "@/components/billing/UpgradeModal";
 import type { StorePage } from "@/db/schema";
+
+type PartialStorePage = {
+  id?: string;
+  type?: StorePage["type"];
+  name?: string;
+  slug?: string;
+  order?: number;
+  isDefault?: boolean;
+  sections?: unknown[];
+};
 import confetti from "canvas-confetti";
 
 type PublishMode = "all" | "landing" | "product" | string;
@@ -238,7 +248,7 @@ const ShopifyCard = ({
   published: boolean;
   publishedShop: string | null;
   selectedShop: string | null;
-  shops: Array<{ id: string; shopDomain: string }>;
+  shops: Array<{ id?: string; shopDomain?: string }>;
   onSelectShop: (shop: string) => void;
   publishing: boolean;
   onPublish: () => void;
@@ -246,7 +256,7 @@ const ShopifyCard = ({
   disconnecting: boolean;
   isPro: boolean;
   onUpgrade: () => void;
-  pages: StorePage[];
+  pages: PartialStorePage[];
   publishMode: PublishMode;
   onPublishModeChange: (mode: PublishMode) => void;
 }) => {

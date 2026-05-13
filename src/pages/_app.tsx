@@ -1,32 +1,39 @@
 import "@/styles/globals.css";
 import "nprogress/nprogress.css";
-import { useEffect } from "react";
 import type { AppProps } from "next/app";
-import { GeistSans } from "geist/font/sans";
-import { GeistMono } from "geist/font/mono";
+import { Inter } from "next/font/google";
+import { JetBrains_Mono } from "next/font/google";
 import { Toaster } from "sonner";
 import { api } from "@/utils/api";
 import { ThemeProvider } from "@/lib/theme-context";
 import { ShopProvider } from "@/lib/shop-context";
 import { NProgressBar } from "@/lib/nprogress";
 
-const App = ({ Component, pageProps }: AppProps) => {
-  useEffect(() => {
-    document.body.classList.add(GeistSans.variable, GeistMono.variable);
-  }, []);
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 
+const mono = JetBrains_Mono({
+  subsets: ["latin"],
+  variable: "--font-mono",
+  display: "swap",
+});
+
+const App = ({ Component, pageProps }: AppProps) => {
   return (
     <ThemeProvider>
       <ShopProvider>
-        <style jsx global>{`
-          body {
-            font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
-          }
-        `}</style>
-        <div
-          id="dw-app-root"
-          className={`${GeistSans.variable} ${GeistMono.variable} font-sans`}
-        >
+        <div className={`${inter.variable} ${mono.variable}`}>
+          <style jsx global>{`
+            html, body, button, input, select, textarea {
+              font-family: ${inter.style.fontFamily}, ui-sans-serif, system-ui, -apple-system, sans-serif;
+            }
+            code, pre, .dw-mono {
+              font-family: ${mono.style.fontFamily}, ui-monospace, monospace;
+            }
+          `}</style>
           <NProgressBar />
           <Component {...pageProps} />
           <Toaster
@@ -35,7 +42,7 @@ const App = ({ Component, pageProps }: AppProps) => {
             position="top-center"
             toastOptions={{
               style: {
-                fontFamily: "var(--font-geist-sans)",
+                fontFamily: `${inter.style.fontFamily}, system-ui, sans-serif`,
                 borderRadius: "12px",
               },
             }}

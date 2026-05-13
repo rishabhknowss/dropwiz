@@ -62,16 +62,16 @@ export const StoreRenderer = ({
     "--store-radius": `${tokens.radius ?? 12}px`,
     "--store-button-radius": `${tokens.buttonRadius ?? 8}px`,
     "--store-font-sans": fontStack(
-      typography.sans,
-      "var(--font-geist-sans), system-ui, sans-serif",
+      typography.sans ?? "Space Grotesk",
+      "system-ui, sans-serif",
     ),
     "--store-font-display": fontStack(
-      typography.display ?? typography.sans,
-      "var(--font-geist-sans), system-ui, sans-serif",
+      typography.display ?? typography.sans ?? "Space Grotesk",
+      "system-ui, sans-serif",
     ),
     "--store-font-mono": fontStack(
-      typography.mono,
-      "var(--font-geist-mono), ui-monospace, monospace",
+      typography.mono ?? "Space Mono",
+      "ui-monospace, monospace",
     ),
   } as CSSProperties;
 

@@ -37,6 +37,7 @@
     "@hugeicons/core-free-icons": "^4.1.1",
     "@hugeicons/react": "^1.1.6",
     "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-tabs": "^1.1.13",
     "@sentry/nextjs": "^10.49.0",
     "@tabler/icons-react": "^3.41.1",
     "@tailwindcss/typography": "^0.5.19",

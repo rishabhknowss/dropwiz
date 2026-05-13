@@ -16,8 +16,9 @@ export const PageLayout = ({
     <div className="min-h-screen bg-[color:var(--dw-bg)] text-[color:var(--dw-text)]">
       <header className="border-b border-[color:var(--dw-border)]">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
-          <Link href="/" className="text-xl font-semibold tracking-tight">
-            drop<span className="text-[color:var(--dw-accent)]">wiz</span>
+          <Link href="/" className="flex items-center gap-1">
+            <img src="/logo.png" alt="dropwiz" className="h-7 w-auto lg:h-8" />
+            <span className="text-[18px] font-bold text-[#0A0A0A] lg:text-[20px]">dropwiz</span>
           </Link>
           <nav className="hidden items-center gap-6 text-sm md:flex">
             <Link
@@ -47,7 +48,7 @@ export const PageLayout = ({
           </nav>
           <Link
             href="/build/new"
-            className="rounded-full bg-[color:var(--dw-accent)] px-4 py-2 text-sm font-medium text-[#0A0A0A] transition-opacity hover:opacity-90"
+            className="rounded-lg bg-[#0A0A0A] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a1a1a]"
           >
             Start Free
           </Link>

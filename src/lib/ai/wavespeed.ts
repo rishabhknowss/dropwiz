@@ -75,19 +75,46 @@ async function pollJob(
   intervalMs = 1500,
 ): Promise<string[]> {
   const deadline = Date.now() + maxMs;
+  const startTime = Date.now();
+  let pollCount = 0;
+  console.log(`[wavespeed:poll] Starting poll for task ${taskId}, timeout=${maxMs}ms`);
+
   while (Date.now() < deadline) {
-    const res = await axios.get<StatusResponse>(`${BASE}/predictions/${taskId}/result`, {
-      headers: getHeaders(),
-      timeout: 15_000,
-    });
-    const data = res.data.data;
-    if (data.status === "completed") return data.outputs;
-    if (data.status === "failed") {
-      const errorMsg = data.error || "Generation failed - the image provider rejected this request. Try a different prompt or image.";
-      throw new Error(errorMsg);
+    pollCount++;
+    const elapsed = Date.now() - startTime;
+
+    try {
+      const res = await axios.get<StatusResponse>(`${BASE}/predictions/${taskId}/result`, {
+        headers: getHeaders(),
+        timeout: 15_000,
+      });
+      const data = res.data.data;
+
+      if (data.status === "completed") {
+        console.log(`[wavespeed:poll] Task ${taskId} completed after ${elapsed}ms (${pollCount} polls), outputs=${data.outputs.length}`);
+        return data.outputs;
+      }
+      if (data.status === "failed") {
+        const errorMsg = data.error || "Generation failed - the image provider rejected this request. Try a different prompt or image.";
+        console.error(`[wavespeed:poll] Task ${taskId} FAILED after ${elapsed}ms: ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+
+      if (pollCount % 10 === 0) {
+        console.log(`[wavespeed:poll] Task ${taskId} still ${data.status} after ${elapsed}ms (poll #${pollCount})`);
+      }
+    } catch (err) {
+      if (err instanceof Error && !err.message.includes("Generation failed")) {
+        console.warn(`[wavespeed:poll] Poll request error for ${taskId}: ${err.message}`);
+      } else {
+        throw err;
+      }
     }
+
     await new Promise((r) => setTimeout(r, intervalMs));
   }
+
+  console.error(`[wavespeed:poll] Task ${taskId} TIMEOUT after ${Date.now() - startTime}ms`);
   throw new Error("wavespeed timeout");
 }
 
@@ -176,22 +203,33 @@ async function submitSeedream(
   useEdit: boolean,
 ): Promise<{ id: string; outputs: string[]; status: string }> {
   const url = useEdit ? SEEDREAM_EDIT_BASE : SEEDREAM_T2I_BASE;
+  const promptPreview = typeof body.prompt === "string" ? body.prompt.slice(0, 60) : "no-prompt";
+  console.log(`[wavespeed:seedream] Submitting ${useEdit ? "edit" : "t2i"} job, prompt="${promptPreview}..."`);
+  const startTime = Date.now();
+
   try {
     const res = await axios.post<SeedreamSyncResponse>(url, body, {
       headers: getHeaders(),
       timeout: 90_000,
     });
+
+    const elapsed = Date.now() - startTime;
+    console.log(`[wavespeed:seedream] Submit response in ${elapsed}ms: id=${res.data.data.id}, status=${res.data.data.status}, outputs=${res.data.data.outputs?.length ?? 0}`);
+
     return {
       id: res.data.data.id,
       outputs: res.data.data.outputs ?? [],
       status: res.data.data.status,
     };
   } catch (err) {
+    const elapsed = Date.now() - startTime;
     if (err instanceof AxiosError) {
+      console.error(`[wavespeed:seedream] Submit FAILED after ${elapsed}ms: ${err.response?.status} ${JSON.stringify(err.response?.data)}`);
       throw new Error(
         `seedream submit failed: ${err.response?.status} ${JSON.stringify(err.response?.data)}`,
       );
     }
+    console.error(`[wavespeed:seedream] Submit FAILED after ${elapsed}ms:`, err);
     throw err;
   }
 }

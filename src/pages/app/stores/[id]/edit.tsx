@@ -25,6 +25,7 @@ import {
   AdsPanel,
 } from "@/components/editor/panels";
 import { api } from "@/utils/api";
+import type { Store, StorePage, StoreSection } from "@/db/schema";
 
 const EditStore = () => {
   const router = useRouter();
@@ -107,13 +108,13 @@ const EditStore = () => {
   const storeWithActiveSections = {
     ...store.data,
     sections: activeSections,
-  };
+  } as unknown as Store;
 
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-[color:var(--dw-bg)] text-[color:var(--dw-text)]">
       <EditorHeader
-        store={store.data}
-        pages={pages}
+        store={store.data as unknown as Store}
+        pages={pages as unknown as StorePage[]}
         activePageId={activePageId}
         onSelectPage={handleSelectPage}
       />
@@ -182,7 +183,7 @@ const EditStore = () => {
           <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[color:var(--dw-border-strong)] md:hidden" />
           {activeSection ? (
             <SectionInspector
-              section={activeSection}
+              section={activeSection as unknown as StoreSection}
               store={storeWithActiveSections}
               pageId={activePageId}
               onClose={() => {

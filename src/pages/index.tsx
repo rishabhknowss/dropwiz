@@ -4,10 +4,8 @@ import {
   HeroSection,
   StatsBar,
   FeaturesSection,
-  HowItWorks,
   TestimonialsSection,
   PricingSection,
-  CTABanner,
   FAQSection,
   LandingFooter,
 } from "@/components/landing";
@@ -59,17 +57,21 @@ const Home = () => {
         ]}
       />
       <div
-        className="min-h-screen overflow-x-hidden bg-[var(--dw-bg)] text-[var(--dw-text)]"
+        className="relative min-h-screen overflow-x-hidden bg-[var(--dw-bg)] text-[var(--dw-text)]"
         style={{ fontFamily: "'Inter', sans-serif" }}
       >
+        <div className="pointer-events-none fixed inset-0 z-[100] mx-auto hidden max-w-6xl lg:block">
+          <div className="relative size-full">
+            <div className="absolute bottom-0 left-4 top-0 w-px bg-[var(--dw-border)] lg:left-8" />
+            <div className="absolute bottom-0 right-4 top-0 w-px bg-[var(--dw-border)] lg:right-8" />
+          </div>
+        </div>
         <LandingNav isLoggedIn={isLoggedIn} />
         <HeroSection />
         <StatsBar />
         <FeaturesSection />
-        <HowItWorks />
         <TestimonialsSection />
         <PricingSection />
-        <CTABanner />
         <FAQSection />
         <LandingFooter />
       </div>

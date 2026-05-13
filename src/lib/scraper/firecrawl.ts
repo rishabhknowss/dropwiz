@@ -100,7 +100,10 @@ function estimateCost(priceCents: number, platform: NewProduct["sourcePlatform"]
 }
 
 export async function scrapeWithFirecrawl(sourceUrl: string): Promise<ScrapedProduct> {
+  console.log(`[firecrawl] Starting scrape for: ${sourceUrl.slice(0, 100)}...`);
+  const startTime = Date.now();
   let response: FirecrawlScrapeResponse;
+
   try {
     const result = await axios.post<FirecrawlScrapeResponse>(
       `${FIRECRAWL_API}/scrape`,
@@ -126,14 +129,19 @@ export async function scrapeWithFirecrawl(sourceUrl: string): Promise<ScrapedPro
       },
     );
     response = result.data;
+    const elapsed = Date.now() - startTime;
+    console.log(`[firecrawl] Scrape completed in ${elapsed}ms, success=${response.success}`);
   } catch (err) {
+    const elapsed = Date.now() - startTime;
     const axErr = err as AxiosError<{ error?: string }>;
     const msg =
       axErr.response?.data?.error ?? axErr.message ?? "Firecrawl request failed";
+    console.error(`[firecrawl] Scrape FAILED after ${elapsed}ms: ${msg}`);
     throw new Error(`Firecrawl scrape failed: ${msg}`);
   }
 
   if (!response.success || !response.data?.json) {
+    console.error(`[firecrawl] No structured data: ${response.error ?? "unknown error"}`);
     throw new Error(response.error ?? "Firecrawl returned no structured data");
   }
 
@@ -148,6 +156,8 @@ export async function scrapeWithFirecrawl(sourceUrl: string): Promise<ScrapedPro
   }
 
   const priceCents = Math.max(0, Math.round(extracted.priceCents ?? 0));
+
+  console.log(`[firecrawl] Extracted: "${extracted.title?.slice(0, 50)}...", platform=${platform}, images=${rawImages.length}, price=${priceCents} ${extracted.currency}`);
 
   return {
     sourceUrl,

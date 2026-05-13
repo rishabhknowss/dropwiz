@@ -1,104 +1,111 @@
 import Link from "next/link";
-import dynamic from "next/dynamic";
 import { motion } from "motion/react";
-
-const LightRays = dynamic(() => import("@/components/ui/LightRays"), {
-  ssr: false,
-});
+import { Button } from "@/components/ui/button";
 
 export const HeroSection = () => {
   return (
-    <section className="relative -mt-[86px] overflow-hidden pb-16 pt-[110px] lg:pb-24 lg:pt-[130px]">
-      <div className="absolute inset-0 bg-[var(--dw-bg)]" />
-      <LightRays
-        raysOrigin="top-center"
-        raysColor="#ffffff"
-        raysSpeed={1}
-        lightSpread={1.2}
-        rayLength={1.5}
-        followMouse={true}
-        mouseInfluence={0.1}
-        noiseAmount={0.05}
-        className="opacity-50"
-      />
-
-      <div className="relative mx-auto max-w-5xl px-4 lg:px-8">
-        <div className="flex flex-col items-center text-center">
+    <section className="relative overflow-hidden bg-[var(--dw-bg)] pb-0 pt-12 lg:pt-16">
+      <div className="relative mx-auto max-w-6xl px-4 lg:px-8">
+        <div className="px-4 lg:px-8">
+          <div className="flex flex-col items-center text-center">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-8 inline-flex items-center gap-2 rounded-full bg-[var(--dw-accent)]/10 px-4 py-2"
+            className="mb-8 inline-flex items-center gap-2 rounded-lg border border-[var(--dw-border)] bg-[var(--dw-bg)] px-1.5 py-1.5 pr-4 shadow-sm"
           >
-            <div className="flex items-center gap-0.5">
-              {[...Array(5)].map((_, i) => (
-                <svg key={i} className="size-4 text-[var(--dw-accent)]" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
-              ))}
-            </div>
-            <span className="text-[14px] font-medium text-white">
-              2,500+ stores generated
+            <span className="rounded-md bg-[var(--dw-accent)] px-3 py-1 text-[12px] font-semibold uppercase tracking-wide text-[var(--dw-text)]">
+              New
+            </span>
+            <span className="whitespace-nowrap text-[11px] text-[var(--dw-text-muted)] sm:text-[14px]">
+              AI-powered Shopify store builder
             </span>
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="text-[44px] font-bold leading-[1.1] tracking-[-0.02em] text-[var(--dw-text)] sm:text-[64px] lg:text-[80px]"
+            className="max-w-4xl text-[24px] font-semibold leading-[1.15] tracking-[-0.02em] text-[var(--dw-text)] sm:text-[40px] lg:text-[72px]"
           >
-            The <span className="whitespace-nowrap text-[var(--dw-accent)]">#1 store builder</span>
+            Build High-Converting
             <br />
-            for dropshippers.
+            Stores With AI
           </motion.h1>
 
           <motion.p
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="mx-auto mt-6 max-w-xl text-[17px] leading-relaxed text-[var(--dw-text-muted)] lg:text-[19px]"
+            className="mx-auto mt-6 max-w-[280px] text-[14px] leading-relaxed text-[var(--dw-text-muted)] sm:max-w-xl sm:text-[16px] lg:text-[18px]"
           >
-            Build AI stores for Shopify in minutes.
-            <br />
-            Store design, copywriting, image generation and more.
+            Your AI partner that generates store designs, writes product copy, and creates stunning images—so you can launch faster.
           </motion.p>
 
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="mt-10"
+            className="mt-10 flex items-center gap-3"
           >
-            <Link
-              href="/get-started"
-              className="inline-flex h-14 items-center justify-center rounded-full bg-white px-8 text-[16px] font-semibold text-[#0A0A0A] transition-all duration-200 hover:bg-white/90"
-            >
-              Get started — Try for <span className="ml-1 italic">FREE</span>
-            </Link>
+            <Button variant="outline" size="lg" className="h-12 rounded-lg px-7" asChild>
+              <Link href="/#features">Learn More</Link>
+            </Button>
+            <Button size="lg" className="h-12 gap-2 rounded-lg px-7" asChild>
+              <Link href="/get-started">
+                Get Started
+                <svg
+                  className="size-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </Link>
+            </Button>
           </motion.div>
+          </div>
         </div>
+      </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 60 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
-          className="relative mt-16 lg:mt-20"
-        >
-          
-          <div className="relative overflow-hidden rounded-2xl border-4 border-[#2a2a2a] bg-[#1a1a1a] p-3 lg:rounded-3xl lg:border-[6px] lg:p-4">
-            <div className="relative aspect-video w-full overflow-hidden rounded-lg lg:rounded-xl">
-              <iframe
-                src="https://www.youtube.com/embed/zPcnuS8HWpE?rel=0&modestbranding=1"
-                title="Dropwiz Demo"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-                className="absolute inset-0 size-full"
-              />
+      <motion.div
+        initial={{ opacity: 0, y: 32 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.4 }}
+        className="relative mt-16 lg:mt-20"
+      >
+        <div className="mx-auto max-w-6xl px-4 lg:px-8">
+          <div className="px-4 lg:px-8">
+            <div className="-mx-4 flex border-y border-[var(--dw-border)] lg:-mx-8 lg:w-[calc(100%+4rem)]">
+              {["Winning Products", "Image Generation", "Store Builder", "Import Products", "Shopify Export"].map((label, i, arr) => (
+                <div
+                  key={label}
+                  className={`flex-1 whitespace-nowrap px-4 py-4 text-center text-[12px] font-medium text-[var(--dw-text-muted)] transition-colors hover:bg-[#E8F0FE] hover:text-[var(--dw-text)] sm:text-[13px] lg:py-5 lg:text-[15px] ${i !== arr.length - 1 ? "border-r border-[var(--dw-border)]" : ""}`}
+                >
+                  {label}
+                </div>
+              ))}
+            </div>
+            <div className="relative mx-auto mt-8 max-w-4xl overflow-hidden rounded-2xl border border-[var(--dw-border)] bg-black shadow-2xl lg:mt-12">
+              <div className="aspect-video w-full">
+                <iframe
+                  src="https://www.youtube.com/embed/zPcnuS8HWpE?rel=0"
+                  title="Dropwiz Demo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                  className="size-full"
+                />
+              </div>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </section>
   );
 };

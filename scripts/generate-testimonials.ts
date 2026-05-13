@@ -28,22 +28,22 @@ const TESTIMONIALS = [
   {
     filename: "sarah.jpg",
     prompt:
-      "Professional headshot portrait of a confident Asian woman in her early 30s, warm smile, wearing a casual business blazer, soft natural lighting, blurred modern home office background, high quality, photorealistic, looking directly at camera, approachable expression",
+      "candid photo of a real chinese woman early 30s taking a selfie at a rooftop bar at sunset, golden hour lighting, slight smile, messy hair from wind, wearing simple white tee, iphone camera quality, natural skin texture, no makeup look, slightly grainy, instagram story vibe, casual authentic moment",
   },
   {
     filename: "marcus.jpg",
     prompt:
-      "Professional headshot portrait of a successful Black man in his mid 30s, confident smile, well-groomed short beard, wearing a dark polo shirt, natural window lighting, blurred minimalist living room background, high quality, photorealistic, looking directly at camera, warm friendly expression",
+      "real photo of african american guy late 20s at a basketball court, post-workout selfie, slight sweat on forehead, genuine laugh showing teeth, wearing grey hoodie, outdoor harsh daylight, phone camera quality, candid unposed moment, beard stubble, real person not model",
   },
   {
     filename: "jessica.jpg",
     prompt:
-      "Professional headshot portrait of a polished Korean-American woman in her late 20s, bright genuine smile, wearing a cream colored sweater, soft studio lighting, clean white background with subtle gradient, high quality, photorealistic, looking directly at camera, professional yet approachable",
+      "authentic selfie of korean girl mid 20s at coffee shop, natural daylight from window, holding iced latte, subtle smile, wearing oversized sweater, messy bun hairstyle, no heavy makeup just lip gloss, grainy phone camera, cozy cafe vibes, looking slightly off camera, real instagram aesthetic",
   },
   {
     filename: "david.jpg",
     prompt:
-      "Professional headshot portrait of a friendly Caucasian man in his early 40s, natural smile, short brown hair, wearing a navy blue button-down shirt, warm natural lighting, blurred coffee shop background, high quality, photorealistic, looking directly at camera, trustworthy expression",
+      "candid photo of white guy early 30s at hiking trail, outdoor adventure selfie, squinting slightly from sun, 5 oclock shadow beard, wearing baseball cap backwards and flannel shirt, sweaty and windswept hair, mountains blurred in background, gopro wide angle look, authentic rugged outdoor vibes",
   },
 ];
 

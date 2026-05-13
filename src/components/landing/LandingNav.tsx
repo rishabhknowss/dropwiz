@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import { Menu01Icon, Cancel01Icon } from "@hugeicons/core-free-icons";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type NavItemProps = {
@@ -12,7 +13,6 @@ type NavItemProps = {
 
 const NAV_ITEMS: NavItemProps[] = [
   { label: "Features", href: "/#features" },
-  { label: "How it works", href: "/#how-it-works" },
   { label: "Pricing", href: "/#pricing" },
   { label: "FAQ", href: "/#faq" },
 ];
@@ -31,63 +31,84 @@ export const LandingNav = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
 
   return (
     <>
-      <motion.header
+      <motion.div
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="sticky top-0 z-50 px-4 py-4 lg:px-6"
+        className="fixed left-0 right-0 top-0 z-50 bg-[var(--dw-bg)] transition-all duration-300"
       >
         <div
           className={cn(
-            "mx-auto flex h-14 max-w-4xl items-center justify-between rounded-full border px-4 transition-all duration-300 lg:px-2 lg:pl-6",
-            scrolled
-              ? "border-white/10 bg-[#0a0a0a]/90 shadow-[0_8px_32px_rgba(0,0,0,0.4)] backdrop-blur-xl"
-              : "border-white/[0.08] bg-white/[0.03] backdrop-blur-sm"
+            "overflow-hidden transition-all duration-300 ease-in-out",
+            scrolled ? "max-h-0 opacity-0" : "max-h-20 opacity-100"
           )}
         >
-          <Link href="/" className="text-[18px] font-bold tracking-tight text-[var(--dw-text)]">
-            drop<span className="text-[var(--dw-accent)]">wiz</span>
-          </Link>
+          <div className="mx-auto max-w-6xl lg:px-8">
+            <div className="border-b border-[var(--dw-border)] bg-[#EEF4FF] px-4 py-2.5 text-center lg:px-8">
+              <p className="text-[13px] font-medium text-[var(--dw-text-secondary)]">
+                Launch your Shopify store in minutes with AI —{" "}
+                <Link href="/get-started" className="text-[var(--dw-text)] underline underline-offset-2">
+                  Try It Free!
+                </Link>
+              </p>
+            </div>
+          </div>
+        </div>
+        <header className="border-b border-[var(--dw-border)]">
+          <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 lg:h-16 lg:px-8">
+            <Link href="/" className="flex items-center gap-1 lg:pl-8">
+              <img src="/logo.png" alt="dropwiz" className="h-7 w-auto lg:h-8" />
+              <span className="text-[18px] font-bold text-[var(--dw-text)] lg:text-[20px]">dropwiz</span>
+            </Link>
 
-          <nav className="absolute left-1/2 hidden -translate-x-1/2 items-center gap-1 lg:flex">
+          <nav className="hidden items-center gap-2 lg:flex">
             {NAV_ITEMS.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="relative px-4 py-2 text-[14px] font-medium text-white/60 transition-colors hover:text-white"
+                className="px-4 py-2 text-[14px] font-medium text-[var(--dw-text-muted)] transition-colors hover:text-[var(--dw-text)]"
               >
                 {item.label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4 lg:pr-8">
             {isLoggedIn ? (
-              <Link
-                href="/app/stores"
-                className="hidden h-9 items-center rounded-full bg-white px-5 text-[13px] font-semibold text-[#0A0A0A] transition-all hover:bg-white/90 lg:flex"
-              >
-                Dashboard
-              </Link>
+              <Button size="lg" className="hidden h-10 rounded-lg px-5 lg:flex" asChild>
+                <Link href="/app/stores">Dashboard</Link>
+              </Button>
             ) : (
-              <Link
-                href="/auth/signin"
-                className="hidden h-9 items-center rounded-full bg-white px-5 text-[13px] font-semibold text-[#0A0A0A] transition-all hover:bg-white/90 lg:flex"
-              >
-                Get Started
-              </Link>
+              <>
+                <Link
+                  href="/auth/signin"
+                  className="hidden text-[14px] font-medium text-[var(--dw-text-muted)] transition-colors hover:text-[var(--dw-text)] lg:block"
+                >
+                  Login
+                </Link>
+                <Button size="lg" className="hidden h-10 rounded-lg px-5 lg:flex" asChild>
+                  <Link href="/auth/signup">Try For Free</Link>
+                </Button>
+              </>
             )}
 
             <button
               type="button"
               onClick={() => setMobileOpen(true)}
-              className="flex size-10 items-center justify-center rounded-full text-white/70 transition hover:bg-white/10 hover:text-white lg:hidden"
+              className="flex size-10 items-center justify-center rounded-lg text-[var(--dw-text-muted)] transition hover:bg-[var(--dw-surface2)] hover:text-[var(--dw-text)] lg:hidden"
             >
               <HugeiconsIcon icon={Menu01Icon} size={20} />
             </button>
           </div>
-        </div>
-      </motion.header>
+          </div>
+        </header>
+      </motion.div>
+      <div
+        className={cn(
+          "transition-all duration-300",
+          scrolled ? "h-14 lg:h-16" : "h-[104px] lg:h-[112px]"
+        )}
+      />
 
       <AnimatePresence>
         {mobileOpen && (
@@ -97,14 +118,15 @@ export const LandingNav = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex flex-col bg-[var(--dw-bg)] lg:hidden"
           >
-            <div className="flex h-[72px] items-center justify-between border-b border-[var(--dw-border)] px-4">
-              <Link href="/" onClick={() => setMobileOpen(false)} className="text-[20px] font-bold tracking-tight text-[var(--dw-text)]">
-                drop<span className="text-[var(--dw-accent)]">wiz</span>
+            <div className="flex h-16 items-center justify-between border-b border-[var(--dw-border)] px-4">
+              <Link href="/" onClick={() => setMobileOpen(false)} className="flex items-center gap-1">
+                <img src="/logo.png" alt="dropwiz" className="h-7 w-auto" />
+                <span className="text-[18px] font-bold text-[var(--dw-text)]">dropwiz</span>
               </Link>
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="flex size-11 items-center justify-center rounded-full text-[var(--dw-text-muted)] hover:bg-[var(--dw-bg-tertiary)]"
+                className="flex size-10 items-center justify-center rounded-lg text-[var(--dw-text-muted)] hover:bg-[var(--dw-surface2)]"
               >
                 <HugeiconsIcon icon={Cancel01Icon} size={22} />
               </button>
@@ -120,7 +142,7 @@ export const LandingNav = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
                   <Link
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className="block rounded-xl px-4 py-4 text-[17px] font-medium text-[var(--dw-text-secondary)] transition hover:bg-[var(--dw-bg-tertiary)]"
+                    className="block rounded-xl px-4 py-4 text-[17px] font-medium text-[var(--dw-text-secondary)] transition hover:bg-[var(--dw-surface2)]"
                   >
                     {item.label}
                   </Link>
@@ -128,17 +150,14 @@ export const LandingNav = ({ isLoggedIn }: { isLoggedIn: boolean }) => {
               ))}
             </nav>
             <div className="border-t border-[var(--dw-border)] p-4">
-              <Link
-                href="/auth/signup"
-                className="flex h-14 w-full items-center justify-center gap-3 rounded-[30px] border border-[var(--dw-accent)] bg-[var(--dw-accent)] text-[15px] font-semibold text-[#0A0A0A] shadow-[0_6px_20px_rgba(0,255,204,0.3)]"
-              >
-                <span>Get Started Free</span>
-                <span className="flex size-8 items-center justify-center rounded-full bg-[#0A0A0A]/10">
-                  <svg className="size-4 text-[#0A0A0A]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <Button size="lg" className="h-12 w-full gap-2 rounded-lg" asChild>
+                <Link href="/auth/signup" onClick={() => setMobileOpen(false)}>
+                  Get Started Free
+                  <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
-                </span>
-              </Link>
+                </Link>
+              </Button>
             </div>
           </motion.div>
         )}

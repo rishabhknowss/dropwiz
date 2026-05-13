@@ -4,6 +4,7 @@ import { HugeiconsIcon } from "@hugeicons/react";
 import { PaintBrush02Icon, ArrowRight01Icon } from "@hugeicons/core-free-icons";
 import { StoreRenderer } from "@/components/store/StoreRenderer";
 import { api } from "@/utils/api";
+import type { Store } from "@/db/schema";
 import { SEOHead } from "@/components/seo";
 import { storeMetadata } from "@/lib/seo/metadata";
 import { productSchema, breadcrumbSchema } from "@/lib/seo/schema";
@@ -107,7 +108,7 @@ const PublicStorePage = () => {
           <HugeiconsIcon icon={ArrowRight01Icon} size={12} />
         </Link>
       )}
-      <StoreRenderer store={store} />
+      <StoreRenderer store={store as unknown as Store} />
     </>
   );
 };

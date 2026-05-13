@@ -16,8 +16,9 @@ export const AuthShell = ({ title, subtitle, children, footer }: AuthShellProps)
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(0,255,204,0.08),transparent)]" />
 
         <div className="relative flex h-full flex-col justify-between p-12">
-          <Link href="/" className="text-[22px] font-bold tracking-tight text-[var(--dw-text)]">
-            drop<span className="text-[var(--dw-accent)]">wiz</span>
+          <Link href="/" className="flex items-center gap-1">
+            <img src="/logo.png" alt="dropwiz" className="h-8 w-auto brightness-0 invert" />
+            <span className="text-[20px] font-bold text-white">dropwiz</span>
           </Link>
 
           <div className="flex flex-col items-center">
@@ -45,9 +46,9 @@ export const AuthShell = ({ title, subtitle, children, footer }: AuthShellProps)
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="flex -space-x-2">
-                <Image src="/testimonials/sarah.jpg" alt="Sarah" width={36} height={36} className="size-9 rounded-full border-2 border-[#0A0A0A] object-cover" />
-                <Image src="/testimonials/marcus.jpg" alt="Marcus" width={36} height={36} className="size-9 rounded-full border-2 border-[#0A0A0A] object-cover" />
-                <Image src="/testimonials/jessica.jpg" alt="Jessica" width={36} height={36} className="size-9 rounded-full border-2 border-[#0A0A0A] object-cover" />
+                <img src="/testimonials/girl.jpeg" alt="User" className="size-9 rounded-full border-2 border-[#0A0A0A] object-cover" />
+                <img src="/testimonials/men.jpeg" alt="User" className="size-9 rounded-full border-2 border-[#0A0A0A] object-cover" />
+                <img src="/testimonials/men2.jpeg" alt="User" className="size-9 rounded-full border-2 border-[#0A0A0A] object-cover" />
               </div>
               <p className="text-[13px] text-white/50">
                 <span className="font-semibold text-white">2,500+</span> stores built
@@ -67,8 +68,9 @@ export const AuthShell = ({ title, subtitle, children, footer }: AuthShellProps)
 
       <div className="flex w-full flex-col bg-[var(--dw-bg)] lg:w-1/2">
         <header className="flex items-center p-6 lg:hidden">
-          <Link href="/" className="text-[20px] font-bold tracking-tight text-[var(--dw-text)]">
-            drop<span className="text-[var(--dw-accent)]">wiz</span>
+          <Link href="/" className="flex items-center gap-1">
+            <img src="/logo.png" alt="dropwiz" className="h-7 w-auto" />
+            <span className="text-[18px] font-bold text-[var(--dw-text)]">dropwiz</span>
           </Link>
         </header>
 

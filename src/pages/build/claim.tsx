@@ -138,12 +138,11 @@ const ClaimStorePage = () => {
 
   if (!me.data) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-[var(--dw-bg)]">
+      <div className="flex min-h-screen flex-col items-center justify-center bg-white">
         <div className="relative mb-4">
-          <div className="absolute inset-0 rounded-full bg-[var(--dw-accent)] opacity-20 blur-xl" />
-          <div className="relative h-10 w-10 rounded-full border-2 border-[var(--dw-border)] border-t-[var(--dw-accent)] dw-spin" />
+          <div className="relative h-8 w-8 rounded-full border-2 border-[#E5E5E5] border-t-[#0A0A0A] animate-spin" />
         </div>
-        <div className="text-[13px] font-medium text-[var(--dw-text-muted)]">Loading...</div>
+        <div className="text-[13px] font-medium text-[#666666]">Loading...</div>
       </div>
     );
   }
@@ -153,24 +152,23 @@ const ClaimStorePage = () => {
       <Head>
         <title>Building Your Store | Dropwiz</title>
       </Head>
-      <div className="relative min-h-screen bg-[var(--dw-bg)]">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(0,255,204,0.06),transparent)]" />
-
-        <header className="relative z-10 flex items-center px-6 py-5 md:px-10 md:py-6">
-          <span className="text-[20px] font-bold tracking-tight text-[var(--dw-text)]">
-            drop<span className="text-[var(--dw-accent)]">wiz</span>
-          </span>
+      <div className="relative min-h-screen bg-white">
+        <header className="relative z-10 flex items-center border-b border-[#E5E5E5] px-6 py-4 md:px-10">
+          <div className="flex items-center gap-1">
+            <img src="/logo.png" alt="dropwiz" className="h-7 w-auto" />
+            <span className="text-[18px] font-bold text-[#0A0A0A]">dropwiz</span>
+          </div>
         </header>
 
         <main className="relative z-10 mx-auto max-w-[900px] px-5 pb-16 pt-4 md:px-8 md:pb-20 md:pt-8">
-          <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
+          <div className="flex flex-col gap-8 lg:flex-row lg:gap-16">
             <div className="flex-1">
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 inline-flex items-center gap-2.5 rounded-full bg-[var(--dw-accent)]/10 px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--dw-accent)]"
+                className="mb-5 inline-flex items-center gap-2.5 rounded-full border border-[#E5E5E5] bg-white px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-[#0A0A0A]"
               >
-                <HugeiconsIcon icon={SparklesIcon} size={12} className="animate-pulse" />
+                <span className="size-2 animate-pulse rounded-full bg-[#0A0A0A]" />
                 Building Store
               </motion.div>
 
@@ -178,16 +176,16 @@ const ClaimStorePage = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-[32px] font-bold leading-tight tracking-tight text-[var(--dw-text)] md:text-[40px]"
+                className="text-[32px] font-bold leading-tight tracking-tight text-[#0A0A0A] md:text-[44px]"
               >
-                Building your store<span className="text-[var(--dw-accent)]">.</span>
+                Building your store<span className="text-[#0A0A0A]">.</span>
               </motion.h1>
 
               <motion.p
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="mt-3 text-[15px] text-[var(--dw-text-muted)]"
+                className="mt-4 text-[15px] leading-relaxed text-[#666666]"
               >
                 AI is generating hero images, writing conversion copy, and assembling your store.
               </motion.p>
@@ -196,22 +194,22 @@ const ClaimStorePage = () => {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="mt-6 flex items-baseline gap-3"
+                className="mt-8 flex items-baseline gap-3"
               >
-                <span className="dw-mono text-[48px] font-light tracking-tight text-[var(--dw-text)]">
+                <span className="font-mono text-[56px] font-light tracking-tight text-[#0A0A0A]">
                   {formatTime(elapsedSeconds)}
                 </span>
-                <span className="text-[14px] text-[var(--dw-text-muted)]">elapsed</span>
+                <span className="text-[14px] text-[#666666]">elapsed</span>
               </motion.div>
 
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.25 }}
-                className="mt-4 h-2 overflow-hidden rounded-full bg-[var(--dw-surface2)]"
+                className="mt-5 h-1.5 overflow-hidden rounded-full bg-[#E5E5E5]"
               >
                 <motion.div
-                  className="h-full bg-gradient-to-r from-[var(--dw-accent)] to-[var(--dw-accent-hover)]"
+                  className="h-full bg-[#0A0A0A]"
                   initial={{ width: 0 }}
                   animate={{ width: `${progress}%` }}
                   transition={{ duration: 0.5, ease: "easeOut" }}
@@ -222,7 +220,7 @@ const ClaimStorePage = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="mt-8 space-y-2"
+                className="mt-10 space-y-1.5"
               >
                 {BUILD_STEPS.map((step, index) => {
                   const isCompleted = completedSteps.includes(step.id);
@@ -235,33 +233,30 @@ const ClaimStorePage = () => {
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.35 + index * 0.05 }}
                       className={cn(
-                        "flex items-center gap-4 rounded-xl px-4 py-3 transition-all duration-300",
+                        "flex items-center gap-4 rounded-xl px-4 py-3.5 transition-all duration-300",
                         isCompleted
-                          ? "bg-[var(--dw-jade)]/8"
+                          ? "bg-[#F5F5F5]"
                           : isActive
-                            ? "border border-[var(--dw-accent)]/30 bg-[var(--dw-accent)]/8"
+                            ? "border border-[#0A0A0A] bg-white"
                             : "bg-transparent"
                       )}
                     >
                       <div
                         className={cn(
-                          "relative flex size-7 shrink-0 items-center justify-center rounded-lg transition-all",
+                          "relative flex size-6 shrink-0 items-center justify-center rounded-full transition-all",
                           isCompleted
-                            ? "bg-[var(--dw-jade)] text-[#0a0a0a]"
+                            ? "bg-[#0A0A0A] text-white"
                             : isActive
-                              ? "bg-[var(--dw-accent)] text-[#0a0a0a]"
-                              : "bg-[var(--dw-surface2)] text-[var(--dw-text-muted)]"
+                              ? "bg-[#0A0A0A] text-white"
+                              : "border border-[#D1D5DB] bg-white text-[#9CA3AF]"
                         )}
                       >
                         {isCompleted ? (
-                          <HugeiconsIcon icon={Tick02Icon} size={14} />
+                          <HugeiconsIcon icon={Tick02Icon} size={12} />
                         ) : isActive ? (
-                          <>
-                            <HugeiconsIcon icon={SparklesIcon} size={14} className="animate-pulse" />
-                            <span className="absolute inset-0 animate-ping rounded-lg bg-[var(--dw-accent)] opacity-30" />
-                          </>
+                          <HugeiconsIcon icon={SparklesIcon} size={12} className="animate-pulse" />
                         ) : (
-                          <span className="size-1.5 rounded-full bg-current animate-pulse" />
+                          <span className="size-1.5 rounded-full bg-current" />
                         )}
                       </div>
 
@@ -270,10 +265,10 @@ const ClaimStorePage = () => {
                           className={cn(
                             "text-[14px] font-medium transition-colors",
                             isCompleted
-                              ? "text-[var(--dw-jade)] line-through decoration-[var(--dw-jade)]/40"
+                              ? "text-[#0A0A0A]"
                               : isActive
-                                ? "text-[var(--dw-text)]"
-                                : "text-[var(--dw-text-muted)]"
+                                ? "text-[#0A0A0A]"
+                                : "text-[#9CA3AF]"
                           )}
                         >
                           {isCompleted ? step.label : isActive ? step.activeLabel : step.label}
@@ -290,28 +285,28 @@ const ClaimStorePage = () => {
                 initial={{ opacity: 0, scale: 0.95, x: 20 }}
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 transition={{ delay: 0.4, type: "spring", stiffness: 200, damping: 20 }}
-                className="flex flex-col items-center lg:w-[340px]"
+                className="flex flex-col items-center lg:w-[320px]"
               >
-                <div className="relative w-full overflow-hidden rounded-2xl border border-[var(--dw-border)] bg-white p-4 shadow-xl shadow-black/20">
+                <div className="relative w-full overflow-hidden rounded-2xl border border-[#E5E5E5] bg-white p-5 shadow-lg shadow-black/5">
                   {isAiMode ? (
-                    <div className="flex aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-[var(--dw-accent)]/10 to-[var(--dw-accent)]/5">
-                      <HugeiconsIcon icon={MagicWand01Icon} size={64} className="text-[var(--dw-accent)]" />
+                    <div className="flex aspect-square items-center justify-center rounded-xl bg-gradient-to-br from-[#F5F5F5] to-[#FAFAFA]">
+                      <HugeiconsIcon icon={MagicWand01Icon} size={56} className="text-[#0A0A0A]" />
                     </div>
                   ) : productImage && (
-                    <div className="relative aspect-square">
+                    <div className="relative aspect-square rounded-xl bg-[#FAFAFA]">
                       <Image
                         src={productImage}
                         alt="Product"
                         fill
-                        className="object-contain"
+                        className="object-contain p-2"
                         unoptimized
                       />
                     </div>
                   )}
                 </div>
-                <div className="mt-4 flex items-center gap-2 text-[12px] font-medium text-[var(--dw-jade)]">
-                  <span className="size-2 rounded-full bg-[var(--dw-jade)] animate-pulse" />
-                  {isAiMode ? "AI GENERATING" : "PRODUCT DETECTED"}
+                <div className="mt-4 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#0A0A0A]">
+                  <span className="size-2 rounded-full bg-[#22C55E] animate-pulse" />
+                  {isAiMode ? "AI Generating" : "Product Detected"}
                 </div>
               </motion.div>
             )}
