@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import Link from "next/link";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
   Store04Icon,
@@ -41,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { ShopifyConnectModal } from "@/components/shopify/ShopifyConnectModal";
 import { api } from "@/utils/api";
 import { cn } from "@/lib/utils";
 import type { RouterOutputs } from "@/utils/api";
@@ -78,6 +78,7 @@ const IntegrationsPage = () => {
 
   const [selectedShopId, setSelectedShopId] = useState<string | null>(null);
   const [dateRange, setDateRange] = useState<DateRange>("7d");
+  const [showConnectModal, setShowConnectModal] = useState(false);
 
   const selectedShop = shops.data?.find((s) => s.id === selectedShopId) ?? shops.data?.[0] ?? null;
 
@@ -222,10 +223,14 @@ const IntegrationsPage = () => {
           </div>
         )}
 
+        {showConnectModal && (
+          <ShopifyConnectModal onClose={() => setShowConnectModal(false)} />
+        )}
+
         {!hasShops ? (
-          <EmptyState />
+          <EmptyState onConnect={() => setShowConnectModal(true)} />
         ) : !hasOrdersScope ? (
-          <ReconnectState shopDomain={selectedShop?.shopDomain ?? ""} />
+          <ReconnectState shopDomain={selectedShop?.shopDomain ?? ""} onConnect={() => setShowConnectModal(true)} />
         ) : (
           <div className="space-y-6">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -452,7 +457,7 @@ const MetricCard = ({
   );
 };
 
-const EmptyState = () => (
+const EmptyState = ({ onConnect }: { onConnect: () => void }) => (
   <div className="relative overflow-hidden rounded-2xl border border-dashed border-[#E5E5E5] bg-white px-8 py-16 text-center">
     <div className="relative z-10">
       <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#96BF48]/10">
@@ -462,18 +467,18 @@ const EmptyState = () => (
       <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-[#666666]">
         Connect your Shopify store to view analytics, track orders, and publish your dropwiz stores.
       </p>
-      <Link
-        href="/api/auth/shopify"
+      <button
+        onClick={onConnect}
         className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0A0A0A] px-5 py-3 text-[14px] font-semibold text-white transition-all hover:bg-[#1a1a1a]"
       >
         <HugeiconsIcon icon={LinkSquare02Icon} size={16} />
         Connect Shopify
-      </Link>
+      </button>
     </div>
   </div>
 );
 
-const ReconnectState = ({ shopDomain }: { shopDomain: string }) => (
+const ReconnectState = ({ shopDomain, onConnect }: { shopDomain: string; onConnect: () => void }) => (
   <div className="relative overflow-hidden rounded-2xl border border-[#FEF3C7] bg-[#FFFBEB] px-8 py-12 text-center">
     <div className="relative z-10">
       <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#FDE68A]">
@@ -484,13 +489,13 @@ const ReconnectState = ({ shopDomain }: { shopDomain: string }) => (
         To view analytics for <span className="font-medium">{shopDomain}</span>, you need to reconnect with
         order read permissions.
       </p>
-      <Link
-        href="/api/auth/shopify"
+      <button
+        onClick={onConnect}
         className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#0A0A0A] px-4 py-2.5 text-[13px] font-semibold text-white transition-all hover:bg-[#1a1a1a]"
       >
         Reconnect Store
         <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
-      </Link>
+      </button>
     </div>
   </div>
 );

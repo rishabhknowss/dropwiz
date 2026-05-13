@@ -16,7 +16,7 @@ export const DWLogo = ({
   variant = "default",
   textClassName
 }: LogoProps) => {
-  const logoSrc = variant === "light" ? "/logowithbg.png" : "/logo.png";
+  const logoSrc = "/logo.png";
   const textColor = variant === "light" ? "text-[#0A0A0A]" : "text-[var(--dw-text)]";
 
   return (
@@ -46,9 +46,8 @@ export const DWLogo = ({
 export const DWLogoIcon = ({
   size = 32,
   className,
-  variant = "default"
-}: Omit<LogoProps, "showText" | "textClassName">) => {
-  const logoSrc = variant === "light" ? "/logowithbg.png" : "/logo.png";
+}: Omit<LogoProps, "showText" | "textClassName" | "variant">) => {
+  const logoSrc = "/logo.png";
 
   return (
     <Image

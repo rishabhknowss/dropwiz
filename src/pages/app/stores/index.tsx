@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import Image from "next/image";
@@ -13,20 +13,12 @@ import {
 } from "@hugeicons/core-free-icons";
 import { toast } from "sonner";
 import { DashboardLayout } from "@/components/dashboard";
-import { OnboardingModal } from "@/components/dw/OnboardingModal";
 import { ShopifyConnectModal } from "@/components/shopify/ShopifyConnectModal";
 import { api } from "@/utils/api";
 import { cn } from "@/lib/utils";
 import type { RouterOutputs } from "@/utils/api";
 
-const ONBOARDING_KEY = "dropwiz_onboarding_complete";
-
 type StoreCardData = RouterOutputs["stores"]["listMine"][number];
-
-const getInitialOnboardingState = () => {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem(ONBOARDING_KEY) !== "true";
-};
 
 const PROMO_BANNER = {
   id: "shopify",
@@ -53,16 +45,8 @@ const StoresIndex = () => {
   const shouldShowConnect = router.query.action === "connect-shopify";
   const subscriptionSuccess = router.query.subscription === "success";
   const [showShopifyConnect, setShowShopifyConnect] = useState(false);
-  const [onboardingDismissed, setOnboardingDismissed] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<StoreCardData | null>(null);
   const successToastShown = useRef(false);
-
-  const showOnboarding = useMemo(() => {
-    if (onboardingDismissed) return false;
-    if (!me.data || stores.data === undefined) return false;
-    if (stores.data.length > 0) return false;
-    return getInitialOnboardingState();
-  }, [me.data, stores.data, onboardingDismissed]);
 
   useEffect(() => {
     if (!me.isLoading && !me.data) router.replace("/auth/signin");
@@ -85,11 +69,6 @@ const StoresIndex = () => {
       router.replace("/app/stores", undefined, { shallow: true });
     }
   }, [subscriptionSuccess, router]);
-
-  const handleOnboardingComplete = () => {
-    localStorage.setItem(ONBOARDING_KEY, "true");
-    setOnboardingDismissed(true);
-  };
 
   const handleDelete = () => {
     if (!deleteTarget) return;
@@ -123,12 +102,6 @@ const StoresIndex = () => {
 
   return (
     <DashboardLayout>
-      {showOnboarding && (
-        <OnboardingModal
-          userName={me.data?.name ?? undefined}
-          onComplete={handleOnboardingComplete}
-        />
-      )}
       {showShopifyConnect && (
         <ShopifyConnectModal onClose={() => setShowShopifyConnect(false)} />
       )}
