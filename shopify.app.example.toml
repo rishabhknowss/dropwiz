@@ -1,0 +1,37 @@
+client_id = "YOUR_CLIENT_ID"
+application_url = "https://your-app-url.com"
+embedded = false
+name = "Dropwiz"
+
+[access_scopes]
+scopes = "read_analytics,read_customers,read_orders,read_products,write_products,read_publications,write_publications,read_themes,write_themes"
+
+[auth]
+redirect_urls = [
+  "https://your-app-url.com/api/shopify/callback"
+]
+
+[webhooks]
+api_version = "2026-04"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/api/shopify/webhooks/app-uninstalled"
+
+  [[webhooks.subscriptions]]
+  topics = ["app_subscriptions/update"]
+  uri = "/api/shopify/webhooks/subscriptions-update"
+
+  [[webhooks.subscriptions]]
+  compliance_topics = [
+    "customers/data_request",
+    "customers/redact",
+    "shop/redact",
+  ]
+  uri = "/api/shopify/webhooks/gdpr/dispatch"
+
+[pos]
+embedded = false
+
+[build]
+automatically_update_urls_on_dev = false

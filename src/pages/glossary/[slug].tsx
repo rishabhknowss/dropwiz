@@ -79,7 +79,7 @@ const GlossaryTermPage = ({ term, relatedTerms }: GlossaryTermPageProps) => {
             <p className="text-[color:var(--dw-text-muted)]">{term.definition}</p>
           </div>
 
-          <div className="prose prose-lg max-w-none dark:prose-invert prose-headings:scroll-mt-20 prose-a:text-[color:var(--dw-accent)] prose-code:rounded prose-code:bg-[color:var(--dw-surface)] prose-code:px-1.5 prose-code:py-0.5 prose-pre:bg-[color:var(--dw-surface)] prose-table:border-collapse prose-th:border prose-th:border-[color:var(--dw-border)] prose-th:bg-[color:var(--dw-surface)] prose-th:p-2 prose-td:border prose-td:border-[color:var(--dw-border)] prose-td:p-2">
+          <div className="prose prose-lg max-w-none prose-headings:scroll-mt-20 prose-a:text-[color:var(--dw-accent)] prose-code:rounded prose-code:bg-[color:var(--dw-surface)] prose-code:px-1.5 prose-code:py-0.5 prose-pre:bg-[color:var(--dw-surface)] prose-table:border-collapse prose-th:border prose-th:border-[color:var(--dw-border)] prose-th:bg-[color:var(--dw-surface)] prose-th:p-2 prose-td:border prose-td:border-[color:var(--dw-border)] prose-td:p-2">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>
               {term.extendedDefinition}
             </ReactMarkdown>

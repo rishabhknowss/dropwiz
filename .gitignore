@@ -59,6 +59,10 @@ aws-credentials
 .gcloud/
 .shopify-cli-config
 
+# ─── Shopify app config (contains client_id/secrets) ──────────
+shopify.app.*.toml
+!shopify.app.example.toml
+
 # ─── Cloud / deploy artefacts ─────────────────────────────────
 .vercel/
 .shopify/

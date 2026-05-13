@@ -2,13 +2,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { HugeiconsIcon } from "@hugeicons/react";
 import {
-  Moon02Icon,
-  Sun03Icon,
   Menu01Icon,
   Cancel01Icon,
   SparklesIcon,
 } from "@hugeicons/core-free-icons";
-import { useTheme } from "@/lib/theme-context";
 import { Button } from "@/components/ui/button";
 import { DWLogo } from "./Logo";
 import { cn } from "@/lib/utils";
@@ -46,7 +43,6 @@ export const DWTopNav = ({
   secondaryDisabled,
   showCredits = false,
 }: TopNavProps) => {
-  const { theme, toggle } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
   const me = api.auth.me.useQuery();
 
@@ -105,17 +101,6 @@ export const DWTopNav = ({
                 </span>
               </Link>
             )}
-            <button
-              type="button"
-              onClick={toggle}
-              aria-label="Toggle theme"
-              className="flex size-8 items-center justify-center rounded-md text-[color:var(--dw-text-dim)] transition hover:bg-[color:var(--dw-surface)] hover:text-[color:var(--dw-text)]"
-            >
-              <HugeiconsIcon
-                icon={theme === "dark" ? Sun03Icon : Moon02Icon}
-                size={15}
-              />
-            </button>
 
             <div className="hidden items-center gap-2 md:flex">
               {resolvedSecondaryLabel && (secondaryOnClick ? (

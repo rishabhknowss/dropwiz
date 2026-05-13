@@ -62,41 +62,6 @@
   --radius: 0.625rem;
 }
 
-.dark {
-  --dw-bg: #0A0A0A;
-  --dw-bg-secondary: #0F0F0F;
-  --dw-bg-tertiary: #141414;
-  --dw-surface: #181818;
-  --dw-surface2: #1E1E1E;
-  --dw-surface-hover: #242424;
-  --dw-border: #2A2A2A;
-  --dw-border-strong: #3A3A3A;
-  --dw-text: #F5F5F5;
-  --dw-text-secondary: #B0B0B0;
-  --dw-text-muted: #787878;
-  --dw-text-subtle: #505050;
-  --dw-accent: #00FFCC;
-  --dw-accent-hover: #00E6B8;
-  --dw-accent-light: #33FFD6;
-  --dw-accent-subtle: rgba(0, 255, 204, 0.08);
-  --dw-accent-glow: rgba(0, 255, 204, 0.25);
-  --dw-secondary: #FFB347;
-  --dw-secondary-subtle: rgba(255, 179, 71, 0.1);
-  --dw-success: #00E676;
-  --dw-success-bg: rgba(0, 230, 118, 0.1);
-  --dw-warning: #FFC107;
-  --dw-warning-bg: rgba(255, 193, 7, 0.1);
-  --dw-error: #FF5252;
-  --dw-error-bg: rgba(255, 82, 82, 0.1);
-  --dw-tier-pro: #00FFCC;
-  --dw-tier-pro-bg: rgba(0, 255, 204, 0.1);
-  --dw-tier-agency: #FFB347;
-  --dw-tier-agency-bg: rgba(255, 179, 71, 0.1);
-  --dw-tier-enterprise: #FF6B9D;
-  --dw-tier-enterprise-bg: rgba(255, 107, 157, 0.1);
-  --dw-jade: #00E676;
-  --dw-signal: #FF5252;
-}
 
 [data-radix-popper-content-wrapper],
 [data-radix-portal],

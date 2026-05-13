@@ -58,7 +58,7 @@ export const PageLayout = ({
       <main className="mx-auto max-w-7xl px-6 py-10">
         {breadcrumbs && <Breadcrumbs items={breadcrumbs} />}
         <div className={sidebar ? "grid gap-10 lg:grid-cols-[1fr_300px]" : ""}>
-          <article className="prose prose-neutral max-w-none dark:prose-invert">
+          <article className="prose prose-neutral max-w-none">
             {children}
           </article>
           {sidebar && (

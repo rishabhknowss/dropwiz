@@ -23,11 +23,6 @@ const Document = () => {
         <link rel="stylesheet" href={GOOGLE_FONT_HREF} />
       </Head>
       <body className="antialiased">
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('dw-theme');var d=t==='dark';document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';}catch(e){}})();`,
-          }}
-        />
         <Main />
         <NextScript />
         <script

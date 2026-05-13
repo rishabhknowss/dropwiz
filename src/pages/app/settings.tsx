@@ -31,7 +31,7 @@ const TIER_INFO: Record<string, { label: string; color: string; bgColor: string;
     color: "#0A0A0A",
     bgColor: "#FEF9C3",
     iconBg: "#FDE047",
-    description: "50 AI credits/month, publish to Shopify, priority support",
+    description: "100 AI credits/month, publish to Shopify, priority support",
   },
 };
 
@@ -227,7 +227,7 @@ const SettingsPage = () => {
 
             {isPro && (
               <p className="mt-4 rounded-lg bg-[#F5F5F5] px-3 py-2 text-[11px] text-[#666666]">
-                PRO members receive 50 credits monthly with their subscription.
+                PRO members receive 100 credits monthly with their subscription.
               </p>
             )}
           </div>

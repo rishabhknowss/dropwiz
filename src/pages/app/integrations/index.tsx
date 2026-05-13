@@ -15,7 +15,9 @@ import {
   ArrowRight01Icon,
   CheckmarkCircle02Icon,
   FilterIcon,
+  Delete02Icon,
 } from "@hugeicons/core-free-icons";
+import { toast } from "sonner";
 import {
   Area,
   AreaChart,
@@ -117,16 +119,52 @@ const IntegrationsPage = () => {
   const hasShops = (shops.data?.length ?? 0) > 0;
   const hasOrdersScope = selectedShop?.hasOrdersScope ?? false;
 
-  const shopsConnectedBadge = (
-    <div className="flex items-center gap-2 rounded-lg bg-[#F5F5F5] px-3 py-1.5">
-      <div className="flex size-5 items-center justify-center rounded bg-[#96BF48]">
-        <HugeiconsIcon icon={Store04Icon} size={12} className="text-white" />
-      </div>
-      <span className="text-[13px] font-medium text-[#0A0A0A]">
-        {shops.data?.length ?? 0} shop{(shops.data?.length ?? 0) !== 1 ? "s" : ""} connected
-      </span>
-    </div>
-  );
+  const utils = api.useUtils();
+  const disconnectMutation = api.shopify.disconnectShop.useMutation();
+
+  const handleDisconnect = (shopDomain: string) => {
+    const id = toast.loading("Disconnecting shop...");
+    disconnectMutation.mutate(
+      { shopDomain },
+      {
+        onSuccess: () => {
+          toast.success("Shop disconnected", { id });
+          utils.analytics.getConnectedShops.invalidate();
+          utils.shopify.listShops.invalidate();
+        },
+        onError: (error) => {
+          toast.error(error.message, { id });
+        },
+      }
+    );
+  };
+
+  const shopsConnectedBadge = hasShops ? (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button className="flex items-center gap-2 rounded-lg bg-[#F5F5F5] px-3 py-1.5 transition hover:bg-[#EBEBEB]">
+          <div className="flex size-5 items-center justify-center rounded bg-[#96BF48]">
+            <HugeiconsIcon icon={Store04Icon} size={12} className="text-white" />
+          </div>
+          <span className="text-[13px] font-medium text-[#0A0A0A]">
+            {shops.data?.length ?? 0} shop{(shops.data?.length ?? 0) !== 1 ? "s" : ""} connected
+          </span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-[260px]">
+        {shops.data?.map((shop) => (
+          <DropdownMenuItem
+            key={shop.id}
+            onClick={() => handleDisconnect(shop.shopDomain)}
+            className="flex items-center justify-between text-[13px] text-[#DC2626] focus:text-[#DC2626]"
+          >
+            <span className="truncate">{shop.shopDomain}</span>
+            <HugeiconsIcon icon={Delete02Icon} size={14} />
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  ) : null;
 
   return (
     <DashboardLayout title="Analytics" subtitle="Track your Shopify store performance" action={shopsConnectedBadge}>

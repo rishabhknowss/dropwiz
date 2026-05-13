@@ -394,18 +394,8 @@ function getProgramInfo(
   }
 }
 
-function isDarkMode(colorScheme: MediaQueryList) {
-  const root = document.documentElement
-
-  if (root.classList.contains("dark")) {
-    return true
-  }
-
-  if (root.classList.contains("light")) {
-    return false
-  }
-
-  return colorScheme.matches
+function isDarkMode(_colorScheme: MediaQueryList) {
+  return false
 }
 
 function getColorResolveContext() {
@@ -840,13 +830,8 @@ export function RetroGrid({
           <div className="absolute inset-0" style={fallbackRotationStyles}>
             <div
               data-retro-grid-scroll="true"
-              className="absolute inset-[0%_0px] ms-[-200%] h-[300vh] w-[600vw] origin-[100%_0_0] dark:hidden"
+              className="absolute inset-[0%_0px] ms-[-200%] h-[300vh] w-[600vw] origin-[100%_0_0]"
               style={lightFallbackGridStyles}
-            />
-            <div
-              data-retro-grid-scroll="true"
-              className="absolute inset-[0%_0px] ms-[-200%] hidden h-[300vh] w-[600vw] origin-[100%_0_0] dark:block"
-              style={darkFallbackGridStyles}
             />
           </div>
         </div>
@@ -858,7 +843,7 @@ export function RetroGrid({
           isWebGlReady ? "opacity-100" : "opacity-0"
         )}
       />
-      <div className="absolute inset-0 bg-linear-to-t from-white to-transparent to-90% dark:from-black" />
+      <div className="absolute inset-0 bg-linear-to-t from-white to-transparent to-90%" />
     </div>
   )
 }
